@@ -221,7 +221,7 @@ class Kwant_SSeS():
                  SNjunc=['SNS'], ProximityOn=[1], delta = 64e-6 ,
                  mu_N=0, mu_SC=10e-3, VGate_shift=-0.1, DefectAmp=0.5,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,
-                 ShowDensity=False, Swave=False, CombineMu = False, AddOrbitEffect=True, BlockWarnings = True,
+                 ShowDensity=False, Swave=False, CombineMu = False, AddOrbitEffect=True, BlockWarnings = False,
                  SwpID = "Vg",Digits=5,PlotbeforeFigures = 20):
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
@@ -1427,4 +1427,5 @@ for DELTA in delta_list:
                        SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Test',
                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+
 

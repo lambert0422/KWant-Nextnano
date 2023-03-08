@@ -221,10 +221,9 @@ class Kwant_SSeS():
                  SNjunc=['SNS'], ProximityOn=[1], delta = 64e-6 ,
                  mu_N=0, mu_SC=10e-3, VGate_shift=-0.1, DefectAmp=0.5,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,
-                 ShowDensity=False, Swave=False, CombineMu = False, AddOrbitEffect=True, BlockWarnings = True,
+                 ShowDensity=False, Swave=False, CombineMu = False, AddOrbitEffect=True,
                  SwpID = "Vg",Digits=5,PlotbeforeFigures = 20):
         # a = 30  # nm # grid point separation
-        self.BlockWarnings = BlockWarnings
         self.ReferenceData = ReferenceData
         if self.ReferenceData !=None:
             self.GetReferenceData(self.ReferenceData)
@@ -594,8 +593,8 @@ class Kwant_SSeS():
         self.img, Amin, Amax = kwant.plotter.mask_interpolate(coords, self.d) # Make colormap
 
 
-        if self.BlockWarnings:
-            warnings.filterwarnings("ignore")
+
+        warnings.filterwarnings("ignore")
         self.fig = plt.figure(figsize=(14, 11))
         Ax0 = plt.subplot(3, 3, 1)
         set_size(6, 2, Ax0)
@@ -642,8 +641,6 @@ class Kwant_SSeS():
                             wspace=0.4,
                             hspace=0.4)
 
-        if self.BlockWarnings:
-            warnings.filterwarnings("always")
     def Gen_Ana_Plot(self):
 
 
@@ -710,8 +707,8 @@ class Kwant_SSeS():
         self.fig.tight_layout()
 
     def Gen_Conduct_Plot(self, x,y,Xlabel):
-        if self.BlockWarnings:
-            warnings.filterwarnings("ignore")
+
+        warnings.filterwarnings("ignore")
         self.fig = plt.figure(figsize=(14, 11))
         self.fig.suptitle(self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + str(
                         self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +
@@ -764,8 +761,7 @@ class Kwant_SSeS():
         ax5.legend()
         plt.xlabel(Xlabel)
         plt.ylabel("G/G0[/(2e^2/h)]")
-        if self.BlockWarnings:
-            warnings.filterwarnings("always")
+        warnings.filterwarnings("always")
 
     def MapCutPlot(self, Map, Title=None, subTitle=None):
         self.fig = plt.figure(figsize=(11, 11))
@@ -1087,8 +1083,7 @@ class Kwant_SSeS():
 
                     # Get the initial reference gate potential and proximity effect factor depend on B
                     if RunCount == 1 or self.SwpID == 'B' or self.SwpID == 'Phase':
-                        if self.BlockWarnings:
-                            warnings.filterwarnings("ignore")
+                        warnings.filterwarnings("ignore")
                         self.Factor = 1 # correct the proximity effect of order parameter
                         if self.SN == 'SN':
                             self.Factor = self.orderDelta(int(self.L / 2), 1, self.B, self.delta, 0,
@@ -1121,8 +1116,7 @@ class Kwant_SSeS():
                                                                                      self.B,
                                                                                      self.delta, 1, self.phi, Bx=0,
                                                                                      alphaangle=0)
-                        if self.BlockWarnings:
-                            warnings.filterwarnings("always")
+                        warnings.filterwarnings("always")
                         if self.DavidPot:
                             self.u_sl_ref_2DEG = 0
                         else:
@@ -1154,8 +1148,8 @@ class Kwant_SSeS():
                                   Delta_SC_up_prime=self.delta * np.exp(1j * self.phi / 2),
                                   Delta_SC_dn_prime=self.delta * np.exp(-1j * self.phi / 2),
                                   B = self.B, Y_rl = Y_rl_dis,c = self.c)
-                    if self.BlockWarnings:
-                        warnings.filterwarnings("ignore")
+
+                    warnings.filterwarnings("ignore")
                     SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
                                                             in_leads=[0, 1])
 
@@ -1170,8 +1164,7 @@ class Kwant_SSeS():
                         self.fig.savefig(self.SAVEFILENAME+self.SaveNameNote+'_' + str(VSwp) + "Ana.png")
                         if self.ShowDensity == 1:
                             self.fig.show()
-                    if self.BlockWarnings:
-                        warnings.filterwarnings("always")
+                    warnings.filterwarnings("always")
                     if self.SN == 'SN':
                         # A = SMatrix.submatrix((1, 0), (1, 0))
                         C1 = SMatrix.transmission(1, 0) / 2  # /2 to became 2e^2/h
@@ -1427,4 +1420,5 @@ for DELTA in delta_list:
                        SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Test',
                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+
 
