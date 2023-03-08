@@ -272,7 +272,7 @@ class Kwant_SSeS():
             self.GateSplit = int(GridFactor* S_g / self.a )
             self.GateWidth = int(GridFactor* W_g / self.a)
             self.Depth2DEG = int(GridFactor* D_2DEG / self.a)
-            self.NextNanoName = 'DavidMathod'
+            self.NextNanoName = 'DavidMethod'
         else:
             if not NextNanoName == None:
                 self.NextNanoName = NextNanoName
