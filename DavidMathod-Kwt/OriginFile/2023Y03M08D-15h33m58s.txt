@@ -1,5 +1,0 @@
-Vg G
-V 2e^2/h
-Bias 1:2023Y03M08D-15h33m58s-Delta-650.0ueV-Test_Conductance
-0.0 0.0
--0.1 0.0
