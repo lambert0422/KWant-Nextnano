@@ -1302,7 +1302,7 @@ class Kwant_SSeS():
         # print('---------------------- All Finished (Total Time:'+TimeFormat(
         #                 TimeSpend)+') ----------------------')
         syst.stdout.write("\r{0}".format('------------------------- All Finished (Total:'+TimeFormat(
-                        TimeSpend)+'/Ave:'+TimeFormat(elapsed_tol/self.GlobalRunCount)+') -------------------------'))
+                        TimeSpend)+'/Ave:'+TimeFormat(elapsed_tol/self.GlobalRunCount)+'/run) -------------------------'))
         syst.stdout.flush()
 
 
@@ -1425,6 +1425,8 @@ class Kwant_SSeS():
         percentage_rounded = int((self.GlobalRunCount / self.TotalNrun) * 100 / res)
         if self.GlobalRunCount != 1:
             syst.stdout.write('\r')
+        syst.stdout.write("{:8.4f}".format(percentage))
+        syst.stdout.write('% ')
         for i in range(int(100/res)+1):
 
             if i <= percentage_rounded:
@@ -1435,7 +1437,7 @@ class Kwant_SSeS():
                 
                 syst.stdout.write('-')
 
-        syst.stdout.write(' '+str(percentage)+'% ' + TimeTXT)
+        syst.stdout.write(' ' + TimeTXT)
         # syst.stdout.flush()
     def list_duplicates_of(self, seq, item):
         start_at = -1
