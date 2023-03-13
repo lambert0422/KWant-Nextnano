@@ -1,21 +1,27 @@
 import os
-from cmath import exp
+from os import system, name
+
+from prettytable import PrettyTable
+# import colorama
+# colorama.init()
+import sys as syst
+# from cmath import exp
 import numpy as np
 from matplotlib.transforms import Affine2D
 import mpl_toolkits.axisartist.floating_axes as floating_axes
 import numpy as np
-import mpl_toolkits.axisartist.angle_helper as angle_helper
-from matplotlib.projections import PolarAxes
+# import mpl_toolkits.axisartist.angle_helper as angle_helper
+# from matplotlib.projections import PolarAxes
 from mpl_toolkits.axisartist.grid_finder import (FixedLocator, MaxNLocator,
                                                  DictFormatter)
 import matplotlib.pyplot as plt
-import tinyarray
+# import tinyarray
 import warnings
 import kwant
 import kwant.continuum
 import pandas as pd
 import itertools
-from itertools import chain, combinations
+# from itertools import chain, combinations
 import nextnanopy as nn
 # from scipy.interpolate import interp2d
 from scipy.interpolate import LinearNDInterpolator
@@ -23,7 +29,25 @@ import re
 import time
 from datetime import datetime
 
+def clear():
+    # for windows the name is 'nt'
+    if name == 'nt':
+        _ = system('cls')
 
+    # and for mac and linux, the os.name is 'posix'
+    else:
+        _ = system('clear')
+def clear():
+    # for windows the name is 'nt'
+    if name == 'nt':
+        _ = system('cls')
+
+    # and for mac and linux, the os.name is 'posix'
+    else:
+        _ = system('clear')
+
+# Then, whenever you want to clear the screen, just use this clear function as:
+clear()
 def TimeFormat(sec):
     # Format the time display into h/m/s
     if sec > 3600:
@@ -276,7 +300,9 @@ class Kwant_SSeS():
         else:
             if not NextNanoName == None:
                 self.NextNanoName = NextNanoName
-
+                syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
+                syst.stdout.flush()
+                # print('--------------------------- Loading Poisson Result -----------------------------------')
                 self.Dict, self.VgList = SearchFolder(NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',
                                                       ylim=(-1600, 2400))
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
@@ -292,7 +318,7 @@ class Kwant_SSeS():
         self.YY = np.arange(0, self.W)
         self.Vbias_List = Vbias
         self.T = T
-        print('--------------------------- Start Sweep -----------------------------------')
+
         self.Run_sweep()
 
     def GetReferenceData(self,Path):
@@ -515,7 +541,7 @@ class Kwant_SSeS():
 
     def Gen_SaveFileName(self):
         self.PBtxt = 'PB' if self.PB == 1 else 'nPB'
-        self.Proximitytxt = 'ProximityOn' if self.ProximityOn == 1 else 'ProximityOff'
+        self.Proximitytxt = 'On' if self.ProximityOn == 1 else 'Off'
 
         self.SAVEFILENAME_origin = str(self.GlobalVswpCount + 1) + ':' + self.Date + '-' + self.Time
         self.SAVENOTETitle = ["DATE(Y/M/D)","TIME(h/m/s)","Ee(t)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi_rad)", "SN-SNS", "PB?", "Proxy?", "muN(meV)",
@@ -569,6 +595,22 @@ class Kwant_SSeS():
                                                                                  self.SaveNameNote]))
             # self.SAVEFILENAME_origin = self.SN + '_' + self.PBtxt + '_' + self.Proximitytxt + '_t' + str(
         #     self.tmev) + 'meV_E_excited'+str(self.E)+'t_Tunnel' + str(self.TunnelStrength) + 't_Field' + str(self.B) + 'T'
+
+        table2 = list(map(str, self.SAVENOTE_buff + [self.SN, self.PBtxt, self.Proximitytxt,
+                                                                                 np.round(self.mu_N * 1e3, 3), \
+                                                                                 np.round(self.mu_SC * 1e3, 3),
+                                                                                 np.round(self.t * 1e3, 3),
+                                                                                 self.TunnelStrength, \
+                                                                                 self.SaveNameNote]))
+        table = [["Ee(t)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi)", "SN-SNS", "PB?", "Proxy?", "muN(meV)",
+                  "muS(meV)", "t(meV)", "Tl(t)", "Note"],table2 ]
+        Mese = PrettyTable(table[0])
+        Mese.add_rows(table[1:])
+        result = re.search('\n(.*)\n(.*)\n(.*)', str(Mese))
+        self.MeseTitle = result.group(1)
+        self.MeseValue = result.group(3)
+        # self.MesaTitle =
+
 
         if not os.path.exists(self.SAVEFILENAME):
             os.makedirs(self.SAVEFILENAME)
@@ -971,7 +1013,10 @@ class Kwant_SSeS():
         elapsed_tol = 0
         self.comb_change = list(
             itertools.product(list(self.SNjunc), list(self.PeriBC), list(self.ProOn), list(self.Tev)))
-
+        syst.stdout.write(
+            "\r{0}".format('--------------------------- Start Sweep -----------------------------------'))
+        syst.stdout.flush()
+        # print('--------------------------- Start Sweep -----------------------------------')
         for self.SN, self.PB, self.ProximityOn, self.t in self.comb_change:
 
             sys = self.make_system()
@@ -1066,8 +1111,17 @@ class Kwant_SSeS():
                 RunCount = 0
                 self.Gen_SaveFileName()
                 self.MakeSaveDir()
+                if self.GlobalVswpCount == 0:
+                    syst.stdout.write("\r{0}".format(self.MeseTitle))
+                    syst.stdout.write("\n")
+                    syst.stdout.write("\r{0}".format(self.MeseValue))
+                    syst.stdout.write("\n")
+                else:
+
+                    syst.stdout.write("\r{0}".format(self.MeseValue))
+                    syst.stdout.write("\n")
                 for VSwp in VarSwp:
-                    CurrentTime = time.time()
+                    TimeBeforeEverySwp = time.time()
                     if self.SwpID == "Vbias":
                         self.Vbias = VSwp
                     elif self.SwpID == "Vg":
@@ -1183,23 +1237,28 @@ class Kwant_SSeS():
                         C1 = SMatrix.transmission(1, 0) / 2
                         self.conductances2.append('nan')
                     self.conductances.append(C1)
-
-                    self.clear_line()
-                    elapsed = np.round(time.time() - CurrentTime, 2)
-                    elapsed_tol = elapsed_tol+elapsed
+                    elapsed = np.round(time.time() - TimeBeforeEverySwp, 2)
+                    elapsed_tol = elapsed_tol + elapsed
                     Elapsed = TimeFormat(elapsed)
                     LeftRuns = np.round(self.TotalNrun - self.GlobalRunCount, 0)
                     TimeSpend = np.round(time.time() - self.GlobalStartTime, 2)
+                    TimeTXT = TimeFormat(TimeSpend) +'/'+ TimeFormat(LeftRuns * elapsed_tol/self.GlobalRunCount)
 
-                    print(self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + str(
-                        self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +
-                          str(self.E)+ ";muN=" + str(self.mu_N)+ ";muSC=" + str(self.mu_SC)+
-                          "eV;B=" + str(self.B) + 'T;      TIME TOTAL:' + TimeFormat(
-                        TimeSpend) + ';EST TIME LEFT:' +
-                          TimeFormat(LeftRuns * elapsed_tol/self.GlobalRunCount) + ';TIME-ONESWP:' + Elapsed,
-                          end='\r')
+                    # Mese =self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + \
+                    #        str(self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +\
+                    #       str(self.E)+ ";muN=" + str(self.mu_N)+ ";muSC=" + str(self.mu_SC)+\
+                    #       "eV;B=" + str(self.B) + 'T'
+                    # print(Mese)
+
+
+
+                    # syst.stdout.flush()
+                    self.ProgressBar(TimeTXT)
+                    # syst.stdout.flush()
                 self.GlobalVswpCount = self.GlobalVswpCount + 1
-
+                # print('\n',end ="")
+                # syst.stdout.write("\r{0}".format('\n'))
+                # syst.stdout.flush()
                 if self.SwpID == "Vbias":
                     TitleTxt1 = ["Vb", "V", "Bias_Voltage"]
                     xData = self.Vbias_List
@@ -1237,8 +1296,13 @@ class Kwant_SSeS():
                     else:
                         self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='Phase (rad)')
 
-        print('---------------------- All Finished (Total Time:'+TimeFormat(
-                        TimeSpend)+') ----------------------')
+        # print('---------------------- All Finished (Total Time:'+TimeFormat(
+        #                 TimeSpend)+') ----------------------')
+        syst.stdout.write("\r{0}".format('---------------------- All Finished (Total Time:'+TimeFormat(
+                        TimeSpend)+') ----------------------'))
+        syst.stdout.flush()
+
+
 
 
     def SaveDatatoOrigin(self,TitleTxt1,xData,xlabel,Plot = 0):
@@ -1276,8 +1340,9 @@ class Kwant_SSeS():
 
             Data.to_csv(self.OriginFilePath + self.Date +'-'+ self.Time +'.txt',
                         sep = ' ',index=False, header=False)
-            print(
-                'Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time + '.xlsx')
+            # print(
+            #     'Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time + '.xlsx')
+
             self.Gen_Conduct_Plot(xData, self.conductances, xlabel)
             self.fig.savefig(self.SAVEFILENAME+ "Conductance.png")
             if Plot == 1:
@@ -1308,8 +1373,8 @@ class Kwant_SSeS():
             Data_2.to_csv(
                 self.OriginFilePath + self.Date +'-'+ self.Time +'_N-Ree+Reh.txt',
                 sep = ' ', index=False, header=False)
-            print(
-                'Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time +'_N-Ree+Reh.txt')
+            # print(
+            #     'Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time +'_N-Ree+Reh.txt')
             self.Gen_Conduct_Plot(xData, self.conductances2, xlabel)
             self.fig.savefig(self.SAVEFILENAME+ "N-Ree+Reh.png")
             if Plot == 1:
@@ -1338,7 +1403,7 @@ class Kwant_SSeS():
 
             Data.to_csv(self.OriginFilePath + self.Date +'-'+ self.Time  + '.txt',
                          sep = ' ',index=False, header=False)
-            print('Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time  + '.xlsx',)
+            # print('Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time  + '.xlsx',)
             self.Gen_Conduct_Plot(xData, self.conductances, xlabel)
             self.fig.savefig(self.SAVEFILENAME+ "Conductance.png")
             if Plot == 1:
@@ -1350,8 +1415,22 @@ class Kwant_SSeS():
         LINE_UP = '\033[1A'
         LINE_CLEAR = '\x1b[2K'
         for i in range(n):
-            print(LINE_UP, end=LINE_CLEAR)
 
+            syst.stdout.write(LINE_UP+LINE_CLEAR)
+    def ProgressBar(self,TimeTXT,res=2,):
+        percentage = np.round((self.GlobalRunCount / self.TotalNrun) * 100,5)
+        percentage_rounded = int((self.GlobalRunCount / self.TotalNrun) * 100 / res)
+        if self.GlobalRunCount != 1:
+            syst.stdout.write('\r')
+        for i in range(int(100/res)+1):
+
+            if i <= percentage_rounded:
+                syst.stdout.write('#')
+            else:
+                syst.stdout.write('-')
+
+        syst.stdout.write(' '+ TimeTXT+' '+str(percentage)+'%')
+        # syst.stdout.flush()
     def list_duplicates_of(self, seq, item):
         start_at = -1
         locs = []
@@ -1372,14 +1451,22 @@ S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
 DavidPot = False
 
-NName = '/mnt/d/OneDrive/Documents/NN_backup/NN_Alienware/2023y02m15d-08H43M04S'
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M09D-09h12m54s'
 RefName = '/mnt/d/OneDrive/Documents/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [3.5e-3]
-mu_SC_list = [3.5e-3]
+mu_N_list = [1e-3,2e-3,3e-3,4e-3]
+mu_SC_list = [1e-3,2e-3,3e-3,4e-3]
 # E_excited_list = [0.023,0.024]
-E_excited_list = [0.021]
-TeV_list = [8.6e-3]
+E_excited_list = [0.01,0.02,0.03,0.04]
+TeV_list = [3e-3,5e-3,7e-3,9e-3]
+
+# mu_N_list = [1e-3,2e-3]
+# mu_SC_list = [1e-3,2e-3]
+# # E_excited_list = [0.023,0.024]
+# E_excited_list = [0.01]
+# TeV_list = [3e-3]
+
+
 PeriBC_list = [0]
 # TStrength_list = np.round(np.arange(0,2,0.04),5)
 TStrength_list = [0]
@@ -1405,7 +1492,7 @@ VGate_shift_list = [0]
 # for DELTA in delta_list:
 #     for Vg_s in VGate_shift_list:
 #         B = Kwant_SSeS(NextNanoName=NName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
-#                        V_A=[0], TStrength=TStrength_list,
+#                        V_A=[0,-0.1], TStrength=TStrength_list,
 #                        PeriBC=PeriBC_list, Tev=[8.5e-3],
 #                        E_excited=[0.02], SNjunc=SNjunc_list,
 #                        ProximityOn=ProximityOn_list,BField=[0],
@@ -1418,13 +1505,13 @@ VGate_shift_list = [0]
 #
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=None, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=[0,-0.1], TStrength=TStrength_list,
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
                        PeriBC=PeriBC_list, Tev=TeV_list,
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
                        ProximityOn=ProximityOn_list,BField=[0],
                        ShowDensity=ShowDensity,phi=[np.pi/2],
-                       SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Test',
+                       SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV',
                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
 
