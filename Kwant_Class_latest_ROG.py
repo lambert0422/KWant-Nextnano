@@ -1111,15 +1111,7 @@ class Kwant_SSeS():
                 RunCount = 0
                 self.Gen_SaveFileName()
                 self.MakeSaveDir()
-                if self.GlobalVswpCount == 0:
-                    syst.stdout.write("\r{0}".format(self.MeseTitle))
-                    syst.stdout.write("\n")
-                    syst.stdout.write("\r{0}".format(self.MeseValue))
-                    syst.stdout.write("\n")
-                else:
 
-                    syst.stdout.write("\r{0}".format(self.MeseValue))
-                    syst.stdout.write("\n")
                 for VSwp in VarSwp:
                     TimeBeforeEverySwp = time.time()
                     if self.SwpID == "Vbias":
@@ -1242,7 +1234,7 @@ class Kwant_SSeS():
                     Elapsed = TimeFormat(elapsed)
                     LeftRuns = np.round(self.TotalNrun - self.GlobalRunCount, 0)
                     TimeSpend = np.round(time.time() - self.GlobalStartTime, 2)
-                    TimeTXT = TimeFormat(TimeSpend) +'/'+ TimeFormat(LeftRuns * elapsed_tol/self.GlobalRunCount)
+                    TimeTXT = 'total:'+TimeFormat(TimeSpend) +'/left:'+ TimeFormat(LeftRuns * elapsed_tol/self.GlobalRunCount) +' '+TimeFormat(elapsed_tol/self.GlobalRunCount)+'/point'
 
                     # Mese =self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + \
                     #        str(self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +\
@@ -1253,8 +1245,19 @@ class Kwant_SSeS():
 
 
                     # syst.stdout.flush()
-                    self.ProgressBar(TimeTXT)
+
                     # syst.stdout.flush()
+                    if RunCount == 1:
+                        if self.GlobalVswpCount == 0:
+                            syst.stdout.write("\r{0}".format(self.MeseTitle))
+                            syst.stdout.write("\n")
+                            syst.stdout.write("\r{0}".format(self.MeseValue))
+                            syst.stdout.write("\n")
+                        else:
+
+                            syst.stdout.write("\r{0}".format(self.MeseValue))
+                            syst.stdout.write("\n")
+                    self.ProgressBar(TimeTXT)
                 self.GlobalVswpCount = self.GlobalVswpCount + 1
                 # print('\n',end ="")
                 # syst.stdout.write("\r{0}".format('\n'))
@@ -1298,8 +1301,8 @@ class Kwant_SSeS():
 
         # print('---------------------- All Finished (Total Time:'+TimeFormat(
         #                 TimeSpend)+') ----------------------')
-        syst.stdout.write("\r{0}".format('---------------------- All Finished (Total Time:'+TimeFormat(
-                        TimeSpend)+') ----------------------'))
+        syst.stdout.write("\r{0}".format('------------------------- All Finished (Total:'+TimeFormat(
+                        TimeSpend)+'/Ave:'+TimeFormat(elapsed_tol/self.GlobalRunCount)+') -------------------------'))
         syst.stdout.flush()
 
 
@@ -1425,11 +1428,14 @@ class Kwant_SSeS():
         for i in range(int(100/res)+1):
 
             if i <= percentage_rounded:
+
+
                 syst.stdout.write('#')
             else:
+                
                 syst.stdout.write('-')
 
-        syst.stdout.write(' '+ TimeTXT+' '+str(percentage)+'%')
+        syst.stdout.write(' '+str(percentage)+'% ' + TimeTXT)
         # syst.stdout.flush()
     def list_duplicates_of(self, seq, item):
         start_at = -1
@@ -1454,17 +1460,17 @@ DavidPot = False
 NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M09D-09h12m54s'
 RefName = '/mnt/d/OneDrive/Documents/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [1e-3,2e-3,3e-3,4e-3]
-mu_SC_list = [1e-3,2e-3,3e-3,4e-3]
-# E_excited_list = [0.023,0.024]
-E_excited_list = [0.01,0.02,0.03,0.04]
-TeV_list = [3e-3,5e-3,7e-3,9e-3]
-
-# mu_N_list = [1e-3,2e-3]
-# mu_SC_list = [1e-3,2e-3]
+# mu_N_list = [1e-3,2e-3,3e-3,4e-3]
+# mu_SC_list = [1e-3,2e-3,3e-3,4e-3]
 # # E_excited_list = [0.023,0.024]
-# E_excited_list = [0.01]
-# TeV_list = [3e-3]
+# E_excited_list = [0.01,0.02,0.03,0.04]
+# TeV_list = [3e-3,5e-3,7e-3,9e-3]
+
+mu_N_list = [1e-3,2e-3]
+mu_SC_list = [1e-3,2e-3]
+# E_excited_list = [0.023,0.024]
+E_excited_list = [0.01]
+TeV_list = [3e-3]
 
 
 PeriBC_list = [0]
@@ -1489,29 +1495,29 @@ delta_list = [6.5e-4] # in eV
 VGate_shift_list = [0]
 
 #
-# for DELTA in delta_list:
-#     for Vg_s in VGate_shift_list:
-#         B = Kwant_SSeS(NextNanoName=NName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
-#                        V_A=[0,-0.1], TStrength=TStrength_list,
-#                        PeriBC=PeriBC_list, Tev=[8.5e-3],
-#                        E_excited=[0.02], SNjunc=SNjunc_list,
-#                        ProximityOn=ProximityOn_list,BField=[0],
-#                        ShowDensity=False,phi = [0,np.pi/4,np.pi/2,3*np.pi/4,np.pi],
-#                        SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Phasetest',
-#                        mu_N=mu_N_list, DefectAmp=0,
-#                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Phase")
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=[0,-0.1], TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=[8.5e-3],
+                       E_excited=[0.02], SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],
+                       ShowDensity=False,
+                       SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Phasetest',
+                       mu_N=mu_N_list, DefectAmp=0,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
 
 #
 #
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProximityOn=ProximityOn_list,BField=[0],
-                       ShowDensity=ShowDensity,phi=[np.pi/2],
-                       SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV',
-                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
-                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+# for DELTA in delta_list:
+#     for Vg_s in VGate_shift_list:
+#         B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+#                        V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+#                        PeriBC=PeriBC_list, Tev=TeV_list,
+#                        E_excited=E_excited_list, SNjunc=SNjunc_list,
+#                        ProximityOn=ProximityOn_list,BField=[0],
+#                        ShowDensity=ShowDensity,phi=[np.pi/2],
+#                        SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV',
+#                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
+#                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
 
