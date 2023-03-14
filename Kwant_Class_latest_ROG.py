@@ -1459,20 +1459,20 @@ S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
 DavidPot = False
 
-NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M09D-09h12m54s'
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M13D-09h20m29s'
 RefName = '/mnt/d/OneDrive/Documents/NN_backup/Reference/ReferData.xlsx'
 
-# mu_N_list = [1e-3,2e-3,3e-3,4e-3]
-# mu_SC_list = [1e-3,2e-3,3e-3,4e-3]
-# # E_excited_list = [0.023,0.024]
-# E_excited_list = [0.01,0.02,0.03,0.04]
-# TeV_list = [3e-3,5e-3,7e-3,9e-3]
-
-mu_N_list = [1e-3,2e-3]
-mu_SC_list = [1e-3,2e-3]
+mu_N_list = [1e-3,2e-3,3e-3,4e-3]
+mu_SC_list = [1e-3,2e-3,3e-3,4e-3]
 # E_excited_list = [0.023,0.024]
-E_excited_list = [0.01]
-TeV_list = [3e-3]
+E_excited_list = [0.01,0.02,0.03,0.04]
+TeV_list = [3e-3,5e-3,7e-3,9e-3]
+
+# mu_N_list = [1e-3,2e-3]
+# mu_SC_list = [1e-3,2e-3]
+# # E_excited_list = [0.023,0.024]
+# E_excited_list = [0.01]
+# TeV_list = [3e-3]
 
 
 PeriBC_list = [0]
@@ -1497,29 +1497,29 @@ delta_list = [6.5e-4] # in eV
 VGate_shift_list = [0]
 
 #
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=[0,-0.1], TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=[8.5e-3],
-                       E_excited=[0.02], SNjunc=SNjunc_list,
-                       ProximityOn=ProximityOn_list,BField=[0],
-                       ShowDensity=False,
-                       SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Phasetest',
-                       mu_N=mu_N_list, DefectAmp=0,
-                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+# for DELTA in delta_list:
+#     for Vg_s in VGate_shift_list:
+#         B = Kwant_SSeS(NextNanoName=NName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
+#                        V_A=[0,-0.1], TStrength=TStrength_list,
+#                        PeriBC=PeriBC_list, Tev=[8.5e-3],
+#                        E_excited=[0.02], SNjunc=SNjunc_list,
+#                        ProximityOn=ProximityOn_list,BField=[0],
+#                        ShowDensity=False,
+#                        SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Phasetest',
+#                        mu_N=mu_N_list, DefectAmp=0,
+#                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
 
 #
 #
-# for DELTA in delta_list:
-#     for Vg_s in VGate_shift_list:
-#         B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
-#                        V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
-#                        PeriBC=PeriBC_list, Tev=TeV_list,
-#                        E_excited=E_excited_list, SNjunc=SNjunc_list,
-#                        ProximityOn=ProximityOn_list,BField=[0],
-#                        ShowDensity=ShowDensity,phi=[np.pi/2],
-#                        SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV',
-#                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
-#                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],
+                       ShowDensity=ShowDensity,phi=[np.pi/2],
+                       SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV',
+                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
 
