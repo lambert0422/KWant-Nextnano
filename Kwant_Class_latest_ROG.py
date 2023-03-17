@@ -1459,14 +1459,14 @@ S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
 DavidPot = False
 
-NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M13D-09h20m29s'
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M15D-09h02m02s'
 RefName = '/mnt/d/OneDrive/Documents/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [1e-3,2e-3,3e-3,4e-3]
-mu_SC_list = [1e-3,2e-3,3e-3,4e-3]
+mu_N_list = [4e-3,4.2e-3,4.4e-3]
+mu_SC_list = [4e-3,4.2e-3,4.4e-3]
 # E_excited_list = [0.023,0.024]
-E_excited_list = [0.01,0.02,0.03,0.04]
-TeV_list = [3e-3,5e-3,7e-3,9e-3]
+E_excited_list = [0.02,0.022,0.024,0.026,0.028,0.03]
+TeV_list = [7e-3,7.5e-3,8e-3,8.5e-3,9e-3]
 
 # mu_N_list = [1e-3,2e-3]
 # mu_SC_list = [1e-3,2e-3]
