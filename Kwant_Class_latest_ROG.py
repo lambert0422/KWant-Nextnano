@@ -242,8 +242,8 @@ class Kwant_SSeS():
                  D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
                  BField=[0], V_A=np.arange(0, -1.49, -0.01),Tev=[100], E_excited=[5e-3],
                  TStrength=[0], TunnelLength=1,  phi=[np.pi/4], Vbias=[0], PeriBC=[0],
-                 SNjunc=['SNS'], ProximityOn=[1], delta = 64e-6 ,
-                 mu_N=0, mu_SC=10e-3, VGate_shift=-0.1, DefectAmp=0.5,
+                 SNjunc=['SNS'], ProximityOn=[1], delta = 64e-6 , Dict = [], VgList = [],
+                 mu_N=0, mu_SC=10e-3, VGate_shift=-0.1, DefectAmp=0.5,SeriesR = 0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,
                  ShowDensity=False, Swave=False, CombineMu = False, AddOrbitEffect=True, BlockWarnings = True,
                  SwpID = "Vg",Digits=5,PlotbeforeFigures = 20):
@@ -252,7 +252,7 @@ class Kwant_SSeS():
         self.ReferenceData = ReferenceData
         if self.ReferenceData !=None:
             self.GetReferenceData(self.ReferenceData)
-
+        self.SeriesR = SeriesR
         self.a = a
         self.Orbit = AddOrbitEffect
         self.delta = delta
@@ -300,11 +300,13 @@ class Kwant_SSeS():
         else:
             if not NextNanoName == None:
                 self.NextNanoName = NextNanoName
-                syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
-                syst.stdout.flush()
-                # print('--------------------------- Loading Poisson Result -----------------------------------')
-                self.Dict, self.VgList = SearchFolder(NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',
-                                                      ylim=(-1600, 2400))
+                # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
+                # syst.stdout.flush()
+                # # print('--------------------------- Loading Poisson Result -----------------------------------')
+                # self.Dict, self.VgList = SearchFolder(NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',
+                #                                       ylim=(-1600, 2400))
+
+                self.Dict, self.VgList = Dict,VgList
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
         self.W_r = W_r
         self.L_r = L_r
@@ -432,7 +434,7 @@ class Kwant_SSeS():
 
             if self.Orbit == False:
                 self.Ham = """ 
-                                    ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))/t + m*alpha**2/(2*e*t))*kron(sigma_z, sigma_0) +
+                                    ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y))/t - TB(x,y) + m*alpha**2/(2*e*t))*kron(sigma_z, sigma_0) +
                                     EZ(x,y)*kron(sigma_0, sigma_x)/(e*t) +
                                     alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t) +
                                     (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))/t
@@ -449,7 +451,7 @@ class Kwant_SSeS():
                 #                                 """
                 # make sure it is in eV /t
                 self.Ham = """
-                                    ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))/t + m*alpha**2/(2*e*t*hbar**2))*kron(sigma_z, sigma_0) +
+                                    ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y))/t -TB(x,y) + m*alpha**2/(2*e*t*hbar**2))*kron(sigma_z, sigma_0) +
                                     EZ(x,y)*kron(sigma_0, sigma_x)/(e*t) +
                                     alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t) +
                                     (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))/t+
@@ -545,7 +547,7 @@ class Kwant_SSeS():
 
         self.SAVEFILENAME_origin = str(self.GlobalVswpCount + 1) + ':' + self.Date + '-' + self.Time
         self.SAVENOTETitle = ["DATE(Y/M/D)","TIME(h/m/s)","Ee(t)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi_rad)", "SN-SNS", "PB?", "Proxy?", "muN(meV)",
-                              "muS(meV)", "t(meV)", "Tl(t)", "Note"]
+                              "muS(meV)", "t(meV)", "Tl(t)", "Defect(t)","Delta(ueV)","Note"]
 
         if self.SwpID == "Vg":
             self.SAVEFILENAME = 'VgSwp'
@@ -579,11 +581,11 @@ class Kwant_SSeS():
 
         self.SAVEFILENAME = self.NextNanoName + self.fileEnd + '/' + self.Date + '-' + self.Time + '/' + self.SN + '-' + self.PBtxt + '-' + \
                             self.Proximitytxt + '-muN' + str(np.round(self.mu_N * 1e3, 3)) + 'meV-muS' + \
-                            str(np.round(self.mu_SC * 1e3, 3)) + 'meV-t' + str(np.round(self.t * 1e3, 3)) + 'meV-Tl' + str(self.TunnelStrength) + 't-' + self.SAVEFILENAME +'/'
+                            str(np.round(self.mu_SC * 1e3, 3)) + 'meV-t' + str(np.round(self.t * 1e3, 3)) + 'meV-Tl' + str(self.TunnelStrength) + 't-DF'+str(self.DefectAmp)+'t' + self.SAVEFILENAME +'/'
 
         if self.GlobalVswpCount == 0:
             self.SAVENOTE = np.vstack((self.SAVENOTETitle, [self.Date,self.Time]+self.SAVENOTE_buff+[self.SN ,self.PBtxt, self.Proximitytxt , np.round(self.mu_N * 1e3, 3) ,\
-                                                  np.round(self.mu_SC * 1e3, 3),np.round(self.t * 1e3, 3), self.TunnelStrength, \
+                                                  np.round(self.mu_SC * 1e3, 3),np.round(self.t * 1e3, 3), self.TunnelStrength, self.DefectAmp,np.round(self.delta*1e6, 3),\
                                                        self.SaveNameNote]))
         else:
             self.SAVENOTE = np.vstack((self.SAVENOTE,
@@ -591,7 +593,7 @@ class Kwant_SSeS():
                                                                                  np.round(self.mu_N * 1e3, 3), \
                                                                                  np.round(self.mu_SC * 1e3, 3),
                                                                                  np.round(self.t * 1e3, 3),
-                                                                                 self.TunnelStrength, \
+                                                                                 self.TunnelStrength, self.DefectAmp,np.round(self.delta*1e6, 3),\
                                                                                  self.SaveNameNote]))
             # self.SAVEFILENAME_origin = self.SN + '_' + self.PBtxt + '_' + self.Proximitytxt + '_t' + str(
         #     self.tmev) + 'meV_E_excited'+str(self.E)+'t_Tunnel' + str(self.TunnelStrength) + 't_Field' + str(self.B) + 'T'
@@ -600,10 +602,10 @@ class Kwant_SSeS():
                                                                                  np.round(self.mu_N * 1e3, 3), \
                                                                                  np.round(self.mu_SC * 1e3, 3),
                                                                                  np.round(self.t * 1e3, 3),
-                                                                                 self.TunnelStrength, \
+                                                                                 self.TunnelStrength, self.DefectAmp,np.round(self.delta*1e6, 3),\
                                                                                  self.SaveNameNote]))
-        table = [["Ee(t)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi)", "SN-SNS", "PB?", "Proxy?", "muN(meV)",
-                  "muS(meV)", "t(meV)", "Tl(t)", "Note"],table2 ]
+        table = [["Ee(t)", "B(T)", "Vg(V)", "VB(V)", "Phi(pi)", "SN-SNS", "PB?", "Proxy?", "muN(meV)",
+                  "muS", "t(meV)", "Tl(t)","DF(t)","Delta(ueV)", "Note"],table2 ]
         Mese = PrettyTable(table[0])
         Mese.add_rows(table[1:])
         result = re.search('\n(.*)\n(.*)\n(.*)', str(Mese))
@@ -1305,9 +1307,6 @@ class Kwant_SSeS():
                         TimeSpend)+'/Ave:'+TimeFormat(elapsed_tol/self.GlobalRunCount)+'/run) -------------------------'))
         syst.stdout.flush()
 
-
-
-
     def SaveDatatoOrigin(self,TitleTxt1,xData,xlabel,Plot = 0):
 
 
@@ -1323,15 +1322,33 @@ class Kwant_SSeS():
             if self.GlobalVswpCount == 1:
 
                 self.TXT = TitleTxt1
-                self.Data = xData
-                self.Data_2 = xData
                 self.TXT = np.vstack((self.TXT, TitleTxt2))
-                self.Data = np.vstack((self.Data, self.conductances))
-                self.Data_2 = np.vstack((self.Data_2, self.conductances2))
+                if self.SeriesR != 0:
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("ignore")
+                    self.Data_R = np.vstack((xData, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5))
+                    self.Data_R_2 = np.vstack((xData, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances2)))) / 7.74809173e-5))
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("always")
+                self.Data = np.vstack((xData, self.conductances))
+                self.Data_2 = np.vstack((xData, self.conductances2))
             else:
 
                 self.TXT = np.vstack((self.TXT, TitleTxt1))
                 self.TXT = np.vstack((self.TXT, TitleTxt2))
+                if self.SeriesR != 0:
+                    self.Data_R = np.vstack((self.Data_R, xData))
+                    self.Data_R_2 = np.vstack((self.Data_R_2, xData))
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("ignore")
+                    self.Data_R = np.vstack(
+                        (self.Data_R, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5))
+                    self.Data_R_2 = np.vstack(
+                        (self.Data_R_2, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances2)))) / 7.74809173e-5))
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("always")
+#
+
                 self.Data_2 = np.vstack((self.Data_2, xData))
                 self.Data_2 = np.vstack((self.Data_2, self.conductances2))
                 self.Data = np.vstack((self.Data, xData))
@@ -1339,10 +1356,16 @@ class Kwant_SSeS():
 
             DataTxt = np.vstack((self.TXT.T, self.Data.T))
             Data = pd.DataFrame(DataTxt)
-
+            if self.SeriesR != 0:
+                DataRTxt = np.vstack((self.TXT.T, self.Data_R.T))
+                DataR = pd.DataFrame(DataRTxt)
+                DataR.to_csv(
+                    self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(round(self.SeriesR, 3)) + '.txt',
+                    sep=' ', index=False, header=False)
 
             Data.to_csv(self.OriginFilePath + self.Date +'-'+ self.Time +'.txt',
                         sep = ' ',index=False, header=False)
+
             # print(
             #     'Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time + '.xlsx')
 
@@ -1368,7 +1391,13 @@ class Kwant_SSeS():
 
             DataTxt_2 = np.vstack((self.TXT_2.T, self.Data_2.T))
             Data_2 = pd.DataFrame(DataTxt_2)
-
+            if self.SeriesR != 0:
+                DataRTxt_2 = np.vstack((self.TXT_2.T, self.Data_R_2.T))
+                DataR2 = pd.DataFrame(DataRTxt_2)
+                DataR2.to_csv(
+                    self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                        round(self.SeriesR, 3)) + '_N-Ree+Reh.txt',
+                    sep=' ', index=False, header=False)
 
 
 
@@ -1376,6 +1405,7 @@ class Kwant_SSeS():
             Data_2.to_csv(
                 self.OriginFilePath + self.Date +'-'+ self.Time +'_N-Ree+Reh.txt',
                 sep = ' ', index=False, header=False)
+
             # print(
             #     'Data save to file ' + self.OriginFilePath + self.Date +'-'+ self.Time +'_N-Ree+Reh.txt')
             self.Gen_Conduct_Plot(xData, self.conductances2, xlabel)
@@ -1391,18 +1421,40 @@ class Kwant_SSeS():
             if self.GlobalVswpCount == 1:
 
                 self.TXT = TitleTxt1
-                self.Data = xData
                 self.TXT = np.vstack((self.TXT, TitleTxt2))
-                self.Data = np.vstack((self.Data, self.conductances))
+                self.Data = np.vstack((xData, self.conductances))
+                if self.SeriesR != 0:
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("ignore")
+                    self.Data_R = np.vstack(
+                        (xData, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5))
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("always")
+
             else:
 
                 self.TXT = np.vstack((self.TXT, TitleTxt1))
                 self.TXT = np.vstack((self.TXT, TitleTxt2))
                 self.Data = np.vstack((self.Data, xData))
                 self.Data = np.vstack((self.Data, self.conductances))
+                if self.SeriesR != 0:
+                    self.Data_R = np.vstack((self.Data_R, xData))
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("ignore")
+                    self.Data_R = np.vstack(
+                        (self.Data_R, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5))
+                    if self.BlockWarnings:
+                        warnings.filterwarnings("always")
+
 
             DataTxt = np.vstack((self.TXT.T, self.Data.T))
             Data = pd.DataFrame(DataTxt)
+            if self.SeriesR != 0:
+                DataRTxt = np.vstack((self.TXT.T, self.Data_R.T))
+                DataR = pd.DataFrame(DataRTxt)
+                DataR.to_csv(
+                    self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(round(self.SeriesR, 3)) + '.txt',
+                    sep=' ', index=False, header=False)
 
             Data.to_csv(self.OriginFilePath + self.Date +'-'+ self.Time  + '.txt',
                          sep = ' ',index=False, header=False)
@@ -1413,13 +1465,13 @@ class Kwant_SSeS():
 
                 self.fig.show()
 
-
     def clear_line(self,n=1):
         LINE_UP = '\033[1A'
         LINE_CLEAR = '\x1b[2K'
         for i in range(n):
 
             syst.stdout.write(LINE_UP+LINE_CLEAR)
+
     def ProgressBar(self,TimeTXT,res=2,):
         percentage = np.round((self.GlobalRunCount / self.TotalNrun) * 100,5)
         percentage_rounded = int((self.GlobalRunCount / self.TotalNrun) * 100 / res)
@@ -1439,6 +1491,7 @@ class Kwant_SSeS():
 
         syst.stdout.write(' ' + TimeTXT)
         # syst.stdout.flush()
+
     def list_duplicates_of(self, seq, item):
         start_at = -1
         locs = []
@@ -1459,14 +1512,14 @@ S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
 DavidPot = False
 
-NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M15D-09h02m02s'
+
 RefName = '/mnt/d/OneDrive/Documents/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [4e-3,4.2e-3,4.4e-3]
-mu_SC_list = [4e-3,4.2e-3,4.4e-3]
+mu_N_list = [4.2e-3]
+mu_SC_list = [4.2e-3]
 # E_excited_list = [0.023,0.024]
-E_excited_list = [0.02,0.022,0.024,0.026,0.028,0.03]
-TeV_list = [7e-3,7.5e-3,8e-3,8.5e-3,9e-3]
+E_excited_list = [0.028]
+TeV_list = [7e-3]
 
 # mu_N_list = [1e-3,2e-3]
 # mu_SC_list = [1e-3,2e-3]
@@ -1477,7 +1530,7 @@ TeV_list = [7e-3,7.5e-3,8e-3,8.5e-3,9e-3]
 
 PeriBC_list = [0]
 # TStrength_list = np.round(np.arange(0,2,0.04),5)
-TStrength_list = [0]
+TStrength_list = [1]
 SNjunc_list = ['SN']
 ProximityOn_list = [1]
 
@@ -1497,29 +1550,79 @@ delta_list = [6.5e-4] # in eV
 VGate_shift_list = [0]
 
 #
-# for DELTA in delta_list:
-#     for Vg_s in VGate_shift_list:
-#         B = Kwant_SSeS(NextNanoName=NName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
-#                        V_A=[0,-0.1], TStrength=TStrength_list,
-#                        PeriBC=PeriBC_list, Tev=[8.5e-3],
-#                        E_excited=[0.02], SNjunc=SNjunc_list,
-#                        ProximityOn=ProximityOn_list,BField=[0],
-#                        ShowDensity=False,
-#                        SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV-Phasetest',
-#                        mu_N=mu_N_list, DefectAmp=0,
-#                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
+syst.stdout.flush()
 
-#
-#
+
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
+Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
                        V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
                        PeriBC=PeriBC_list, Tev=TeV_list,
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProximityOn=ProximityOn_list,BField=[0],
-                       ShowDensity=ShowDensity,phi=[np.pi/2],
-                       SaveNameNote='Delta-' + str(DELTA * 1e6) + 'ueV',
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='',SeriesR = 500,
                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
-
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='',SeriesR = 500,
+                       mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-22h42m51s'
+Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='',SeriesR = 500,
+                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='',SeriesR = 500,
+                       mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M25D-03h03m39s'
+Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='',SeriesR = 500,
+                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='',SeriesR = 500,
+                       mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
