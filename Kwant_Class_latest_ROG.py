@@ -1515,8 +1515,8 @@ DavidPot = False
 
 RefName = '/mnt/d/OneDrive/Documents/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [4.2e-3]
-mu_SC_list = [4.2e-3]
+mu_N_list = [4e-3]
+mu_SC_list = [4e-3]
 # E_excited_list = [0.023,0.024]
 E_excited_list = [0.028]
 TeV_list = [7e-3]
@@ -1550,11 +1550,39 @@ delta_list = [6.5e-4] # in eV
 VGate_shift_list = [0]
 
 #
+
+
 syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
 syst.stdout.flush()
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M28D-00h09m17s'
+Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='',SeriesR = 500,
+                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+                       ShowDensity=ShowDensity,phi=[np.pi/4],
+                       SaveNameNote='Defect0.02',SeriesR = 500,
+                       mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
 
 
-NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
+syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
+syst.stdout.flush()
+NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M29D-03h35m53s'
 Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
@@ -1575,54 +1603,30 @@ for DELTA in delta_list:
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
                        ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
                        ShowDensity=ShowDensity,phi=[np.pi/4],
-                       SaveNameNote='',SeriesR = 500,
+                       SaveNameNote='Defect0.02',SeriesR = 500,
                        mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
-NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-22h42m51s'
-Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
-                       ShowDensity=ShowDensity,phi=[np.pi/4],
-                       SaveNameNote='',SeriesR = 500,
-                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
-                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
-                       ShowDensity=ShowDensity,phi=[np.pi/4],
-                       SaveNameNote='',SeriesR = 500,
-                       mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
-                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
-NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M25D-03h03m39s'
-Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
-                       ShowDensity=ShowDensity,phi=[np.pi/4],
-                       SaveNameNote='',SeriesR = 500,
-                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
-                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
-                       ShowDensity=ShowDensity,phi=[np.pi/4],
-                       SaveNameNote='',SeriesR = 500,
-                       mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
-                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+# NName = '/mnt/d/OneDrive/Documents/NN_backup/UpdateSiDopedLayerThickness/2023Y03M25D-03h03m39s'
+# Dict, VgList = SearchFolder(NName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',ylim=(-1600, 2400))
+# for DELTA in delta_list:
+#     for Vg_s in VGate_shift_list:
+#         B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+#                        V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+#                        PeriBC=PeriBC_list, Tev=TeV_list,
+#                        E_excited=E_excited_list, SNjunc=SNjunc_list,
+#                        ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+#                        ShowDensity=ShowDensity,phi=[np.pi/4],
+#                        SaveNameNote='',SeriesR = 500,
+#                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
+#                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
+# for DELTA in delta_list:
+#     for Vg_s in VGate_shift_list:
+#         B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=False, W_g=500, S_g=300, D_2DEG=250,
+#                        V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+#                        PeriBC=PeriBC_list, Tev=TeV_list,
+#                        E_excited=E_excited_list, SNjunc=SNjunc_list,
+#                        ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
+#                        ShowDensity=ShowDensity,phi=[np.pi/4],
+#                        SaveNameNote='',SeriesR = 500,
+#                        mu_N=mu_N_list, DefectAmp=0.02,CombineMu=True,
+#                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg")
