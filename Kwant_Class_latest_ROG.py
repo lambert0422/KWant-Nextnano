@@ -432,22 +432,14 @@ class Kwant_SSeS():
             # alpha^2*m is in J need to /(e*t)
             # # The excitation energy is given in the unit of
             # Ham is the one in the scattering region
-<<<<<<< HEAD
+
             if self.Orbit == False:  # add magntic field effect or not
                 self.Ham = """ 
                                            ((k_x**2+k_y**2)*t(x,y) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y)) + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0) +
                                            EZ(x,y)*kron(sigma_0, sigma_x)/(e) +
                                            alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e) +
                                            (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))
-=======
 
-            if self.Orbit == False:  # add magntic field effect or not
-                self.Ham = """ 
-                                           ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))/t(x,y) + m*alpha**2/(2*e*t(x,y)))*kron(sigma_z, sigma_0) +
-                                           EZ(x,y)*kron(sigma_0, sigma_x)/(e*t(x,y)) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t(x,y)) +
-                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))/t(x,y)
->>>>>>> 42c87a2881935529be661970056d2fc543afaca5
                                       """
             else:
                 # self.Ham = """
@@ -532,33 +524,7 @@ class Kwant_SSeS():
             #                                alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t(x,y))
             #                            """
             #
-=======
-                                           ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))/t(x,y) + m*alpha**2/(2*e*t(x,y)*hbar**2))*kron(sigma_z, sigma_0) +
-                                           EZ(x,y)*kron(sigma_0, sigma_x)/(e*t(x,y)) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t(x,y)) +
-                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))/t(x,y)+
-                                           ((e * (B**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
-                                           (hbar*B*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
-                                           (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_0, sigma_y))/t(x,y)
-                                       """
 
-            self.Ham_l_up_S = """
-                                           ((k_x**2+k_y**2) - (mu_S + V_bias)/t(x,y) + m*alpha**2/(2*e*t(x,y)*hbar**2))*kron(sigma_z, sigma_0) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t(x,y)) +
-                                           (Delta_SC_up*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_up_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))/t(x,y)
-                                       """
-            self.Ham_l_dn_S = """
-                                           ((k_x**2+k_y**2) - mu_S/t(x,y) + m*alpha**2/(2*e*t(x,y)*hbar**2))*kron(sigma_z, sigma_0) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t(x,y))  +
-                                           (Delta_SC_dn*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_dn_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))/t(x,y)
-                                       """
-            self.Ham_l_dn_N = """
-                                           ((k_x**2+k_y**2) - (mu_N - V_ref)/t(x,y) + m*alpha**2/(2*e*t(x,y)*hbar**2))*kron(sigma_z, sigma_0) +
-                                           EZ_fix*kron(sigma_0, sigma_x)/(e*t(x,y)) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e*t(x,y))
-                                       """
-
->>>>>>> 42c87a2881935529be661970056d2fc543afaca5
 
 
         template = kwant.continuum.discretize(self.Ham)
@@ -1616,7 +1582,7 @@ E_excited_list = [0.0005]
 # TeV_list = [1]
 # TeV_T_list = [0.5]
 TeV_list = [7e-3]
-TeV_T_list = [0]
+TeV_T_list = [7e-3]
 # mu_N_list = [1e-3,2e-3]
 # mu_SC_list = [1e-3,2e-3]
 # # E_excited_list = [0.023,0.024]
@@ -1656,11 +1622,7 @@ for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
                        V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
-<<<<<<< HEAD
                        PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
-=======
-                       PeriBC=PeriBC_list, Tev=TeV_list,
->>>>>>> 42c87a2881935529be661970056d2fc543afaca5
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
                        ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
                        ShowDensity=ShowDensity,phi=[np.pi/4],
