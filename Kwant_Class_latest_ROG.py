@@ -176,6 +176,8 @@ class Kwant_SSeS():
     e = 1.60217662e-19  # electron charge
     c = 299792458.0
     hbar = 1.05471817e-34  # J.s # Planck constant
+    epsilon_r = 13.5
+    epsilon_0 = 8.8541878128e-12
     n_2DEG = 2e15  # in m^-2 electron density of 2DEG
 
     # t_cal = 1000*hbar**2/(e*2*m*(a*1e-9)**2)
@@ -245,7 +247,7 @@ class Kwant_SSeS():
                  SNjunc=['SNS'], ProximityOn=[1], delta = 64e-6 , Dict = [], VgList = [],
                  mu_N=0, mu_SC=10e-3, VGate_shift=-0.1, DefectAmp=0.5,SeriesR = 0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,
-                 ShowDensity=False, Swave=False, CombineMu = False, AddOrbitEffect=True, BlockWarnings = True,
+                 ShowDensity=False, Swave=False, CombineTev = True,CombineMu = False, AddOrbitEffect=True, BlockWarnings = True,
                  SwpID = "Vg",Digits=5,PlotbeforeFigures = 20):
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
@@ -261,11 +263,21 @@ class Kwant_SSeS():
         self.SNjunc = SNjunc
         self.PeriBC = PeriBC
         self.ProOn = ProximityOn
-        self.Tev = Tev
-        self.Tev_Tunnel = Tev_Tunnel
+
         self.CombineMu = CombineMu
-        self.muSC = mu_SC
-        self.muN = mu_N
+        self.CombineTev = CombineTev
+        if self.CombineMu == 1:
+            self.Tev = Tev
+            self.Tev_Tunnel = Tev
+        else:
+            self.Tev = Tev
+            self.Tev_Tunnel = Tev_Tunnel
+        if self.CombineMu == 1:
+            self.muSC = mu_SC
+            self.muN = mu_SC
+        else:
+            self.muSC = mu_SC
+            self.muN = mu_N
         self.E_excited = E_excited
         self.PlotbeforeFigures = PlotbeforeFigures
 
@@ -293,6 +305,7 @@ class Kwant_SSeS():
         self.GridFactor = GridFactor
         # Use David method or import potential from Nextnano calculation
         self.DavidPot = DavidPot
+
         if self.DavidPot:
             self.GateSplit = int(GridFactor* S_g / self.a )
             self.GateWidth = int(GridFactor* W_g / self.a)
@@ -364,10 +377,15 @@ class Kwant_SSeS():
     def Upzip(self,a):
         c = []
         e = []
+
         for b in a:
+
             try:
-                for d in b:
-                    e.append(d)
+                if type(b) == str:
+                    e.append(b)
+                else:
+                    for d in b:
+                        e.append(d)
             except:
                 e.append(b)
         c = tuple(e)
@@ -527,8 +545,11 @@ class Kwant_SSeS():
 
 
         template = kwant.continuum.discretize(self.Ham)
-        template_l_up_S = kwant.continuum.discretize(self.Ham_l_up_S)
-        template_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_S)
+        # template_l_up_S = kwant.continuum.discretize(self.Ham_l_up_S)
+        # template_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_S)
+
+        template_l_up_S = kwant.continuum.discretize(self.Ham_l_dn_N)
+        template_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_N)
         template_l_dn_N = kwant.continuum.discretize(self.Ham_l_dn_N)
         # print(template)
         sys = kwant.Builder()
@@ -700,7 +721,10 @@ class Kwant_SSeS():
         plt.title('LDOS')
         plt.axis('off')
         Ax2 = plt.subplot(3, 3, 3)
-        kwant.plotter.map(sys, np.abs(self.Deltamap), ax=Ax2)
+
+        # kwant.plotter.map(sys, np.abs(self.Deltamap), ax=Ax2)
+        pcolor = Ax2.imshow(np.abs(self.SpatialDeltaMap).T)
+
         plt.title('Order Parameter')
         plt.axis('off')
         Ax3 = plt.subplot(3, 3, 4)
@@ -794,6 +818,8 @@ class Kwant_SSeS():
 
         ax7 = plt.subplot(3, 3, 7)
         ax7.plot(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
+        ax7.axhline(y=self.Delta_induced, color='r')
+        ax7.text(x=0,y=self.Delta_induced,s = str(np.round(1e6*self.Delta_induced,3)))
         plt.title('Delta up down cut')
 
         ax8 = plt.subplot(3, 3, 8)
@@ -815,14 +841,24 @@ class Kwant_SSeS():
                         self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +
                           str(self.E)+ ";muN=" + str(self.mu_N)+ ";muSC=" + str(self.mu_SC)+
                           "eV;B=" + str(self.B) + 'T')
-        ax0 = plt.subplot(2, 3, 1)
+        ax0 = plt.subplot(1, 2, 1)
         ax0.plot(x, y, label=" 0 Ohm")
+        if self.SwpID == 'E':
+            # ax0.axvline(x=self.delta, color='r')
+            # ax0.axvline(x=-self.delta, color='r')
+            ax0.axvline(x=self.delta*2, color='b')
+            ax0.axvline(x=-self.delta*2, color='b')
+            ax0.text(x=self.Delta_induced*2, y = 0, s = str(np.round(self.Delta_induced*1e6,3)))
+            # ax0.axvline(x=self.Delta_induced, color='r')
+            # ax0.axvline(x=-self.Delta_induced, color='r')
+            ax0.axvline(x=self.Delta_induced*2, color='b')
+            ax0.axvline(x=-self.Delta_induced*2, color='b')
         if self.ReferenceData != None:
             ax0.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
         ax0.legend()
         plt.xlabel(Xlabel)
         plt.ylabel("G/G0[/(2e^2/h)]")
-        ax1 = plt.subplot(2, 3, 2)
+        ax1 = plt.subplot(1, 2, 2)
         ax1.plot(x, (1 / (500 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
                  label=" 500 Ohm")
         ax1.legend()
@@ -830,38 +866,38 @@ class Kwant_SSeS():
             ax1.plot(self.referdata.Vg1,self.referdata.G1,self.referdata.Vg2,self.referdata.G2)
         plt.xlabel(Xlabel)
         plt.ylabel("G/G0[/(2e^2/h)]")
-        ax2 = plt.subplot(2, 3, 3)
-        ax2.plot(x, (1 / (1000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
-                 label=" 1000 Ohm")
-        if self.ReferenceData != None:
-            ax2.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
-        ax2.legend()
-        plt.xlabel(Xlabel)
-        plt.ylabel("G/G0[/(2e^2/h)]")
-        ax3 = plt.subplot(2, 3, 4)
-        ax3.plot(x, (1 / (3000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
-                 label=" 3000 Ohm")
-        if self.ReferenceData != None:
-            ax3.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
-        ax3.legend()
-        plt.xlabel(Xlabel)
-        plt.ylabel("G/G0[/(2e^2/h)]")
-        ax4 = plt.subplot(2, 3, 5)
-        ax4.plot(x, (1 / (5000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
-                 label=" 5000 Ohm")
-        if self.ReferenceData != None:
-            ax4.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
-        ax4.legend()
-        plt.xlabel(Xlabel)
-        plt.ylabel("G/G0[/(2e^2/h)]")
-        ax5 = plt.subplot(2, 3, 6)
-        ax5.plot(x, (1 / (8000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
-                 label=" 8000 Ohm")
-        if self.ReferenceData != None:
-            ax5.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
-        ax5.legend()
-        plt.xlabel(Xlabel)
-        plt.ylabel("G/G0[/(2e^2/h)]")
+        # ax2 = plt.subplot(2, 3, 3)
+        # ax2.plot(x, (1 / (1000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
+        #          label=" 1000 Ohm")
+        # if self.ReferenceData != None:
+        #     ax2.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
+        # ax2.legend()
+        # plt.xlabel(Xlabel)
+        # plt.ylabel("G/G0[/(2e^2/h)]")
+        # ax3 = plt.subplot(2, 3, 4)
+        # ax3.plot(x, (1 / (3000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
+        #          label=" 3000 Ohm")
+        # if self.ReferenceData != None:
+        #     ax3.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
+        # ax3.legend()
+        # plt.xlabel(Xlabel)
+        # plt.ylabel("G/G0[/(2e^2/h)]")
+        # ax4 = plt.subplot(2, 3, 5)
+        # ax4.plot(x, (1 / (5000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
+        #          label=" 5000 Ohm")
+        # if self.ReferenceData != None:
+        #     ax4.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
+        # ax4.legend()
+        # plt.xlabel(Xlabel)
+        # plt.ylabel("G/G0[/(2e^2/h)]")
+        # ax5 = plt.subplot(2, 3, 6)
+        # ax5.plot(x, (1 / (8000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
+        #          label=" 8000 Ohm")
+        # if self.ReferenceData != None:
+        #     ax5.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
+        # ax5.legend()
+        # plt.xlabel(Xlabel)
+        # plt.ylabel("G/G0[/(2e^2/h)]")
         if self.BlockWarnings:
             warnings.filterwarnings("always")
 
@@ -959,32 +995,35 @@ class Kwant_SSeS():
             self.Vbias_Map = np.zeros((self.L + 1, 2 * self.WSC + self.W + 1))
             self.Tunnel_Map = np.zeros((self.L + 1, 2 * self.WSC + self.W + 1))
     def orderDelta(self, X, Y, Bz, lambdaIn, leadN, PHI0, Bx=0, alphaangle=0):
+                # Theory based on <Controlled finite momentum pairing and spatially
+                # varying order parameter in proximitized HgTe
+                # quantum wells>
 
-                X_m = (X - self.L_r / 2) * 1e-9
-                Y_m = Y * 1e-9
-                X1 = np.linspace(-self.L_r / 2, self.L_r / 2, 10000) * 1e-9  # in m
 
+                X_m = 1e-9*(X - (self.L-1) / 2)*self.a/self.GridFactor
+                Y_m = 1e-9*Y *self.a/self.GridFactor
+                X1 = (self.L_r/10000) * 1e-9*(np.linspace(0,10000,10001)-5000)  # in m
+                W = 1e-9*self.W_r/4
                 PHIJ = PHI0 / (2 * np.pi) + ((-1) ** leadN * X1 * Bz * (self.W_r + self.L_r) * 1e-9) / (
                         4 * np.pi * self.hbar / (2 * self.e))
                 lambda_sp = lambdaIn * np.exp(2 * np.pi * 1j * PHIJ)
-                kF = (2 * np.pi * self.n_2DEG) ** 0.5
+                a_B = self.epsilon_r * self.epsilon_0 * self.hbar**2 / (self.m * self.e**2)
+                kF = (4 * np.pi * self.n_2DEG) ** 0.5/a_B
                 # kF = (2 * np.pi * 1e10) ** 0.5
                 vF = self.hbar * kF / self.m
 
                 Dk = self.gn * self.mu_B * Bx / (self.hbar * vF)
-
+                # Dk = np.pi/(2*W)
                 gamma = Dk * (np.sin(alphaangle) * Y_m + np.cos(alphaangle) * (X_m - X1))
 
-                F = kF * (np.exp(1j * gamma) + np.exp(-1j * gamma)) / (
-                        8 * (np.pi ** 2) * vF * ((X_m - X1) ** 2 + Y_m ** 2))
+                F = (np.exp(1j * gamma) + np.exp(-1j * gamma)) / (
+                        8 * (np.pi ** 2) * self.hbar*self.m * ((X_m - X1) ** 2 + Y_m ** 2))
 
                 ORDER = np.trapz(lambda_sp * F, X1) / (self.Factor)
 
                 # A = abs(ORDER)/lambdaIn
-                if X == 0 and Y == 0:
-                    return 0
-                else:
-                    return ORDER
+
+                return ORDER
 
     def Run_sweep(self):
 
@@ -1001,7 +1040,11 @@ class Kwant_SSeS():
                 if (0 <= x < self.L) and (0 <= y < self.W):
                     DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
             self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.abs(DELTA)
+            # self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
+
             self.Delta_phase_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
+            # self.Delta_induced = np.min(self.Delta_abs_Map)
+
             return DELTA
 
         def Delta_0_prime_dis(x, y):
@@ -1073,9 +1116,15 @@ class Kwant_SSeS():
             return  result # in actual nm
 
         elapsed_tol = 0
-        self.comb_change = list(
-            itertools.product(list(self.SNjunc), list(self.PeriBC), list(self.ProOn), list(self.Tev),
-                              list(self.Tev_Tunnel)))
+        if self.CombineTev:
+            self.comb_change = list(
+                itertools.product(list(self.SNjunc), list(self.PeriBC), list(self.ProOn), zip(list(self.Tev),
+                                  list(self.Tev_Tunnel))))
+            self.comb_change = list(map(self.Upzip, self.comb_change))
+        else:
+            self.comb_change = list(
+                itertools.product(list(self.SNjunc), list(self.PeriBC), list(self.ProOn), list(self.Tev),
+                                  list(self.Tev_Tunnel)))
         syst.stdout.write(
             "\r{0}".format('--------------------------- Start Sweep -----------------------------------'))
         syst.stdout.flush()
@@ -1200,36 +1249,38 @@ class Kwant_SSeS():
                             warnings.filterwarnings("ignore")
                         self.Factor = 1 # correct the proximity effect of order parameter
                         if self.SN == 'SN':
-                            self.Factor = self.orderDelta(int(self.L / 2), 1, self.B, self.delta, 0,
-                                                          self.phi, Bx=0,
-                                                          alphaangle=0) / self.delta
+                            self.Factor = np.abs(self.orderDelta((self.L-1)/2, 1, self.B, self.delta, 0,
+                                                          -self.phi, Bx=0,
+                                                          alphaangle=0) / self.delta)
                         else:
-                            self.Factor = (self.orderDelta(int(self.L / 2), 1, self.B, self.delta, 0,
-                                                           self.phi, Bx=0,
+                            self.Factor = np.abs(self.orderDelta((self.L-1) / 2, 1, self.B, self.delta, 0,
+                                                           -self.phi/2, Bx=0,
                                                            alphaangle=0) + \
-                                           self.orderDelta(int(self.L / 2), self.W - 1, self.B,
-                                                           self.delta, 1, self.phi, Bx=0,
+                                           self.orderDelta((self.L-1) / 2, self.W - 1, self.B,
+                                                           self.delta, 1, self.phi/2, Bx=0,
                                                            alphaangle=0)) / self.delta
                         if self.ProximityOn:
                             for i in range(len(self.XX)):
                                 for j in range(len(self.YY)):
                                     if self.SN == 'SN':
 
-                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j], self.B,
+                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j]+1, self.B,
                                                                                      self.delta, 0,
                                                                                      self.phi, Bx=0,
                                                                                      alphaangle=0)
 
                                     else:
 
-                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j], self.B,
+                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j]+1, self.B,
                                                                                      self.delta, 0,
-                                                                                     self.phi, Bx=0,
+                                                                                     -self.phi/2, Bx=0,
                                                                                      alphaangle=0) + \
-                                                                     self.orderDelta(self.XX[i], self.W - self.YY[j],
+                                                                     self.orderDelta(self.XX[i], self.W - self.YY[j]+1,
                                                                                      self.B,
-                                                                                     self.delta, 1, self.phi, Bx=0,
+                                                                                     self.delta, 1, self.phi/2, Bx=0,
                                                                                      alphaangle=0)
+                            A = np.abs(self.SpatialDeltaMap).T
+
                         if self.BlockWarnings:
                             warnings.filterwarnings("always")
                         if self.DavidPot:
@@ -1267,14 +1318,15 @@ class Kwant_SSeS():
                         warnings.filterwarnings("ignore")
                     SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
                                                             in_leads=[0, 1])
+                    self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
 
-                    if RunCount%30 == 0:
+                    if RunCount%10 == 0:
                         try:
+
                             self.Gen_Site_Plot(sys,params)
                             self.fig.savefig(self.SAVEFILENAME+self.SaveNameNote+'_' + str(VSwp) + "Sites.png")
                             if self.ShowDensity == 1:
                                 self.fig.show()
-
                             self.Gen_Ana_Plot()
                             self.fig.savefig(self.SAVEFILENAME+self.SaveNameNote+'_' + str(VSwp) + "Ana.png")
                             if self.ShowDensity == 1:
@@ -1440,9 +1492,6 @@ class Kwant_SSeS():
 
                 self.fig.show()
 
-
-
-
             TitleTxt2 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_N-Ree+Reh']
 
             if self.GlobalVswpCount == 1:
@@ -1463,9 +1512,6 @@ class Kwant_SSeS():
                     self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
                         round(self.SeriesR, 3)) + '_N-Ree+Reh.txt',
                     sep=' ', index=False, header=False)
-
-
-
 
             Data_2.to_csv(
                 self.OriginFilePath + self.Date +'-'+ self.Time +'_N-Ree+Reh.txt',
@@ -1580,14 +1626,15 @@ DavidPot = False
 
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [4.2e-3]
-mu_SC_list = [4.2e-3]
+mu_N_list = np.round(np.arange(0,50e-3,5e-4),6)
+mu_SC_list = np.round(np.arange(0,50e-3,5e-4),6)
 # E_excited_list = [0.023,0.024]
-E_excited_list = [0]
+# E_excited_list = [0]
+E_excited_list = np.round(np.arange(-5e-3,5e-3,10e-5),6)
 # TeV_list = [1]
 # TeV_T_list = [0.5]
-TeV_list = [7e-3]
-TeV_T_list = [0]
+TeV_list = [5e-3]
+TeV_T_list = [5e-3]
 # mu_N_list = [1e-3,2e-3]
 # mu_SC_list = [1e-3,2e-3]
 # # E_excited_list = [0.023,0.024]
@@ -1597,8 +1644,8 @@ TeV_T_list = [0]
 
 PeriBC_list = [0]
 # TStrength_list = np.round(np.arange(0,2,0.04),5)
-TStrength_list = [1]
-SNjunc_list = ['SN']
+TStrength_list = [0]
+SNjunc_list = ['SNS']
 ProximityOn_list = [1]
 
 lenswp = len(mu_SC_list) * len(mu_N_list) * len(E_excited_list) * len(TeV_list) * len(PeriBC_list) * len(
@@ -1628,12 +1675,12 @@ else:
     NName = ''
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
-        B = Kwant_SSeS(NextNanoName=NName,ReferenceData=RefName, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.03),3), TStrength=TStrength_list,
+        B = Kwant_SSeS(NextNanoName=NName,W_r = 600, DavidPot=True, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=[0], TStrength=TStrength_list,
                        PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
                        ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
                        ShowDensity=ShowDensity,phi=[np.pi/4],
                        SaveNameNote='',SeriesR = 500,
                        mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
-                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1)
+                       mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "E",PlotbeforeFigures=1)
