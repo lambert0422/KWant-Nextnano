@@ -495,6 +495,9 @@ class Kwant_SSeS():
                                            EZ_fix*kron(sigma_0, sigma_x)/e +
                                            alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/e
                                        """
+            self.Ham_l_N_metal = """
+                                                       ((k_x**2+k_y**2)*t(x,y) - (mu_S - V_ref) + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0)
+                                                   """
 
 
             # if self.Orbit == False:  # add magntic field effect or not
@@ -548,8 +551,8 @@ class Kwant_SSeS():
         # template_l_up_S = kwant.continuum.discretize(self.Ham_l_up_S)
         # template_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_S)
 
-        template_l_up_S = kwant.continuum.discretize(self.Ham_l_dn_N)
-        template_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_N)
+        template_l_up_S = kwant.continuum.discretize(self.Ham_l_N_metal)
+        template_l_dn_S = kwant.continuum.discretize(self.Ham_l_N_metal)
         template_l_dn_N = kwant.continuum.discretize(self.Ham_l_dn_N)
         # print(template)
         sys = kwant.Builder()
@@ -1626,15 +1629,15 @@ DavidPot = False
 
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = np.round(np.arange(0,50e-3,5e-4),6)
-mu_SC_list = np.round(np.arange(0,50e-3,5e-4),6)
+mu_N_list = [10e-3]
+mu_SC_list = [30e-3]
 # E_excited_list = [0.023,0.024]
 # E_excited_list = [0]
 E_excited_list = np.round(np.arange(-5e-3,5e-3,10e-5),6)
 # TeV_list = [1]
 # TeV_T_list = [0.5]
-TeV_list = [5e-3]
-TeV_T_list = [5e-3]
+TeV_list = [7e-3]
+TeV_T_list = [7e-3]
 # mu_N_list = [1e-3,2e-3]
 # mu_SC_list = [1e-3,2e-3]
 # # E_excited_list = [0.023,0.024]
@@ -1682,5 +1685,5 @@ for DELTA in delta_list:
                        ProximityOn=ProximityOn_list,BField=[0],Dict = Dict, VgList = VgList,
                        ShowDensity=ShowDensity,phi=[np.pi/4],
                        SaveNameNote='',SeriesR = 500,
-                       mu_N=mu_N_list, DefectAmp=0,CombineMu=True,
+                       mu_N=mu_N_list, DefectAmp=0,CombineMu=False,
                        mu_SC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "E",PlotbeforeFigures=1)
