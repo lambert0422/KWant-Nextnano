@@ -23,7 +23,7 @@ mainmenu () {
 	    read -p "Type in Commit message: " Message
 	    git commit -m "$Message"
 	    read -p "Push?[1Y/2N]: " PushYN
-	    if [ "$APushYN" = "1" ]; then
+	    if [ "$PushYN" = "1" ]; then
 		git push
 	    fi
 
