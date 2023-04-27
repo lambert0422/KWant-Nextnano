@@ -278,9 +278,9 @@ class Kwant_SSeS():
     def __init__(self, DavidPot=False, GridFactor=1, W_g=300, S_g=400,
                  D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
                  BField=[0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
-                 TStrength=[0], TunnelLength=3, phi=[np.pi / 4], Vbias=[0], PeriBC=[0],
-                 SNjunc=['SNS'], ProximityOn=[1], delta=64e-6,
-                 mu_N=0, mu_SC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, SeriesR=0,
+                 TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
+                 SNjunc=['SNS'], ProOn=[1], delta=64e-6,
+                 muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
                  BlockWarnings=True,
@@ -296,35 +296,31 @@ class Kwant_SSeS():
         self.delta = delta
         self.Data = []
         self.TXT = []
-        self.SNjunc = SNjunc
-        self.PeriBC = PeriBC
-        self.ProOn = ProximityOn
+
+
+
         self.TeV_Normal = TeV_Normal
         self.CombineMu = CombineMu
         self.CombineTev = CombineTev
         if self.CombineMu == 1:
-            self.Tev = Tev
-            self.Tev_Tunnel = Tev
-        else:
-            self.Tev = Tev
-            self.Tev_Tunnel = Tev_Tunnel
+
+            Tev_Tunnel = Tev
+
         if self.CombineMu == 1:
-            self.muSC = mu_SC
-            self.muN = mu_SC
-        else:
-            self.muSC = mu_SC
-            self.muN = mu_N
-        self.E_excited = E_excited
+
+            muN = muSC
+
+
         self.PlotbeforeFigures = PlotbeforeFigures
 
-        self.BField = BField
-        self.V_A = np.round(V_A, Digits)
+
+        V_A = np.round(V_A, Digits)
         self.Digits = Digits
-        self.Phase = phi  # phase difference between two SC
+       # phase difference between two SC
         self.SaveNameNote = SaveNameNote
         # Tmev = [self.t_cal]
         self.DefectAmp = DefectAmp
-        self.TStrength = TStrength
+
 
         self.fileEnd = '-Kwt'
         self.SwpID = SwpID
@@ -355,7 +351,7 @@ class Kwant_SSeS():
                 # self.Dict, self.VgList = SearchFolder(NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',
                 #                                       ylim=(-1600, 2400))
 
-                self.Dict, self.VgList = SearchFolder(self.NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',Vg_target=self.V_A, ylim=(-1600, 2400))
+                self.Dict, self.VgList = SearchFolder(self.NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',Vg_target=V_A, ylim=(-1600, 2400))
 
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
         self.W_r = W_r
@@ -368,11 +364,57 @@ class Kwant_SSeS():
         self.Time = now.strftime("%Hh%Mm%Ss")
         self.XX = np.arange(0, self.L)
         self.YY = np.arange(0, self.W)
-        self.Vbias_List = Vbias
-        self.T = T
+
+        self.Temp = T
+
+        self.Combine_Change(SNjunc,PeriBC,ProOn,Tev,Tev_Tunnel)
+
+        if self.SwpID == "Vbias":
+            self.Combine_Still(muSC,muN,E_excited,V_A,TStrength,BField,Phase)
+            self.VarSwp = Vbias_List
+            self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(Vbias_List)
+
+        elif self.SwpID == "Vg":
+            self.Combine_Still(muSC, muN, E_excited, TStrength, BField,Vbias_List, Phase)
+            self.VarSwp = V_A
+            self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(V_A)
+
+        elif self.SwpID == "E":
+            self.Combine_Still(muSC, muN, V_A, TStrength, BField, Vbias_List, Phase)
+            self.VarSwp = E_excited
+            self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len( E_excited)
+
+        elif self.SwpID == "B":
+            self.Combine_Still(muSC, muN, E_excited, V_A,TStrength, Vbias_List, Phase)
+            self.VarSwp = BField
+            self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(BField)
+
+        elif self.SwpID == "Phase":
+            self.Combine_Still(muSC, muN, E_excited,V_A, TStrength, Vbias_List, BField)
+            self.VarSwp = Phase
+            self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(Phase)
+        if self.CombineMu:
+            self.comb_still = list(map(self.Upzip, self.comb_still))
 
         self.Run_sweep()
+    def Combine_Change(self,SNjunc,PeriBC,ProOn,Tev,Tev_Tunnel):
+        if self.CombineTev:
+            self.comb_change = list(
+                itertools.product(list(SNjunc), list(PeriBC), list(ProOn), zip(list(Tev),list(Tev_Tunnel))))
+            self.comb_change = list(map(self.Upzip, self.comb_change))
+        else:
+            self.comb_change = list(
+                itertools.product(list(SNjunc), list(PeriBC), list(ProOn), list(Tev),list(Tev_Tunnel)))
 
+    def Combine_Still(self,V1,V2,V3,V4,V5,V6,V7):
+        if self.CombineMu:
+            self.comb_still = list(
+                itertools.product(zip(list(V1), list(V2)), list(V3), list(V4),
+                                  list(V5), list(V6), list(V7)))
+        else:
+            self.comb_still = list(
+                itertools.product(list(V1), list(V2), list(V3), list(V4),
+                                  list(V5), list(V6), list(V7)))
     def GetReferenceData(self, Path):
         self.referdata = pd.read_excel(Path)
 
@@ -382,7 +424,7 @@ class Kwant_SSeS():
         ans = np.zeros(En.size, dtype=complex)
 
         lim = 500
-        if self.T == 0:
+        if self.Temp == 0:
             if np.real(En - mu) > 0:
                 ans = 0
             elif np.real(En - mu) < 0:
@@ -390,13 +432,13 @@ class Kwant_SSeS():
             else:
                 ans = 0.5
         else:
-            if np.real(En - mu) / (self.kB * self.T) > lim:
+            if np.real(En - mu) / (self.kB * self.Temp) > lim:
                 ans = 0
-            elif np.real(En - mu) / (self.kB * self.T) < -lim:
+            elif np.real(En - mu) / (self.kB * self.Temp) < -lim:
                 ans = 1
             else:
-                ans = 1 / (np.exp(np.real(En[(np.real(En - mu) / (self.kB * self.T) <= lim) & (
-                        np.real(En - mu) / (self.kB * self.T) >= -lim)] - mu) / (self.kB * self.T)) + 1)
+                ans = 1 / (np.exp(np.real(En[(np.real(En - mu) / (self.kB * self.Temp) <= lim) & (
+                        np.real(En - mu) / (self.kB * self.Temp) >= -lim)] - mu) / (self.kB * self.Temp)) + 1)
             # ans = 1 / (np.exp((En - mu) / (kB * T)) + 1)
         return ans
 
@@ -646,9 +688,9 @@ class Kwant_SSeS():
         # Ans = ((A[:, e_up] * np.conj(A[:, h_down]) + A[:, e_down] * np.conj(A[:, h_up])) * np.tanh(
         #     energy * t * e / (2 * kB * T))).sum(axis=0)
         Ans = ((A[:, e_up] * np.conj(A[:, h_down]) + A[:, e_down] * np.conj(A[:, h_up])) * np.tanh(
-            self.E * self.t * self.e / (2 * self.kB * self.T))).sum(axis=0) + \
+            self.E * self.t * self.e / (2 * self.kB * self.Temp))).sum(axis=0) + \
               ((A2[:, e_up] * np.conj(A2[:, h_down]) + A2[:, e_down] * np.conj(A2[:, h_up])) * np.tanh(
-                  self.E * self.t * self.e / (2 * self.kB * self.T))).sum(axis=0)
+                  self.E * self.t * self.e / (2 * self.kB * self.Temp))).sum(axis=0)
         self.d = (abs(wf(lead_nr)) ** 2).sum(axis=0)
         self.Deltamap = Ans
 
@@ -1167,106 +1209,36 @@ class Kwant_SSeS():
             return result  # in actual nm
 
         elapsed_tol = 0
-        if self.CombineTev:
-            self.comb_change = list(
-                itertools.product(list(self.SNjunc), list(self.PeriBC), list(self.ProOn), zip(list(self.Tev),
-                                                                                              list(self.Tev_Tunnel))))
-            self.comb_change = list(map(self.Upzip, self.comb_change))
-        else:
-            self.comb_change = list(
-                itertools.product(list(self.SNjunc), list(self.PeriBC), list(self.ProOn), list(self.Tev),
-                                  list(self.Tev_Tunnel)))
+
         syst.stdout.write(
             "\r{0}".format('--------------------------- Start Sweep -----------------------------------'))
         syst.stdout.flush()
         # print('--------------------------- Start Sweep -----------------------------------')
         for self.SN, self.PB, self.ProximityOn, self.t, self.t_Tunnel in self.comb_change:
-            if ~self.TeV_Normal:
-                self.E_excited = [x * self.t for x in self.E_excited]
+
             sys = self.make_system()
             self.DefOutputMap()
             self.Defect_Map = self.GaussianDefect(FWHM=2)
 
-            if self.SwpID == "Vbias":
-                if self.CombineMu:
-                    self.comb_still = list(
-                        itertools.product(zip(list(self.muSC), list(self.muN)), list(self.E_excited), list(self.V_A),
-                                          list(self.TStrength),
-                                          list(self.BField), list(self.Phase)))
-                else:
-                    self.comb_still = list(
-                        itertools.product(list(self.muSC), list(self.muN), list(self.E_excited), list(self.V_A),
-                                          list(self.TStrength),
-                                          list(self.BField), list(self.Phase)))
 
-                self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(self.Vbias_List)
-            elif self.SwpID == "Vg":
-                if self.CombineMu:
-                    self.comb_still = list(
-                        itertools.product(zip(list(self.muSC), list(self.muN)), list(self.E_excited),
-                                          list(self.TStrength),
-                                          list(self.BField), list(self.Vbias_List), list(self.Phase)))
-                else:
-                    self.comb_still = list(
-                        itertools.product(list(self.muSC), list(self.muN), list(self.E_excited), list(self.TStrength),
-                                          list(self.BField), list(self.Vbias_List), list(self.Phase)))
 
-                self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(self.V_A)
-            elif self.SwpID == "E":
-                if self.CombineMu:
-                    self.comb_still = list(
-                        itertools.product(zip(list(self.muSC), list(self.muN)), list(self.V_A), list(self.TStrength),
-                                          list(self.BField), list(self.Vbias_List), list(self.Phase)))
-                else:
-                    self.comb_still = list(
-                        itertools.product(list(self.muSC), list(self.muN), list(self.V_A), list(self.TStrength),
-                                          list(self.BField), list(self.Vbias_List), list(self.Phase)))
 
-                self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(self.E_excited)
-            elif self.SwpID == "B":
-                if self.CombineMu:
-                    self.comb_still = list(
-                        itertools.product(zip(list(self.muSC), list(self.muN)), list(self.E_excited), list(self.V_A),
-                                          list(self.TStrength),
-                                          list(self.Vbias_List), list(self.Phase)))
-                else:
-                    self.comb_still = list(
-                        itertools.product(list(self.muSC), list(self.muN), list(self.E_excited), list(self.V_A),
-                                          list(self.TStrength),
-                                          list(self.Vbias_List), list(self.Phase)))
-
-                self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(self.BField)
-            elif self.SwpID == "Phase":
-                if self.CombineMu:
-                    self.comb_still = list(
-                        itertools.product(zip(list(self.muSC), list(self.muN)), list(self.E_excited), list(self.V_A),
-                                          list(self.TStrength),
-                                          list(self.Vbias_List), list(self.BField)))
-                else:
-                    self.comb_still = list(
-                        itertools.product(list(self.muSC), list(self.muN), list(self.E_excited), list(self.V_A),
-                                          list(self.TStrength),
-                                          list(self.Vbias_List), list(self.BField)))
-                self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(self.Phase)
-
-            if self.CombineMu:
-                self.comb_still = list(map(self.Upzip, self.comb_still))
             for Var1, Var2, Var3, Var4, Var5, Var6, Var7 in self.comb_still:
                 if self.SwpID == "Vbias":
                     self.mu_SC, self.mu_N, self.E, self.V_Applied, self.TunnelStrength, self.B, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
-                    VarSwp = self.Vbias_List
+
                 elif self.SwpID == "Vg":
                     self.mu_SC, self.mu_N, self.E, self.TunnelStrength, self.B, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
-                    VarSwp = self.V_A
+
                 elif self.SwpID == "E":
                     self.mu_SC, self.mu_N, self.V_Applied, self.TunnelStrength, self.B, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
-                    VarSwp = self.E_excited
+
                 elif self.SwpID == "B":
                     self.mu_SC, self.mu_N, self.E, self.V_Applied, self.TunnelStrength, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
-                    VarSwp = self.BField
+
                 elif self.SwpID == "Phase":
                     self.mu_SC, self.mu_N, self.E, self.V_Applied, self.TunnelStrength, self.Vbias, self.B = Var1, Var2, Var3, Var4, Var5, Var6, Var7
-                    VarSwp = self.Phase
+
 
                 self.GammaTunnel = self.TunnelStrength
                 self.mu_B = self.e * self.hbar / (2 * self.me)
@@ -1293,19 +1265,31 @@ class Kwant_SSeS():
                 else:
                     V_ref_dis = 0
 
-                for VSwp in VarSwp:
+                if self.DavidPot:
+                    self.DavidPotential()
+                else:
+                    Index = self.VgList.index(self.V_Applied)
+                    self.u_sl = self.Dict[Index]
+
+                for VSwp in self.VarSwp:
                     TimeBeforeEverySwp = time.time()
                     if self.SwpID == "Vbias":
                         self.Vbias = VSwp
                     elif self.SwpID == "Vg":
                         self.V_Applied = VSwp
+                        if self.DavidPot:
+                            self.DavidPotential()
+                        else:
+                            Index = self.VgList.index(self.V_Applied)
+                            self.u_sl = self.Dict[Index]
                     elif self.SwpID == "E":
                         self.E = VSwp
                     elif self.SwpID == "B":
                         self.B = VSwp
                     elif self.SwpID == "Phase":
                         self.phi = VSwp
-
+                    if ~self.TeV_Normal:
+                        self.E = self.E * self.t
                     self.VStr = str(round(self.V_Applied, self.Digits))
                     self.GlobalRunCount = self.GlobalRunCount + 1
                     RunCount = RunCount + 1
@@ -1349,18 +1333,13 @@ class Kwant_SSeS():
                                                                                      self.B,
                                                                                      self.delta, 1, self.phi / 2, Bx=0,
                                                                                      alphaangle=0)
-                            A = np.abs(self.SpatialDeltaMap).T
+                            # A = np.abs(self.SpatialDeltaMap).T
 
                         if self.BlockWarnings:
                             warnings.filterwarnings("always")
 
 
-                    if self.DavidPot:
-                        self.DavidPotential()
-                    else:
 
-                        Index = self.VgList.index(self.V_Applied)
-                        self.u_sl = self.Dict[Index]
 
 
 
@@ -1376,6 +1355,7 @@ class Kwant_SSeS():
                                   Delta_SC_up_prime=self.delta * np.exp(1j * self.phi / 2),
                                   Delta_SC_dn_prime=self.delta * np.exp(-1j * self.phi / 2),
                                   B=self.B, Y_rl=Y_rl_dis, c=self.c)
+
                     if self.BlockWarnings:
                         warnings.filterwarnings("ignore")
                     SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
@@ -1443,42 +1423,43 @@ class Kwant_SSeS():
                 # print('\n',end ="")
                 # syst.stdout.write("\r{0}".format('\n'))
                 # syst.stdout.flush()
+                xData = self.VarSwp
                 if self.SwpID == "Vbias":
                     TitleTxt1 = ["Vb", "V", "Bias_Voltage"]
-                    xData = self.Vbias_List
+
                     if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='Vb (V)', Plot=1)
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vb (V)', Plot=1)
                     else:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='Vb (V)')
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vb (V)')
                 elif self.SwpID == "Vg":
-                    xData = self.V_A
+
                     TitleTxt1 = ["Vg", "V", "Bias"]
 
                     if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='Vg (V)', Plot=1)
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vg (V)', Plot=1)
                     else:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='Vg (V)')
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vg (V)')
                 elif self.SwpID == "E":
                     TitleTxt1 = ["E", "eV", "Excitation_Energy"]
-                    xData = self.E_excited
+
                     if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='E (eV)', Plot=1)
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='E (eV)', Plot=1)
                     else:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='E (eV)')
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='E (eV)')
                 elif self.SwpID == "B":
                     TitleTxt1 = ["B", "T", "Magnetic_Field"]
-                    xData = self.BField
+
                     if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='B (T)', Plot=1)
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='B (T)', Plot=1)
                     else:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='B (T)')
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='B (T)')
                 elif self.SwpID == "Phase":
                     TitleTxt1 = ["Theta", "rad", "Phase"]
-                    xData = self.Phase
+
                     if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='Phase (rad)', Plot=1)
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Phase (rad)', Plot=1)
                     else:
-                        self.SaveDatatoOrigin(TitleTxt1, xData, xlabel='Phase (rad)')
+                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Phase (rad)')
 
         # print('---------------------- All Finished (Total Time:'+TimeFormat(
         #                 TimeSpend)+') ----------------------')
