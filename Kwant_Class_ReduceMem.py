@@ -1264,12 +1264,12 @@ class Kwant_SSeS():
                     V_ref_dis = self.u_sl_ref_2DEG
                 else:
                     V_ref_dis = 0
-
-                if self.DavidPot:
-                    self.DavidPotential()
-                else:
-                    Index = self.VgList.index(self.V_Applied)
-                    self.u_sl = self.Dict[Index]
+                if self.SwpID != 'Vg':
+                    if self.DavidPot:
+                        self.DavidPotential()
+                    else:
+                        Index = self.VgList.index(self.V_Applied)
+                        self.u_sl = self.Dict[Index]
 
                 for VSwp in self.VarSwp:
                     TimeBeforeEverySwp = time.time()
