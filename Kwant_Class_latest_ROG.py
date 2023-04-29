@@ -247,7 +247,7 @@ class Kwant_SSeS():
                  SNjunc=['SNS'], ProximityOn=[1], delta = 64e-6 , Dict = [], VgList = [],
                  mu_N=0, mu_SC=10e-3, VGate_shift=-0.1, DefectAmp=0.5,SeriesR = 0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,
-                 ShowDensity=False, Swave=False, CombineTev = True,CombineMu = False, AddOrbitEffect=True, BlockWarnings = True,
+                 ShowDensity=False, Swave=False,TeV_Normal=True, CombineTev = True,CombineMu = False, AddOrbitEffect=True, BlockWarnings = True,
                  SwpID = "Vg",Digits=5,PlotbeforeFigures = 20):
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
@@ -263,7 +263,7 @@ class Kwant_SSeS():
         self.SNjunc = SNjunc
         self.PeriBC = PeriBC
         self.ProOn = ProximityOn
-
+        self.TeV_Normal = TeV_Normal
         self.CombineMu = CombineMu
         self.CombineTev = CombineTev
         if self.CombineMu == 1:
@@ -450,13 +450,18 @@ class Kwant_SSeS():
             # alpha^2*m is in J need to /(e*t)
             # # The excitation energy is given in the unit of
             # Ham is the one in the scattering region
-
+            TeV_N_Txt = ""
+            TeV_NN_Txt = ""
+            if self.TeV_Normal:
+                TeV_N_Txt = "/t(x,y)"
+            else:
+                TeV_NN_Txt = "*t(x,y)"
             if self.Orbit == False:  # add magntic field effect or not
                 self.Ham = """ 
-                                           ((k_x**2+k_y**2)*t(x,y) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y)) + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0) +
-                                           EZ(x,y)*kron(sigma_0, sigma_x)/(e) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/(e) +
-                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))
+                                           ((k_x**2+k_y**2)"""+ TeV_NN_Txt +""" - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))"""+ TeV_N_Txt +""" + (m*alpha**2/(2*e*hbar**2))"""+ TeV_N_Txt +""")*kron(sigma_z, sigma_0) +
+                                           (EZ(x,y)/e)*kron(sigma_0, sigma_x)"""+ TeV_N_Txt +""" +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)"""+ TeV_N_Txt +""" +
+                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))"""+ TeV_N_Txt +"""
 
                                       """
             else:
@@ -471,33 +476,33 @@ class Kwant_SSeS():
                 #                                 """
                 # make sure it is in eV /t
                 self.Ham = """
-                                           ((k_x**2+k_y**2)*t(x,y) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y)) + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0) +
-                                           EZ(x,y)*kron(sigma_0, sigma_x)/e +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/e +
-                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))+
+                                           ((k_x**2+k_y**2)"""+ TeV_NN_Txt +""" - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))"""+ TeV_N_Txt +""" + (m*alpha**2/(2*e*hbar**2))"""+ TeV_N_Txt +""")*kron(sigma_z, sigma_0) +
+                                           (EZ(x,y)/e)*kron(sigma_0, sigma_x)"""+ TeV_N_Txt +""" +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)"""+ TeV_N_Txt +""" +
+                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))"""+ TeV_N_Txt +"""+
                                            ((e * (B**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
                                            (hbar*B*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
-                                           (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_0, sigma_y))
+                                           (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_0, sigma_y))"""+ TeV_N_Txt +"""
                                        """
 
             self.Ham_l_up_S = """
-                                           ((k_x**2+k_y**2)*t(x,y) - (mu_S + V_bias) + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/e +
-                                           (Delta_SC_up*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_up_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))
+                                           ((k_x**2+k_y**2)"""+ TeV_NN_Txt +""" - (mu_S + V_bias)"""+ TeV_N_Txt +""" + (m*alpha**2/(2*e*hbar**2))"""+ TeV_N_Txt +""")*kron(sigma_z, sigma_0) +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)"""+ TeV_N_Txt +""" +
+                                           (Delta_SC_up*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_up_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))"""+ TeV_N_Txt +"""
                                        """
             self.Ham_l_dn_S = """
-                                           ((k_x**2+k_y**2)*t(x,y) - mu_S + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0) +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/e  +
-                                           (Delta_SC_dn*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_dn_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))
+                                           ((k_x**2+k_y**2)"""+ TeV_NN_Txt +""" - mu_S + (m*alpha**2/(2*e*hbar**2))"""+ TeV_N_Txt +""")*kron(sigma_z, sigma_0) +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)"""+ TeV_N_Txt +"""  +
+                                           (Delta_SC_dn*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_dn_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))"""+ TeV_N_Txt +"""
                                        """
             self.Ham_l_dn_N = """
-                                           ((k_x**2+k_y**2)*t(x,y) - (mu_N - V_ref) + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0) +
-                                           EZ_fix*kron(sigma_0, sigma_x)/e +
-                                           alpha*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)/e
+                                           ((k_x**2+k_y**2)"""+ TeV_NN_Txt +""" - (mu_N - V_ref)"""+ TeV_N_Txt +""" + (m*alpha**2/(2*e*hbar**2))"""+ TeV_N_Txt +""")*kron(sigma_z, sigma_0) +
+                                           (EZ_fix/e)*kron(sigma_0, sigma_x)"""+ TeV_N_Txt +""" +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)"""+ TeV_N_Txt +"""
                                        """
             self.Ham_l_N_metal = """
-                                                       ((k_x**2+k_y**2)*t(x,y) - (mu_S - V_ref) + m*alpha**2/(2*e*hbar**2))*kron(sigma_z, sigma_0)
-                                                   """
+                                           ((k_x**2+k_y**2)"""+ TeV_NN_Txt +""" - (mu_S - V_ref)"""+ TeV_N_Txt +""" + (m*alpha**2/(2*e*hbar**2))"""+ TeV_N_Txt +""")*kron(sigma_z, sigma_0)
+                                 """
 
 
             # if self.Orbit == False:  # add magntic field effect or not
