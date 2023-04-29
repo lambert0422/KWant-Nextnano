@@ -1,7 +1,7 @@
 import itertools
 import numpy as np
 import sys as syst
-import Kwant_Class_latest_ROG as KC
+import Kwant_Class_ReduceMem as KC
 
 W_g_list = [100, 200, 300, 400, 500, 600]
 S_g_list = [200, 300, 400, 500, 600]
@@ -50,19 +50,17 @@ delta_list = [6.5e-4] # in eV
 # delta_list = [0.1] # in eV
 VGate_shift_list = [0]
 
-#
-syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
-syst.stdout.flush()
+
 
 if DavidPot:
-    Dict, VgList = [], []
+  
     NName = ''
 else:
     NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
-    ccccccccccc
+   
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
-        E_excited_list = np.arange(-20*DELTA,20*DELTA, 20*DELTA/100)
+        E_excited_list = np.arange(-10*DELTA,10*DELTA, 20*DELTA/100)
 
         B = KC.Kwant_SSeS(NextNanoName=NName,W_r = 600, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
                        V_A=[0], TStrength=TStrength_list,
