@@ -865,10 +865,12 @@ class Kwant_SSeS():
         self.fig = plt.figure(figsize=(14, 11))
         # plt.subplots_adjust(left=0.125, bottom=0.125, right=0.15, top=0.5, wspace=0.2, hspace=0.2)
 
-        self.fig.suptitle(self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + str(
-            self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +
-                          str(self.E) + ";muN=" + str(self.mu_N) + ";muSC=" + str(self.mu_SC) +
-                          "eV;B=" + str(self.B) + 'T')
+        # self.fig.suptitle(self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + str(
+        #     self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +
+        #                   str(self.E) + ";muN=" + str(self.mu_N) + ";muSC=" + str(self.mu_SC) +
+        #                   "eV;B=" + str(self.B) + 'T')
+        self.fig.suptitle(self.MeseTitle+"\n"+self.MeseValue)
+        # self.fig.suptitle("\r{0}".format(self.MeseTitle) + "\n" + "\r{0}".format(self.MeseValue))
 
         cmap = kwant._common.lazy_import('_plotter')._colormaps.kwant_red
         ax0 = plt.subplot(3, 3, 1)
@@ -928,10 +930,13 @@ class Kwant_SSeS():
         if self.BlockWarnings:
             warnings.filterwarnings("ignore")
         self.fig = plt.figure(figsize=(14, 11))
-        self.fig.suptitle(self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + str(
-            self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +
-                          str(self.E) + ";muN=" + str(self.mu_N) + ";muSC=" + str(self.mu_SC) +
-                          "eV;B=" + str(self.B) + 'T')
+        # self.fig.suptitle(self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + str(
+        #     self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +
+        #                   str(self.E) + ";muN=" + str(self.mu_N) + ";muSC=" + str(self.mu_SC) +
+        #                   "eV;B=" + str(self.B) + 'T')
+        self.fig.suptitle(self.MeseTitle + "\n" + self.MeseValue)
+        # self.fig.suptitle("\r{0}".format(self.MeseTitle) + "\n" + "\r{0}".format(self.MeseValue))
+
         ax0 = plt.subplot(1, 2, 1)
         ax0.plot(x, y, label=" 0 Ohm")
         if self.SwpID == 'E':
