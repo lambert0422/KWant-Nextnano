@@ -1293,7 +1293,7 @@ class Kwant_SSeS():
                         self.B = VSwp
                     elif self.SwpID == "Phase":
                         self.phi = VSwp
-                    if ~self.TeV_Normal:
+                    if not self.TeV_Normal:
                         self.E = self.E * self.t
                     self.VStr = str(round(self.V_Applied, self.Digits))
                     self.GlobalRunCount = self.GlobalRunCount + 1
