@@ -45,7 +45,7 @@ else:
 
 # np.round(np.arange(0.5,-1.2,-0.01),3),
 delta_list = [6.5e-4] # in eV
-delta_list = [6.5e-3,6.5e-4,6.5e-5] # in eV
+delta_list = [6.5e-5] # in eV
 # delta_list = [6.4e-6]
 # delta_list = [0.1] # in eV
 VGate_shift_list = [0]
@@ -61,7 +61,7 @@ else:
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         E_excited_list = np.arange(-8*DELTA,8*DELTA, 8*DELTA/100)
-        B = KC.Kwant_SSeS(NextNanoName=NName, W_r=400, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+        B = KC.Kwant_SSeS(NextNanoName=NName, W_r=1000, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
                           V_A=[0], TStrength=TStrength_list,
                           PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
@@ -70,7 +70,7 @@ for DELTA in delta_list:
                           SaveNameNote='', SeriesR=500,TeV_Normal=True,
                           muN=mu_N_list, DefectAmp=0, CombineMu=False, CombineTev=True,
                           muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1)
-        B = KC.Kwant_SSeS(NextNanoName=NName,W_r = 600, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+        B = KC.Kwant_SSeS(NextNanoName=NName,W_r = 1000, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
                        V_A=[0], TStrength=TStrength_list,
                        PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
