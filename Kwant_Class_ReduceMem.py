@@ -56,9 +56,6 @@ def savedata(file_in,init,initdata = None,newcol = None):
             writer = csv.writer(outfile, delimiter='\t')
 
             for i, row in enumerate(reader):
-                new_data = newcol[i]
-                row += new_data
-
                 writer.writerow(row)
 def clear():
     # for windows the name is 'nt'
@@ -1431,40 +1428,19 @@ class Kwant_SSeS():
                 xData = self.VarSwp
                 if self.SwpID == "Vbias":
                     TitleTxt1 = ["Vb", "V", "Bias_Voltage"]
-
-                    if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vb (V)', Plot=1)
-                    else:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vb (V)')
                 elif self.SwpID == "Vg":
-
                     TitleTxt1 = ["Vg", "V", "Bias"]
-
-                    if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vg (V)', Plot=1)
-                    else:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Vg (V)')
                 elif self.SwpID == "E":
                     TitleTxt1 = ["E", "eV", "Excitation_Energy"]
-
-                    if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='E (eV)', Plot=1)
-                    else:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='E (eV)')
                 elif self.SwpID == "B":
                     TitleTxt1 = ["B", "T", "Magnetic_Field"]
-
-                    if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='B (T)', Plot=1)
-                    else:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='B (T)')
                 elif self.SwpID == "Phase":
                     TitleTxt1 = ["Theta", "rad", "Phase"]
 
-                    if self.GlobalVswpCount % self.PlotbeforeFigures == 0:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Phase (rad)', Plot=1)
-                    else:
-                        self.SaveDatatoOrigin(TitleTxt1, self.VarSwp, xlabel='Phase (rad)')
+                if self.GlobalVswpCount and self.PlotbeforeFigures == 0:
+                    self.SaveDatatoOrigin(TitleTxt1, Plot=1)
+                else:
+                    self.SaveDatatoOrigin(TitleTxt1)
 
         # print('---------------------- All Finished (Total Time:'+TimeFormat(
         #                 TimeSpend)+') ----------------------')
@@ -1472,7 +1448,7 @@ class Kwant_SSeS():
             TimeSpend) + '/Ave:' + TimeFormat(elapsed_tol / self.GlobalRunCount) + '/run) -------------------------'))
         syst.stdout.flush()
 
-    def SaveDatatoOrigin(self, TitleTxtX, xData, xlabel, Plot=0):
+    def SaveDatatoOrigin(self, TitleTxtX, Plot=0):
 
 
         DataState = pd.DataFrame(self.SAVENOTE)
@@ -1481,26 +1457,32 @@ class Kwant_SSeS():
             index=False, header=False)
         TitleTxtY1 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_Conductance']
 
-        Data = [list(a) for a in zip(TitleTxtX + list(xData), TitleTxtY1 + list(self.conductances))]
+        Data = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY1 + list(self.conductances))]
         if self.SeriesR != 0:
             if self.BlockWarnings:
                 warnings.filterwarnings("ignore")
             D_R = (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5
             if self.BlockWarnings:
                 warnings.filterwarnings("always")
-            Data_R = [list(a) for a in zip(TitleTxtX + list(xData), TitleTxtY1 + list(D_R))]
+            Data_R = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY1 + list(D_R))]
+
+
         if self.GlobalVswpCount == 1:
             savedata(self.OriginFilePath + self.Date + '-' + self.Time + '.txt',
                      init=True, initdata=Data)
-            savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
-                round(self.SeriesR, 3)) + '.txt', init=True, initdata=Data_R)
+            if self.SeriesR != 0:
+                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                    round(self.SeriesR, 3)) + '.txt', init=True, initdata=Data_R)
         else:
             savedata(self.OriginFilePath + self.Date + '-' + self.Time + '.txt',
                      init=False, newcol=Data)
-            savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
-                round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
-        self.Gen_Conduct_Plot(xData, self.conductances, xlabel)
+            if self.SeriesR != 0:
+                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                    round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
+
+        self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID)
         self.fig.savefig(self.SAVEFILENAME + "Conductance.png")
+
         if Plot == 1:
             self.fig.show()
 
@@ -1508,7 +1490,7 @@ class Kwant_SSeS():
 
             TitleTxtY2 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_N-Ree+Reh']
 
-            Data_2 = [list(a) for a in zip(TitleTxtX + list(xData), TitleTxtY2 + list(self.conductances2))]
+            Data_2 = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY2 + list(self.conductances2))]
 
             if self.SeriesR != 0:
                 if self.BlockWarnings:
@@ -1518,27 +1500,27 @@ class Kwant_SSeS():
                 if self.BlockWarnings:
                     warnings.filterwarnings("always")
 
-                Data_R_2 = [list(a) for a in zip(TitleTxtX + list(xData), TitleTxtY2 + list(D_R2))]
+                Data_R_2 = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY2 + list(D_R2))]
 
 
             if self.GlobalVswpCount == 1:
 
                 savedata(self.OriginFilePath + self.Date + '-' + self.Time + '_N-Ree+Reh.txt',
                          init=True, initdata=Data_2)
-
-                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
-                        round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=True, initdata=Data_R_2)
+                if self.SeriesR != 0:
+                    savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                            round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=True, initdata=Data_R_2)
             else:
 
                 savedata(self.OriginFilePath + self.Date + '-' + self.Time + '_N-Ree+Reh.txt',
                          init=False, newcol=Data_2)
+                if self.SeriesR != 0:
+                    savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                        round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
 
-                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
-                    round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
 
 
-
-            self.Gen_Conduct_Plot(xData, self.conductances2, xlabel)
+            self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID)
             self.fig.savefig(self.SAVEFILENAME + "N-Ree+Reh.png")
             if Plot == 1:
                 self.fig.show()
