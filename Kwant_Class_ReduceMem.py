@@ -1368,11 +1368,11 @@ class Kwant_SSeS():
                         try:
 
                             self.Gen_Site_Plot(sys, params)
-                            self.fig.savefig(self.SAVEFILENAME + self.SaveNameNote + '_' + str(VSwp) + "Sites.png")
+                            self.fig.savefig(self.SAVEFILENAME + '_' + str(VSwp) + "Sites.png")
                             if self.ShowDensity == 1:
                                 self.fig.show()
                             self.Gen_Ana_Plot()
-                            self.fig.savefig(self.SAVEFILENAME + self.SaveNameNote + '_' + str(VSwp) + "Ana.png")
+                            self.fig.savefig(self.SAVEFILENAME + '_' + str(VSwp) + "Ana.png")
                             if self.ShowDensity == 1:
                                 self.fig.show()
                         except:
