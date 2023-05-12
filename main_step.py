@@ -61,7 +61,7 @@ else:
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
 
-        B = KC.Kwant_SSeS(NextNanoName=NName,ReferenceData = RefName, W_r = 800, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+        B = KC.Kwant_SSeS(NextNanoName=NName,ReferenceData = RefName, W_r = 1400, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
                        V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list,
                        PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
@@ -70,52 +70,3 @@ for DELTA in delta_list:
                        SaveNameNote=NName,SeriesR = 500,
                        muN=mu_N_list, DefectAmp=0,CombineMu=False,CombineTev=True,
                        muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1)
-
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-
-        B = KC.Kwant_SSeS(NextNanoName=NName,ReferenceData = RefName, W_r = 900, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProOn=ProximityOn_list,BField=[0],
-                       ShowDensity=ShowDensity,Phase=[np.pi/4],
-                       SaveNameNote=NName,SeriesR = 500,
-                       muN=mu_N_list, DefectAmp=0,CombineMu=False,CombineTev=True,
-                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1)
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-
-        B = KC.Kwant_SSeS(NextNanoName=NName,ReferenceData = RefName, W_r = 950, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProOn=ProximityOn_list,BField=[0],
-                       ShowDensity=ShowDensity,Phase=[np.pi/4],
-                       SaveNameNote=NName,SeriesR = 500,
-                       muN=mu_N_list, DefectAmp=0,CombineMu=False,CombineTev=True,
-                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1)
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-
-        B = KC.Kwant_SSeS(NextNanoName=NName,ReferenceData = RefName, W_r = 1050, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-                       V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list,
-                       PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
-                       E_excited=E_excited_list, SNjunc=SNjunc_list,
-                       ProOn=ProximityOn_list,BField=[0],
-                       ShowDensity=ShowDensity,Phase=[np.pi/4],
-                       SaveNameNote=NName,SeriesR = 500,
-                       muN=mu_N_list, DefectAmp=0,CombineMu=False,CombineTev=True,
-                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1)
-for DELTA in delta_list:
-    for Vg_s in VGate_shift_list:
-        B = KC.Kwant_SSeS(NextNanoName=NName, ReferenceData=RefName, W_r=1100, DavidPot=DavidPot, W_g=500, S_g=300,
-                      D_2DEG=250,
-                      V_A=np.round(np.arange(0.5, -1.2, -0.01), 3), TStrength=TStrength_list,
-                      PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                      E_excited=E_excited_list, SNjunc=SNjunc_list,
-                      ProOn=ProximityOn_list, BField=[0],
-                      ShowDensity=ShowDensity, Phase=[np.pi / 4],
-                      SaveNameNote=NName, SeriesR=500,
-                      muN=mu_N_list, DefectAmp=0, CombineMu=False, CombineTev=True,
-                      muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="Vg", PlotbeforeFigures=1)
