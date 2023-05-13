@@ -15,8 +15,8 @@ Time = now.strftime("%Hh%Mm%Ss")
 master_file_path = __file__
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [0]
-mu_SC_list = [0]
+mu_N_list = [0,1e-3,2e-3,4e-3,6e-3]
+mu_SC_list = [0,1e-3,2e-3,4e-3,6e-3]
 # E_excited_list = [0.028]
 # # E_excited_list = [0]
 E_excited_list = np.round(np.arange(-2e-3,2e-3,10e-5),6)
