@@ -11,7 +11,7 @@ W_g_list = [100, 200, 300, 400, 500, 600]
 S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
 DavidPot = False
-MMR = False
+MMR = True
 master_file_path = __file__
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
