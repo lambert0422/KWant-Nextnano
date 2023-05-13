@@ -278,7 +278,7 @@ class Kwant_SSeS():
                  TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
                  SNjunc=['SNS'], ProOn=[1], delta=64e-6,DateT = '',TimeT = '',MasterMultiRun = False,
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, SeriesR=0,
-                 NextNanoName=None, ReferenceData=None, SaveNameNote=None,
+                 NextNanoName=None, ReferenceData=None, SaveNameNote=None,masterfilepath = None,
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
                  BlockWarnings=True,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=20):
@@ -369,11 +369,15 @@ class Kwant_SSeS():
         self.SaveTime = DateT+'-'+TimeT+'/'+self.Date+'-'+self.Time
 
         current_file_path = __file__
-        new_file_path = self.NextNanoName + self.fileEnd + '/'+DateT+'-'+TimeT+'/'
+        new_file_path = self.NextNanoName + self.fileEnd + '/' + DateT + '-' + TimeT + '/'
+
         if not os.path.exists(new_file_path):
             os.makedirs(new_file_path)
-        new_file_path = new_file_path + 'Kwant_Class.py'
-        os.system(f'cp {current_file_path} {new_file_path}')
+        new_file = new_file_path + 'Kwant_Class.py'
+        os.system(f'cp {current_file_path} {new_file}')
+
+        new_file = new_file_path + 'main.py'
+        os.system(f'cp {masterfilepath} {new_file}')
 
         self.XX = np.arange(0, self.L)
         self.YY = np.arange(0, self.W)

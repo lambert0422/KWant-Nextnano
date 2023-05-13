@@ -11,8 +11,8 @@ W_g_list = [100, 200, 300, 400, 500, 600]
 S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
 DavidPot = False
-MMR = True
-
+MMR = False
+master_file_path = __file__
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
 mu_N_list = [4e-3,4.2e-3,4.4e-3]
@@ -49,7 +49,7 @@ else:
 
 # np.round(np.arange(0.5,-1.2,-0.01),3),
 # delta_list = [6.5e-4] # in eV
-delta_list = [6.5e-4,6.5e-5] # in eV
+delta_list = [6.5e-3] # in eV
 # delta_list = [6.4e-6]
 # delta_list = [0.1] # in eV
 VGate_shift_list = [0]
@@ -65,7 +65,7 @@ else:
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
 
-        B = KC.Kwant_SSeS(NextNanoName=NName,ReferenceData = RefName, W_r = 1400, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+        B = KC.Kwant_SSeS(NextNanoName=NName,Masterfilepath = master_file_path,ReferenceData = RefName, W_r = 1400, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
                        V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list,
                        PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
                        E_excited=E_excited_list, SNjunc=SNjunc_list,

@@ -12,7 +12,7 @@ MMR = True
 now = datetime.now()
 Date = now.strftime("%YY%mM%dD")
 Time = now.strftime("%Hh%Mm%Ss")
-
+master_file_path = __file__
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
 mu_N_list = [0]
@@ -65,7 +65,7 @@ else:
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         E_excited_list = np.arange(-5*DELTA, 5*DELTA, 10*DELTA/100)
-        B = KC.Kwant_SSeS(NextNanoName=NName,W_r = 1400, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+        B = KC.Kwant_SSeS(NextNanoName=NName,Masterfilepath = master_file_path,W_r = 1400, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
                        V_A=[0], TStrength=TStrength_list,
                        PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
                        E_excited=E_excited_list, SNjunc=SNjunc_list,
