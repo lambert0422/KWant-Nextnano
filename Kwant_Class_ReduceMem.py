@@ -1447,7 +1447,7 @@ class Kwant_SSeS():
                 elif self.SwpID == "Phase":
                     TitleTxt1 = ["Theta", "rad", "Phase"]
 
-                if self.GlobalVswpCount and self.PlotbeforeFigures == 0:
+                if self.GlobalVswpCount%self.PlotbeforeFigures == 0:
                     self.SaveDatatoOrigin(TitleTxt1, Plot=1)
                 else:
                     self.SaveDatatoOrigin(TitleTxt1)
