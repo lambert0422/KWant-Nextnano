@@ -276,12 +276,15 @@ class Kwant_SSeS():
                  D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
                  BField=[0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
                  TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
-                 SNjunc=['SNS'], ProOn=[1], delta=64e-6,
+                 SNjunc=['SNS'], ProOn=[1], delta=64e-6,DateT = '',TimeT = '',MasterMultiRun = False,
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
                  BlockWarnings=True,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=20):
+        if not MasterMultiRun:
+            DateT = ''
+            TimeT = ''
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
         self.ReferenceData = ReferenceData
@@ -350,6 +353,10 @@ class Kwant_SSeS():
 
                 self.Dict, self.VgList = SearchFolder(self.NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',Vg_target=V_A, ylim=(-1600, 2400))
 
+        self.OriginFilePath = self.NextNanoName + self.fileEnd + '/OriginFile/'
+        if not os.path.exists(self.OriginFilePath+DateT+'-'+TimeT+'/'):
+            os.makedirs(self.OriginFilePath+DateT+'-'+TimeT+'/')
+
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
         self.W_r = W_r
         self.L_r = L_r
@@ -359,6 +366,15 @@ class Kwant_SSeS():
         now = datetime.now()
         self.Date = now.strftime("%YY%mM%dD")
         self.Time = now.strftime("%Hh%Mm%Ss")
+        self.SaveTime = DateT+'-'+TimeT+'/'+self.Date+'-'+self.Time
+
+        current_file_path = __file__
+        new_file_path = self.NextNanoName + self.fileEnd + '/'+DateT+'-'+TimeT+'/'
+        if not os.path.exists(new_file_path):
+            os.makedirs(new_file_path)
+        new_file_path = new_file_path + 'Kwant_Class.py'
+        os.system(f'cp {current_file_path} {new_file_path}')
+
         self.XX = np.arange(0, self.L)
         self.YY = np.arange(0, self.W)
 
@@ -439,15 +455,7 @@ class Kwant_SSeS():
             # ans = 1 / (np.exp((En - mu) / (kB * T)) + 1)
         return ans
 
-    def MakeSaveDir(self):
-        with open(self.NextNanoName + self.fileEnd + '/' + self.Date + '-' + self.Time + '/' + "KwantRunRecord.txt",
-                  'w') as f2:
-            with open(__file__, 'r') as f1:
-                contents = f1.read()
-                f2.write(contents)
-                f2.write('\n')
-        f1.close()
-        f2.close()
+
 
     def Upzip(self, a):
         c = []
@@ -695,7 +703,7 @@ class Kwant_SSeS():
         self.PBtxt = 'PB' if self.PB == 1 else 'nPB'
         self.Proximitytxt = 'On' if self.ProximityOn == 1 else 'Off'
 
-        self.SAVEFILENAME_origin = str(self.GlobalVswpCount + 1) + ':' + self.Date + '-' + self.Time
+        self.SAVEFILENAME_origin = str(self.GlobalVswpCount + 1) + ':' + self.SaveTime
         self.SAVENOTETitle = ["DATE(Y/M/D)", "TIME(h/m/s)", "Ee(t)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi_rad)",
                               "SN-SNS", "PB?", "Proxy?", "muN(meV)",
                               "muS(meV)", "t(meV)", "t_tunnelcouple(meV)", "Tl_B(t)", "Defect(t)", "Delta(ueV)", "Note"]
@@ -729,7 +737,7 @@ class Kwant_SSeS():
             self.SAVEFILENAME = 'PhaseSwp'
             self.SAVENOTE_buff = [self.E, self.B, self.V_Applied, self.Vbias, "X"]
 
-        self.SAVEFILENAME = self.NextNanoName + self.fileEnd + '/' + self.Date + '-' + self.Time + '/' + self.SN + '-' + self.PBtxt + '-' + \
+        self.SAVEFILENAME = self.NextNanoName + self.fileEnd + '/' + self.SaveTime + '/' + self.SN + '-' + self.PBtxt + '-' + \
                             self.Proximitytxt + '-muN' + str(np.round(self.mu_N * 1e3, 3)) + 'meV-muS' + \
                             str(np.round(self.mu_SC * 1e3, 3)) + 'meV-t' + str(
             np.round(self.t * 1e3, 3)) + 'meV-Tl' + str(self.TunnelStrength) + 't-DF' + str(
@@ -780,9 +788,7 @@ class Kwant_SSeS():
 
         if not os.path.exists(self.SAVEFILENAME):
             os.makedirs(self.SAVEFILENAME)
-        self.OriginFilePath = self.NextNanoName + self.fileEnd + '/OriginFile/'
-        if not os.path.exists(self.OriginFilePath):
-            os.makedirs(self.OriginFilePath)
+
 
         if self.SaveNameNote != None:
             self.SAVEFILENAME_origin = self.SAVEFILENAME_origin + '-' + self.SaveNameNote
@@ -1251,7 +1257,7 @@ class Kwant_SSeS():
                 RunCount = 0
 
                 self.Gen_SaveFileName()
-                self.MakeSaveDir()
+
 
                 if self.DavidPot:
                     self.u_sl_ref_2DEG = 0
@@ -1453,7 +1459,7 @@ class Kwant_SSeS():
 
         DataState = pd.DataFrame(self.SAVENOTE)
         DataState.to_excel(
-            self.OriginFilePath + self.Date + '-' + self.Time + '-SwpDetail.xlsx',
+            self.OriginFilePath + self.SaveTime + '-SwpDetail.xlsx',
             index=False, header=False)
         TitleTxtY1 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_Conductance']
 
@@ -1468,16 +1474,16 @@ class Kwant_SSeS():
 
 
         if self.GlobalVswpCount == 1:
-            savedata(self.OriginFilePath + self.Date + '-' + self.Time + '.txt',
+            savedata(self.OriginFilePath + self.SaveTime + '.txt',
                      init=True, initdata=Data)
             if self.SeriesR != 0:
-                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                     round(self.SeriesR, 3)) + '.txt', init=True, initdata=Data_R)
         else:
-            savedata(self.OriginFilePath + self.Date + '-' + self.Time + '.txt',
+            savedata(self.OriginFilePath + self.SaveTime + '.txt',
                      init=False, newcol=Data)
             if self.SeriesR != 0:
-                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                     round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
 
         self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID)
@@ -1505,17 +1511,17 @@ class Kwant_SSeS():
 
             if self.GlobalVswpCount == 1:
 
-                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '_N-Ree+Reh.txt',
+                savedata(self.OriginFilePath + self.SaveTime + '_N-Ree+Reh.txt',
                          init=True, initdata=Data_2)
                 if self.SeriesR != 0:
-                    savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                    savedata(self.OriginFilePath + sself.SaveTime + '-' + str(
                             round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=True, initdata=Data_R_2)
             else:
 
-                savedata(self.OriginFilePath + self.Date + '-' + self.Time + '_N-Ree+Reh.txt',
+                savedata(self.OriginFilePath + self.SaveTime + '_N-Ree+Reh.txt',
                          init=False, newcol=Data_2)
                 if self.SeriesR != 0:
-                    savedata(self.OriginFilePath + self.Date + '-' + self.Time + '-' + str(
+                    savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                         round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
 
 
