@@ -282,9 +282,8 @@ class Kwant_SSeS():
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
                  BlockWarnings=True,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=20):
-        if not MasterMultiRun:
-            DateT = ''
-            TimeT = ''
+
+
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
         self.ReferenceData = ReferenceData
@@ -354,8 +353,12 @@ class Kwant_SSeS():
                 self.Dict, self.VgList = SearchFolder(self.NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',Vg_target=V_A, ylim=(-1600, 2400))
 
         self.OriginFilePath = self.NextNanoName + self.fileEnd + '/OriginFile/'
-        if not os.path.exists(self.OriginFilePath+DateT+'-'+TimeT+'/'):
-            os.makedirs(self.OriginFilePath+DateT+'-'+TimeT+'/')
+        if not MasterMultiRun:
+            if not os.path.exists(self.OriginFilePath):
+                os.makedirs(self.OriginFilePath)
+        else:
+            if not os.path.exists(self.OriginFilePath+DateT+'-'+TimeT+'/'):
+                os.makedirs(self.OriginFilePath+DateT+'-'+TimeT+'/')
 
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
         self.W_r = W_r
@@ -366,10 +369,17 @@ class Kwant_SSeS():
         now = datetime.now()
         self.Date = now.strftime("%YY%mM%dD")
         self.Time = now.strftime("%Hh%Mm%Ss")
-        self.SaveTime = DateT+'-'+TimeT+'/'+self.Date+'-'+self.Time
-
         current_file_path = __file__
-        new_file_path = self.NextNanoName + self.fileEnd + '/' + DateT + '-' + TimeT + '/'
+
+
+        if not MasterMultiRun:
+            self.SaveTime = self.Date + '-' + self.Time
+            new_file_path = self.NextNanoName + self.fileEnd + '/' + self.Date + '-' + self.Time + '/'
+        else:
+            self.SaveTime = DateT+'-'+TimeT+'/'+self.Date+'-'+self.Time
+            new_file_path = self.NextNanoName + self.fileEnd + '/' + DateT + '-' + TimeT + '/'
+
+
 
         if not os.path.exists(new_file_path):
             os.makedirs(new_file_path)
