@@ -1518,7 +1518,7 @@ class Kwant_SSeS():
                 savedata(self.OriginFilePath + self.SaveTime + '_N-Ree+Reh.txt',
                          init=True, initdata=Data_2)
                 if self.SeriesR != 0:
-                    savedata(self.OriginFilePath + sself.SaveTime + '-' + str(
+                    savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                             round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=True, initdata=Data_R_2)
             else:
 
