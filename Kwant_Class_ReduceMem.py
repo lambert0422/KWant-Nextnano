@@ -602,7 +602,7 @@ class Kwant_SSeS():
                                            (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """
                                        """
             self.Ham_l_N_metal = """
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu_S - V_ref)""" + TeV_N_Txt + """ + (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
+                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S""" + TeV_N_Txt + """ + (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
                                  """
 
             # if self.Orbit == False:  # add magntic field effect or not
@@ -656,8 +656,9 @@ class Kwant_SSeS():
 
         template_l_up_S = kwant.continuum.discretize(self.Ham_l_N_metal)
         template_l_dn_S = kwant.continuum.discretize(self.Ham_l_N_metal)
-        template_l_dn_N = kwant.continuum.discretize(self.Ham_l_dn_N)
+        # template_l_dn_N = kwant.continuum.discretize(self.Ham_l_dn_N)
         # print(template)
+        template_l_dn_N = kwant.continuum.discretize(self.Ham_l_N_metal)
         sys = kwant.Builder()
         sys.fill(template, central_region, (0, 0));
         ########################################################################################
