@@ -1316,6 +1316,10 @@ class Kwant_SSeS():
                         Index = self.VgList.index(self.V_Applied)
                         self.u_sl = self.Dict[Index]
 
+                        elf.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
+                        # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
+                        self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
+
                 for VSwp in self.VarSwp:
                     TimeBeforeEverySwp = time.time()
                     if self.SwpID == "Vbias":
@@ -1327,6 +1331,10 @@ class Kwant_SSeS():
                         else:
                             Index = self.VgList.index(self.V_Applied)
                             self.u_sl = self.Dict[Index]
+
+                            self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
+                            # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
+                            self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
                     elif self.SwpID == "E":
                         self.E = VSwp
                     elif self.SwpID == "B":
