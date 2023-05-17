@@ -207,6 +207,7 @@ class Kwant_SSeS():
     e = 1.60217662e-19  # electron charge
     c = 299792458.0
     hbar = 1.05471817e-34  # J.s # Planck constant
+    mu_B = e * hbar / (2 * me) # magneto
     epsilon_r = 13.5
     epsilon_0 = 8.8541878128e-12
     n_2DEG = 2e15  # in m^-2 electron density of 2DEG
@@ -1232,16 +1233,50 @@ class Kwant_SSeS():
 
         elapsed_tol = 0
 
+
+
+        if self.DavidPot:
+            self.u_sl_ref_2DEG = 0
+        else:
+
+            Index0 = self.VgList.index(0.0)
+            u_sl_0 = self.Dict[Index0]
+            self.u_sl_ref_2DEG = u_sl_0(self.L_r / 2, self.W_r - self.W_reduced_r)
+            # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
+            self.u_sl_ref = u_sl_0(self.L_r / 2, 2)
+            # TestMap = np.zeros((self.L_r+1,self.W_r+1))
+            # for x in range(self.L_r+1):
+            #     for y in range(self.W_r+1):
+            #         TestMap[x,y] = u_sl_0(x, y)
+            # self.fig = plt.figure(figsize=(14, 11))
+            # ax4 = plt.subplot(1, 2, 1)
+            # # pcolor = ax4.pcolormesh(Potential_Map.T, shading='auto')
+            # # pcolor = ax5.pcolormesh(Delta_Map.T, shading='auto')
+            # pcolor = ax4.imshow(TestMap.T)
+            # cbar = self.fig.colorbar(pcolor)
+            # plt.title('Test')
+            #
+            # ax5 = plt.subplot(1, 2, 2)
+            # ax5.plot(TestMap.T[:,int(np.shape(TestMap.T)[1] / 2)])
+            # plt.title('Cut View')
+            # self.fig.show()
+
+            print(1)
+
         syst.stdout.write(
             "\r{0}".format('--------------------------- Start Sweep -----------------------------------'))
         syst.stdout.flush()
         # print('--------------------------- Start Sweep -----------------------------------')
+
         for self.SN, self.PB, self.ProximityOn, self.t, self.t_Tunnel in self.comb_change:
 
             sys = self.make_system()
             self.DefOutputMap()
             self.Defect_Map = self.GaussianDefect(FWHM=2)
-
+            if self.SN == 'SN':
+                V_ref_dis = self.u_sl_ref_2DEG
+            else:
+                V_ref_dis = 0
 
 
 
@@ -1263,7 +1298,7 @@ class Kwant_SSeS():
 
 
                 self.GammaTunnel = self.TunnelStrength
-                self.mu_B = self.e * self.hbar / (2 * self.me)
+
                 # self.alpha_TB = self.alpha / (2 * self.a)  # eV
 
                 self.conductances = []
@@ -1273,19 +1308,7 @@ class Kwant_SSeS():
                 self.Gen_SaveFileName()
 
 
-                if self.DavidPot:
-                    self.u_sl_ref_2DEG = 0
-                else:
 
-                    Index0 = self.VgList.index(0.0)
-                    u_sl_0 = self.Dict[Index0]
-                    self.u_sl_ref_2DEG = u_sl_0(self.L_r / 2, self.W_r - self.W_reduced_r)
-                    self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
-
-                if self.SN == 'SN':
-                    V_ref_dis = self.u_sl_ref_2DEG
-                else:
-                    V_ref_dis = 0
                 if self.SwpID != 'Vg':
                     if self.DavidPot:
                         self.DavidPotential()
@@ -1384,7 +1407,7 @@ class Kwant_SSeS():
                                                             in_leads=[0, 1])
                     self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
 
-                    if RunCount % 10 == 0:
+                    if RunCount % 2 == 0:
                         try:
 
                             self.Gen_Site_Plot(sys, params)
