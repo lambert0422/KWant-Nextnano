@@ -94,9 +94,10 @@ def SearchFolder(NextNanoName, filename, varname, Vg_target=None, xlim=None, yli
         Vg_target.append(0.0)
     Vg_target.sort()
     VgList = np.zeros(len(Vg_target))
-    syst.stdout.write(
-            "\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
-    syst.stdout.flush()
+    # syst.stdout.write(
+    #         "\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
+    # syst.stdout.flush()
+    print("--------------------------- Loading Poisson Result -----------------------------------", end='\r')
     for FolderName in FileList:
         FolderName_Prv = FolderName.replace('/' + filename, '')  # get the file path before file name
         FolderName_bias = FolderName_Prv + '/bias_points.log'  # search the bias point file from Nextnano
@@ -282,7 +283,7 @@ class Kwant_SSeS():
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
                  BlockWarnings=True,
-                 SwpID="Vg", Digits=5, PlotbeforeFigures=20):
+                 SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
 
 
         # a = 30  # nm # grid point separation
@@ -302,7 +303,7 @@ class Kwant_SSeS():
         self.TeV_Normal = TeV_Normal
         self.CombineMu = CombineMu
         self.CombineTev = CombineTev
-        if self.CombineMu == 1:
+        if self.CombineTev == 1:
 
             Tev_Tunnel = Tev
 
@@ -312,7 +313,7 @@ class Kwant_SSeS():
 
 
         self.PlotbeforeFigures = PlotbeforeFigures
-
+        self.PlotbeforeFigures_Ana = PlotbeforeFigures_Ana
 
         V_A = np.round(V_A, Digits)
         self.Digits = Digits
@@ -900,6 +901,10 @@ class Kwant_SSeS():
 
         ax1 = plt.subplot(3, 3, 2)
         pcolor = ax1.imshow(self.img.T, cmap=cmap)
+        ax1.axvline(x=int(np.shape(self.img.T)[1] / 4),linestyle='--')
+        ax1.axvline(x=int(np.shape(self.img.T)[1] / 2), linestyle='--')
+        ax1.axhline(y=int(np.shape(self.img.T)[0] / 2), linestyle='--')
+
         cbar = self.fig.colorbar(pcolor)
 
         ax2 = plt.subplot(3, 3, 3)
@@ -925,6 +930,8 @@ class Kwant_SSeS():
         ax6 = plt.subplot(3, 3, 6)
         # pcolor = ax4.pcolormesh(Potential_Map.T, shading='auto')
         pcolor = ax6.imshow(self.Potential_Map.T)
+        ax6.axvline(x=int(np.shape(self.Potential_Map.T)[1] / 4), linestyle='--')
+        ax6.axvline(x=int(np.shape(self.Potential_Map.T)[1] / 2), linestyle='--')
         cbar = self.fig.colorbar(pcolor)
         plt.title('Potential[eV/t]')
 
@@ -1067,11 +1074,19 @@ class Kwant_SSeS():
         print('s_eh: \n', np.round(s_eh[::-1, ::-1], 3))
         print('s_he + s_eh^*: \n',
               np.round(s_he + s_eh[::-1, ::-1].conj(), 3))
-        print(1)
 
-    def GaussianDefect(self, FWHM):
-        array_buf = np.array(self.Defect_Map)
 
+    def GaussianDefect(self, FWHM,DefectPer):
+
+
+        def get_random_numbers(num_numbers,start,end):
+            numbers = []
+
+            for _ in range(num_numbers):
+                number = np.random.randint(start, end)  # Generate a random number between 10 and 30
+                numbers.append(number)
+
+            return numbers
         def makeGaussian(Amp, center, Array=self.Defect_Map, fwhm=FWHM):
 
             x = np.arange(0, Array.shape[0], 1, float)
@@ -1082,12 +1097,37 @@ class Kwant_SSeS():
 
             return Amp * np.exp(-4 * np.log(2) * ((X - x0) ** 2 + (Y - y0) ** 2) / fwhm ** 2)
 
+        array_buf = np.array(self.Defect_Map)
+        # DefectPer = 1  # percentage of the sites that contain the defects
+        SiteNum = array_buf.shape[0] * array_buf.shape[1]
+        DefectNum = int(DefectPer * SiteNum / 100)
+        RandX = get_random_numbers(DefectNum, 0, array_buf.shape[0])
+        RandY = get_random_numbers(DefectNum, 0, array_buf.shape[1])
+        RandXY =  zip(RandX, RandY)
+
+
+
+
         array_buf_def = np.zeros((array_buf.shape[0], array_buf.shape[1]))
         array_buf = abs(self.DefectAmp * self.t) * (2 * np.random.rand(array_buf.shape[0], array_buf.shape[1]) - 1)
-        for i in range(array_buf.shape[0]):
-            for j in range(array_buf.shape[1]):
-                array_buf_def = array_buf_def + makeGaussian(Array=array_buf, fwhm=FWHM, center=[i, j],
+
+        for i,j in RandXY:
+            array_buf_def = array_buf_def + makeGaussian(Array=array_buf, fwhm=FWHM, center=[i, j],
                                                              Amp=array_buf[i, j])
+
+        # A = array_buf_def/self.t
+        # self.fig = plt.figure(figsize=(14, 11))
+        # ax4 = plt.subplot(1, 2, 1)
+        # # pcolor = ax4.pcolormesh(Potential_Map.T, shading='auto')
+        # # pcolor = ax5.pcolormesh(Delta_Map.T, shading='auto')
+        # pcolor = ax4.imshow(A.T)
+        # cbar = self.fig.colorbar(pcolor)
+        # plt.title('Test')
+        #
+        # ax5 = plt.subplot(1, 2, 2)
+        # ax5.plot(A.T[:,int(np.shape(A.T)[1] / 2)])
+        # plt.title('Cut View')
+        # self.fig.show()
         return array_buf_def
 
     def DefOutputMap(self):
@@ -1262,18 +1302,18 @@ class Kwant_SSeS():
             # plt.title('Cut View')
             # self.fig.show()
 
-            print(1)
+            # print(1)
 
-        syst.stdout.write(
-            "\r{0}".format('--------------------------- Start Sweep -----------------------------------'))
-        syst.stdout.flush()
-        # print('--------------------------- Start Sweep -----------------------------------')
+        # syst.stdout.write(
+        #     "\r{0}".format('--------------------------- Start Sweep -----------------------------------'))
+        # syst.stdout.flush()
+        print("--------------------------- Start Sweep -----------------------------------", end='\r')
 
         for self.SN, self.PB, self.ProximityOn, self.t, self.t_Tunnel in self.comb_change:
 
             sys = self.make_system()
             self.DefOutputMap()
-            self.Defect_Map = self.GaussianDefect(FWHM=2)
+            self.Defect_Map = self.GaussianDefect(FWHM=1,DefectPer = 1)
             if self.SN == 'SN':
                 V_ref_dis = self.u_sl_ref_2DEG
             else:
@@ -1416,7 +1456,7 @@ class Kwant_SSeS():
                                                             in_leads=[0, 1])
                     self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
 
-                    if RunCount % 2 == 0:
+                    if RunCount % self.PlotbeforeFigures_Ana == 0:
                         try:
 
                             self.Gen_Site_Plot(sys, params)
