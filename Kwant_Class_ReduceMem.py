@@ -1456,7 +1456,7 @@ class Kwant_SSeS():
                                                             in_leads=[0, 1])
                     self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
 
-                    if RunCount % self.PlotbeforeFigures_Ana == 0:
+                    if RunCount%self.PlotbeforeFigures_Ana == 0:
                         try:
 
                             self.Gen_Site_Plot(sys, params)

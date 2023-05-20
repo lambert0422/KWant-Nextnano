@@ -12,17 +12,19 @@ S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
 DavidPot = False
 MMR = False
+ShowDensity = False
+
 master_file_path = __file__
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [3.1e-3]
-mu_SC_list = [3.1e-3]
+mu_N_list = [3.2e-3]
+mu_SC_list = [3.25e-3]
 E_excited_list = [0.035]
 # # E_excited_list = [0]
 # E_excited_list = np.round(np.arange(-2e-3,2e-3,10e-5),6)
 # TeV_list = [1]
 # TeV_T_list = [0.5]
-TeV_list = [4e-3]
+TeV_list = [4.5e-3]
 TeV_T_list = [3e-3]
 # mu_N_list = [1e-3,2e-3]
 # mu_SC_list = [1e-3,2e-3]
@@ -40,12 +42,9 @@ ProximityOn_list = [1]
 lenswp = len(mu_SC_list) * len(mu_N_list) * len(E_excited_list) * len(TeV_list) * len(PeriBC_list) * len(
     TStrength_list) * len(SNjunc_list) * len(ProximityOn_list)
 
-if ~DavidPot & lenswp > 1:
-    ShowDensity = False
-elif DavidPot & lenswp * len(W_g_list) * len(S_g_list) > 1:
-    ShowDensity = False
-else:
-    ShowDensity = True
+
+
+
 
 # np.round(np.arange(0.5,-1.2,-0.01),3),
 # delta_list = [6.5e-4] # in eV
@@ -57,11 +56,11 @@ VGate_shift_list = [0]
 #
 # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
 # syst.stdout.flush()
-
 if DavidPot:
     NName = ''
 else:
-    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
+    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M18D-19h37m02s' # with 1000nm gate width
+    # NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s' # with 1200nm gate width
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
 
@@ -73,4 +72,4 @@ for DELTA in delta_list:
                        ShowDensity=ShowDensity,Phase=[np.pi/4],
                        SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
                        muN=mu_N_list, DefectAmp=0.1,CombineMu=True,CombineTev=False,
-                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1)
+                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)
