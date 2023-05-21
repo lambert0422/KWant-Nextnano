@@ -59,8 +59,68 @@ VGate_shift_list = [0]
 if DavidPot:
     NName = ''
 else:
-    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M18D-19h37m02s' # with 1000nm gate width
+    # NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M18D-19h37m02s' # with 1000nm gate width
     # NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s' # with 1200nm gate width
+    # NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y04M02D-23h36m23s' # with 1.4/1.4 surface charge
+    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M31D-02h23m36s' # with 1.3/1.3 surface charge4c
+    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M28D-21h12m50s' # with 1.3/1.8surface charge
+    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M26D-23h52m07s' # with 1.6/2.25 surface charge
+    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y04M01D-09h09m18s' # with 1.3/2 surface charge
+    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M30D-23h41m55s' # with 1.3/1.9 surface charge
+
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+
+        B = KC.Kwant_SSeS(NextNanoName=NName,Masterfilepath = master_file_path,ReferenceData = RefName, W_r = 1500, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.02),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProOn=ProximityOn_list,BField=[0],
+                       ShowDensity=ShowDensity,Phase=[np.pi/4],
+                       SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
+                       muN=mu_N_list, DefectAmp=0.1,CombineMu=True,CombineTev=False,
+                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)
+
+NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M29D-03h35m53s'  # with 1.2/1.9 surface charge
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+
+        B = KC.Kwant_SSeS(NextNanoName=NName,Masterfilepath = master_file_path,ReferenceData = RefName, W_r = 1500, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.02),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProOn=ProximityOn_list,BField=[0],
+                       ShowDensity=ShowDensity,Phase=[np.pi/4],
+                       SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
+                       muN=mu_N_list, DefectAmp=0.1,CombineMu=True,CombineTev=False,
+                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)
+NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M28D-00h09m17s'  # with 1.4/1.9 surface charge
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+
+        B = KC.Kwant_SSeS(NextNanoName=NName,Masterfilepath = master_file_path,ReferenceData = RefName, W_r = 1500, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.02),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProOn=ProximityOn_list,BField=[0],
+                       ShowDensity=ShowDensity,Phase=[np.pi/4],
+                       SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
+                       muN=mu_N_list, DefectAmp=0.1,CombineMu=True,CombineTev=False,
+                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)
+NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M25D-03h03m39s'  # with 1.6/2.3surface charge
+for DELTA in delta_list:
+    for Vg_s in VGate_shift_list:
+
+        B = KC.Kwant_SSeS(NextNanoName=NName,Masterfilepath = master_file_path,ReferenceData = RefName, W_r = 1500, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+                       V_A=np.round(np.arange(0.5,-1.2,-0.02),3), TStrength=TStrength_list,
+                       PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
+                       E_excited=E_excited_list, SNjunc=SNjunc_list,
+                       ProOn=ProximityOn_list,BField=[0],
+                       ShowDensity=ShowDensity,Phase=[np.pi/4],
+                       SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
+                       muN=mu_N_list, DefectAmp=0.1,CombineMu=True,CombineTev=False,
+                       muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)
+NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'  # with 0.5/1surface charge
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
 
