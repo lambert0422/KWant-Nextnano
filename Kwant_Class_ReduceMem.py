@@ -279,7 +279,7 @@ class Kwant_SSeS():
                  BField=[0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
                  TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
                  SNjunc=['SNS'], ProOn=[1], delta=64e-6,DateT = '',TimeT = '',MasterMultiRun = False,
-                 muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, SeriesR=0,
+                 muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
                  BlockWarnings=True,
@@ -297,7 +297,7 @@ class Kwant_SSeS():
         self.delta = delta
         self.Data = []
         self.TXT = []
-
+        self.DefectNumPer = DefectNumPer
 
 
         self.TeV_Normal = TeV_Normal
@@ -981,8 +981,8 @@ class Kwant_SSeS():
         plt.xlabel(Xlabel)
         plt.ylabel("G/G0[/(2e^2/h)]")
         ax1 = plt.subplot(1, 2, 2)
-        ax1.plot(x, (1 / (500 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
-                 label=" 500 Ohm")
+        ax1.plot(x, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
+                 label=str(self.SeriesR)+" Ohm")
         ax1.legend()
         if self.ReferenceData != None:
             ax1.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
@@ -1076,7 +1076,7 @@ class Kwant_SSeS():
               np.round(s_he + s_eh[::-1, ::-1].conj(), 3))
 
 
-    def GaussianDefect(self, FWHM,DefectPer):
+    def GaussianDefect(self, FWHM):
 
 
         def get_random_numbers(num_numbers,start,end):
@@ -1100,7 +1100,7 @@ class Kwant_SSeS():
         array_buf = np.array(self.Defect_Map)
         # DefectPer = 1  # percentage of the sites that contain the defects
         SiteNum = array_buf.shape[0] * array_buf.shape[1]
-        DefectNum = int(DefectPer * SiteNum / 100)
+        DefectNum = int(self.DefectNumPer * SiteNum / 100)
         RandX = get_random_numbers(DefectNum, 0, array_buf.shape[0])
         RandY = get_random_numbers(DefectNum, 0, array_buf.shape[1])
         RandXY =  zip(RandX, RandY)
@@ -1313,7 +1313,7 @@ class Kwant_SSeS():
 
             sys = self.make_system()
             self.DefOutputMap()
-            self.Defect_Map = self.GaussianDefect(FWHM=1,DefectPer = 1)
+            self.Defect_Map = self.GaussianDefect(FWHM=1)
             if self.SN == 'SN':
                 V_ref_dis = self.u_sl_ref_2DEG
             else:
@@ -1575,8 +1575,8 @@ class Kwant_SSeS():
         self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID)
         self.fig.savefig(self.SAVEFILENAME + "Conductance.png")
 
-        if Plot == 1:
-            self.fig.show()
+        # if Plot == 1:
+        #     self.fig.show()
 
         if self.SN == 'SN':
 
