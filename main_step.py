@@ -76,15 +76,18 @@ else:
     # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y04M02D-23h36m23s')  # with 1.4 / 1.4  surface charge
     # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M28D-00h09m17s')  # with 1.4 / 1.9  surface charge
     # #
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M26D-23h52m07s')  # with 1.6 / 2.25 surface charge
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M25D-03h03m39s')  # with 1.6 / 2.3  surface charge
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M25D-00h19m43s')  # with 1.6 / 2.5 surface charge
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M26D-04h12m19s')  # with 1.6 / 3 surface charge
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M21D-12h03m03s')  # with 1.8 / 2.3 surface charge
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M27D-08h34m13s')  # with 1.8 / 2.5 surface charge
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M22D-16h26m01s')  # with 2 / 2.3 surface charge
-    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M24D-09h15m55s')  # with 2 / 2.5 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M26D-23h52m07s')  # with 1.6 / 2.25 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M25D-03h03m39s')  # with 1.6 / 2.3  surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M25D-00h19m43s')  # with 1.6 / 2.5 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M26D-04h12m19s')  # with 1.6 / 3 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M21D-12h03m03s')  # with 1.8 / 2.3 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M27D-08h34m13s')  # with 1.8 / 2.5 surface charge
 
+    NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M28D-12h21m17s')  # with 1.8 / 3 surface charge
+
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M22D-16h26m01s')  # with 2 / 2.3 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M24D-09h15m55s')  # with 2 / 2.5 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M28D-12h21m17s')  # with 1.8 / 3 surface charge
 
 
 
