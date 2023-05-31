@@ -1478,6 +1478,7 @@ class Kwant_SSeS():
                         C1 = SMatrix.transmission(1, 0) / 2  # /2 to became 2e^2/h
                         C2 = (SMatrix.submatrix((1, 0), (1, 0)).shape[0] - SMatrix.transmission((1, 0), (
                             1, 0)) + SMatrix.transmission((1, 1), (1, 0))) / 2
+
                         self.conductances2.append(C2)
                     else:
                         # A = SMatrix.submatrix((1, 0), (1, 0))
@@ -1575,8 +1576,8 @@ class Kwant_SSeS():
         self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID)
         self.fig.savefig(self.SAVEFILENAME + "Conductance.png")
 
-        # if Plot == 1:
-        #     self.fig.show()
+        if Plot == 1:
+            self.fig.show()
 
         if self.SN == 'SN':
 
