@@ -603,9 +603,11 @@ class Kwant_SSeS():
                                            (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """
                                        """
             self.Ham_l_N_metal = """
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S""" + TeV_N_Txt + """ + (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
+                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
                                  """
-
+            # self.Ham_l_N_metal = """
+            #                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S""" + TeV_N_Txt + """ + (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
+            #                                 """
             # if self.Orbit == False:  # add magntic field effect or not
             #     self.Ham = """
             #                                ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))/t(x,y) + m*alpha**2/(2*e*t(x,y)))*kron(sigma_z, sigma_0) +
