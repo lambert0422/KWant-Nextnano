@@ -36,7 +36,7 @@ TeV_T_list = [4.5e-3]
 PeriBC_list = [0]
 # TStrength_list = np.round(np.arange(0,2,0.04),5)
 TStrength_list = [0]
-SNjunc_list = ['SN']
+SNjunc_list = ['SNS']
 ProximityOn_list = [1]
 
 lenswp = len(mu_SC_list) * len(mu_N_list) * len(E_excited_list) * len(TeV_list) * len(PeriBC_list) * len(
@@ -87,7 +87,7 @@ else:
     #
     # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M22D-16h26m01s')  # with 2 / 2.3 surface charge
     # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M24D-09h15m55s')  # with 2 / 2.5 surface charge
-    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M28D-12h21m17s')  # with 1.8 / 3 surface charge
+    # NName_list.append('/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M28D-12h21m17s')  # with 1.8 / 3 surface charge(Best)
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         for NName in NName_list:

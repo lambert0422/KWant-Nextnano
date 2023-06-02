@@ -968,13 +968,13 @@ class Kwant_SSeS():
         if self.SwpID == 'E':
             # ax0.axvline(x=self.delta, color='r')
             # ax0.axvline(x=-self.delta, color='r')
-            ax0.axvline(x=self.delta * 2, color='b')
-            ax0.axvline(x=-self.delta * 2, color='b')
-            ax0.text(x=self.Delta_induced * 2, y=0, s=str(np.round(self.Delta_induced * 1e6, 3)))
+            ax0.axvline(x=self.delta * 2/self.t, color='b')
+            ax0.axvline(x=-self.delta * 2/self.t, color='b')
+            ax0.text(x=self.Delta_induced * 2/self.t, y=0, s=str(np.round(self.Delta_induced * 1e6, 3)))
             # ax0.axvline(x=self.Delta_induced, color='r')
             # ax0.axvline(x=-self.Delta_induced, color='r')
-            ax0.axvline(x=self.Delta_induced * 2, color='b')
-            ax0.axvline(x=-self.Delta_induced * 2, color='b')
+            ax0.axvline(x=self.Delta_induced * 2/self.t, color='b')
+            ax0.axvline(x=-self.Delta_induced * 2/self.t, color='b')
         if self.ReferenceData != None:
             ax0.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
         ax0.legend()
@@ -1184,7 +1184,7 @@ class Kwant_SSeS():
     def Run_sweep(self):
 
         def Delta_0_dis(x, y):
-            A = self.delta / self.t
+
             Square = np.heaviside(y, 0) - np.heaviside(y - self.W, 1)
             Delta_Spatial = self.delta * (1 - np.heaviside(y, 0)) + \
                             self.delta * np.heaviside(y - self.W, 1)
@@ -1310,6 +1310,11 @@ class Kwant_SSeS():
         print("--------------------------- Start Sweep -----------------------------------", end='\r')
 
         for self.SN, self.PB, self.ProximityOn, self.t, self.t_Tunnel in self.comb_change:
+            now = datetime.now()
+            DateLocal= now.strftime("%YY%mM%dD")
+            TimeLocal = now.strftime("%Hh%Mm%Ss")
+
+            self.LocalSave = DateLocal+'-'+TimeLocal
 
             sys = self.make_system()
             self.DefOutputMap()
@@ -1460,11 +1465,11 @@ class Kwant_SSeS():
                         try:
 
                             self.Gen_Site_Plot(sys, params)
-                            self.fig.savefig(self.SAVEFILENAME + '_' + str(VSwp) + "Sites.png")
+                            self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' + str(VSwp) + "Sites.png")
                             if self.ShowDensity == 1:
                                 self.fig.show()
                             self.Gen_Ana_Plot()
-                            self.fig.savefig(self.SAVEFILENAME + '_' + str(VSwp) + "Ana.png")
+                            self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' + str(VSwp) + "Ana.png")
                             if self.ShowDensity == 1:
                                 self.fig.show()
                         except:
@@ -1574,7 +1579,7 @@ class Kwant_SSeS():
                     round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
 
         self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID)
-        self.fig.savefig(self.SAVEFILENAME + "Conductance.png")
+        self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ "-Conductance.png")
 
         if Plot == 1:
             self.fig.show()
@@ -1614,7 +1619,7 @@ class Kwant_SSeS():
 
 
             self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID)
-            self.fig.savefig(self.SAVEFILENAME + "N-Ree+Reh.png")
+            self.fig.savefig(self.SAVEFILENAME+self.LocalSave + "-N-Ree+Reh.png")
             if Plot == 1:
                 self.fig.show()
 
