@@ -181,10 +181,10 @@ def set_size(w, h, ax=None):
 
 class Kwant_SSeS():
     ##########################################################################################################################
-    alpha = 34e-3  # eVnm SOI
-    # alpha = 0 # eVnm SOI
-    # Digits = 5  # Digits to round the import voltage
-    gn = 10  # g-factor
+    # alpha = 34e-3  # eVnm SOI
+    # # alpha = 0 # eVnm SOI
+    # # Digits = 5  # Digits to round the import voltage
+    # gn = 10  # g-factor
 
     # alpha = 0 # eVnm SOI
     # Digits = 5  # Digits to round the import voltage
@@ -274,7 +274,7 @@ class Kwant_SSeS():
     # SwpID: what parameter to sweep and form figures: Vg/Vbias/E/B
     # AddOrbitEffect: whether to include orbital effect in the Hamiltonian
     # PlotbeforeFigures: how many figures between two displayed plots
-    def __init__(self, DavidPot=False, GridFactor=1, W_g=300, S_g=400,
+    def __init__(self, DavidPot=False,alpha = 34e-3 ,gn = 10, GridFactor=1, W_g=300, S_g=400,
                  D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
                  BField=[0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
                  TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
@@ -285,7 +285,10 @@ class Kwant_SSeS():
                  BlockWarnings=True,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
 
+        self.alpha =alpha  # eVnm SOI
 
+
+        self.gn = gn  # g-factor
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
         self.ReferenceData = ReferenceData
