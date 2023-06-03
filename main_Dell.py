@@ -28,8 +28,8 @@ E_excited_list = [0.035]
 TeV_list = [4.5e-3]
 TeV_T_list = [4.5e-3]
 
-alpha_list = [5e-4,1e-3,3.4e-3,34e-3,50e-3,10e-2,20e-2,50e-2,10e-1]
-gn_list = [1,5,10,20,30,50,100,500,1000]
+alpha_list = [5e-4,1e-3,3.4e-3,50e-3,10e-2,50e-2,10e-1]
+gn_list = [1,5,10,50,100,500,1000]
 # mu_N_list = [1e-3,2e-3]
 # mu_SC_list = [1e-3,2e-3]
 # # E_excited_list = [0.023,0.024]
@@ -64,21 +64,23 @@ if DavidPot:
     NName = ''
 else:
     NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
-for Tev in TeV_list:
-    for DELTA in delta_list:
-        for Vg_s in VGate_shift_list:
-            E_excited_list = np.arange(-3*DELTA/Tev, 3*DELTA/Tev,(3*DELTA/Tev)/100)
-            B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
-                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-                              V_A=[0], TStrength=TStrength_list,TeV_Normal=True,
-                              PeriBC=PeriBC_list, Tev=[Tev], Tev_Tunnel=TeV_T_list,
-                              E_excited=E_excited_list, SNjunc=SNjunc_list,
-                              ProOn=ProximityOn_list, BField=[0], a=25,
-                              ShowDensity=ShowDensity, Phase=[np.pi / 4],
-                              SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                              muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
-                              muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
-                              PlotbeforeFigures_Ana=20)
+ZipList = list(itertools.product(alpha_list,gn_list))
+for ALPHA, GN in ZipList:
+    for Tev in TeV_list:
+        for DELTA in delta_list:
+            for Vg_s in VGate_shift_list:
+                E_excited_list = np.arange(0, 3*DELTA/Tev,(3*DELTA/Tev)/50)
+                B = KC.Kwant_SSeS(NextNanoName=NName, alpha=ALPHA,gn=GN,Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
+                                  DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+                                  V_A=[0], TStrength=TStrength_list,TeV_Normal=True,
+                                  PeriBC=PeriBC_list, Tev=[Tev], Tev_Tunnel=TeV_T_list,
+                                  E_excited=E_excited_list, SNjunc=SNjunc_list,
+                                  ProOn=ProximityOn_list, BField=[0], a=25,
+                                  ShowDensity=ShowDensity, Phase=[np.pi / 2],
+                                  SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
+                                  muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
+                                  muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
+                                  PlotbeforeFigures_Ana=20)
 
 
 
