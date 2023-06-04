@@ -1315,11 +1315,9 @@ class Kwant_SSeS():
         print("--------------------------- Start Sweep -----------------------------------", end='\r')
 
         for self.SN, self.PB, self.ProximityOn, self.t, self.t_Tunnel in self.comb_change:
-            now = datetime.now()
-            DateLocal= now.strftime("%YY%mM%dD")
-            TimeLocal = now.strftime("%Hh%Mm%Ss")
 
-            self.LocalSave = DateLocal+'-'+TimeLocal
+
+
 
             sys = self.make_system()
             self.DefOutputMap()
@@ -1370,7 +1368,10 @@ class Kwant_SSeS():
                         elf.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
                         # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
                         self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
-
+                now = datetime.now()
+                DateLocal = now.strftime("%YY%mM%dD")
+                TimeLocal = now.strftime("%Hh%Mm%Ss")
+                self.LocalSave = DateLocal + '-' + TimeLocal
                 for VSwp in self.VarSwp:
                     TimeBeforeEverySwp = time.time()
                     if self.SwpID == "Vbias":
