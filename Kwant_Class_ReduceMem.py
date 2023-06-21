@@ -328,6 +328,16 @@ class Kwant_SSeS():
 
         self.fileEnd = '-Kwt'
         self.SwpID = SwpID
+        if self.SwpID == 'Vg':
+            self.SwpUnit = ' (V)'
+        elif self.SwpID == 'Vbias':
+            self.SwpUnit = ' (V)'
+        elif self.SwpID == 'E':
+            self.SwpUnit = ' (meV)'
+        elif self.SwpID == 'B':
+            self.SwpUnit = ' (T)'
+        elif self.SwpID == 'Phase':
+            self.SwpUnit = ' (rad)'
 
         self.ShowDensity = ShowDensity
         self.Swave = Swave
@@ -973,13 +983,13 @@ class Kwant_SSeS():
         if self.SwpID == 'E':
             # ax0.axvline(x=self.delta, color='r')
             # ax0.axvline(x=-self.delta, color='r')
-            ax0.axvline(x=self.delta * 2/self.t, color='b')
-            ax0.axvline(x=-self.delta * 2/self.t, color='b')
+            ax0.axvline(x=self.delta * 2000, color='b')
+            ax0.axvline(x=-self.delta * 2000, color='b')
             ax0.text(x=self.Delta_induced * 2/self.t, y=0, s=str(np.round(self.Delta_induced * 1e6, 3)))
             # ax0.axvline(x=self.Delta_induced, color='r')
             # ax0.axvline(x=-self.Delta_induced, color='r')
-            ax0.axvline(x=self.Delta_induced * 2/self.t, color='b')
-            ax0.axvline(x=-self.Delta_induced * 2/self.t, color='b')
+            ax0.axvline(x=self.Delta_induced * 2000, color='r')
+            ax0.axvline(x=-self.Delta_induced * 2000, color='r')
         if self.ReferenceData != None:
             ax0.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
         ax0.legend()
@@ -1583,8 +1593,10 @@ class Kwant_SSeS():
             if self.SeriesR != 0:
                 savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                     round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
-
-        self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID)
+        if self.SwpID == 'E':
+            self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances, self.SwpID+self.SwpUnit)
+        else:
+            self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID+self.SwpUnit)
         self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ "-Conductance.png")
 
         if Plot == 1:
@@ -1622,9 +1634,10 @@ class Kwant_SSeS():
                     savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                         round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
 
-
-
-            self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID)
+            if self.SwpID == 'E':
+                self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances2, self.SwpID+self.SwpUnit)
+            else:
+                self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID+self.SwpUnit)
             self.fig.savefig(self.SAVEFILENAME+self.LocalSave + "-N-Ree+Reh.png")
             if Plot == 1:
                 self.fig.show()

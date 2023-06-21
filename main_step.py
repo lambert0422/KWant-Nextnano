@@ -42,7 +42,7 @@ lenswp = len(mu_SC_list) * len(mu_N_list) * len(E_excited_list) * len(TeV_list) 
 # np.round(np.arange(0.5,-1.2,-0.01),3),
 # delta_list = [6.5e-4] # in eV
 # delta_list = [6.5e-4] # in eV
-delta_list = [6.4e-4]
+delta_list = [5.5e-4]
 # delta_list = [0.1] # in eV
 VGate_shift_list = [0]
 
@@ -88,7 +88,7 @@ for DELTA in delta_list:
                            V_A=np.round(np.arange(0.5,-1.2,-0.02),3), TStrength=TStrength_list,
                            PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
                            E_excited=E_excited_list, SNjunc=SNjunc_list,
-                           ProOn=ProximityOn_list,BField=[0],a = 25,
+                           ProOn=ProximityOn_list,BField=[0],a = 22,
                            ShowDensity=ShowDensity,Phase=[2.6],
                            SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
                            muN=mu_N_list, DefectAmp=0,DefectNumPer=0,CombineMu=True,CombineTev=True,
