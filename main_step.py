@@ -17,14 +17,14 @@ ShowDensity = False
 master_file_path = __file__
 RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
-mu_N_list = [3.5e-3,3.6e-3,3.7e-3]
-mu_SC_list = [3.5e-3,3.6e-3,3.7e-3]
-E_excited_list = [0.045,0.05,0.055]
+mu_N_list = [3.7e-3]
+mu_SC_list = [3.7e-3]
+E_excited_list = [0.04,0.045]
 
 # TeV_list = [4.5e-3]
 # TeV_T_list = [4.5e-3]
-TeV_list = [4.7e-3,4.8e-3,4.9e-3]
-TeV_T_list = [4.7e-3,4.8e-3,4.9e-3]
+TeV_list = [4.7e-3,4.8e-3]
+TeV_T_list = [4.7e-3,4.8e-3]
 
 PeriBC_list = [0]
 # TStrength_list = np.round(np.arange(0,2,0.04),5)
@@ -88,8 +88,8 @@ for DELTA in delta_list:
                            V_A=np.round(np.arange(0.5,-1.2,-0.02),3), TStrength=TStrength_list,
                            PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,
                            E_excited=E_excited_list, SNjunc=SNjunc_list,
-                           ProOn=ProximityOn_list,BField=[0],a = 22,
-                           ShowDensity=ShowDensity,Phase=[2.6],
+                           ProOn=ProximityOn_list,BField=[0],a = 20,
+                           ShowDensity=ShowDensity,Phase=[np.pi],
                            SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
                            muN=mu_N_list, DefectAmp=0,DefectNumPer=0,CombineMu=True,CombineTev=True,
                            muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)
