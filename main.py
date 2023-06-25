@@ -66,11 +66,11 @@ for DELTA in delta_list:
         E_excited_list = np.arange(-1.5, 1.5, 3/100) # the unit is in t(normalised)
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-                          V_A=[0], TStrength=TStrength_list,TeV_Normal=True,AddOrbitEffect=False,
+                          V_A=[0], TStrength=TStrength_list,TeV_Normal=True,AddOrbitEffect=True,
                           PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
                           ProOn=ProximityOn_list, BField=[0], a=25,
-                          ShowDensity=ShowDensity, Phase=np.round(np.arange(0, 2, 1e-2),3)*np.pi,
+                          ShowDensity=ShowDensity, Phase=np.round(np.arange(0, 2, 2e-2),3)*np.pi,
                           SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
                           muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
