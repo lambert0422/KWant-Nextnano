@@ -1,7 +1,7 @@
 import os
 import csv
 from os import system, name
-
+from scipy.optimize import fsolve
 from prettytable import PrettyTable
 # import colorama
 # colorama.init()
@@ -209,12 +209,20 @@ class Kwant_SSeS():
     c = 299792458.0
     hbar = 1.05471817e-34  # J.s # Planck constant
     mu_B = e * hbar / (2 * me) # magneto
-    epsilon_r = 13.5
+    epsilon_r = 13.5 # InGaAs
     epsilon_0 = 8.8541878128e-12
-    n_2DEG = 2e15  # in m^-2 electron density of 2DEG
-
+    n_2DEG = 2.24e15  # in m^-2 electron density of 2DEG
+    lambda_london = 40e-9 # London penetration depth of Nb is 39+-5nm
     # t_cal = 1000*hbar**2/(e*2*m*(a*1e-9)**2)
     t_cal = 100
+    Hcb = 3.5# the bulk critical magnetic field of Nb is 3.5T
+
+    a_B = epsilon_r * epsilon_0 * hbar ** 2 / (m * e ** 2)
+    kF = (4 * np.pi * n_2DEG) ** 0.5
+    lambdaF = 1e9*2*np.pi/kF # make it nm
+    vF = hbar * kF / m
+
+
     ##########################################################################################################################
     # Pauli matrix in Nambu spinor
     ##########################################################################################################################
@@ -247,6 +255,7 @@ class Kwant_SSeS():
     # GridFactor: tune the discretized grid size
     # DavidPot: use David method or Nextnano potential
     # W_r, L_r, D_2DEG: width, length and depth of 2DEG in nm
+    # d: thickness of the Nb in nm
     # T: temperature
     # BField: list of all magnetic field to sweep
     # V_A: applied gate voltage
@@ -274,11 +283,11 @@ class Kwant_SSeS():
     # SwpID: what parameter to sweep and form figures: Vg/Vbias/E/B
     # AddOrbitEffect: whether to include orbital effect in the Hamiltonian
     # PlotbeforeFigures: how many figures between two displayed plots
-    def __init__(self, DavidPot=False,alpha = 34e-3 ,beta = 34e-3,gn = 10, GridFactor=1, W_g=300, S_g=400,
+    def __init__(self, DavidPot=False,alpha = 34e-3 ,beta = 34e-3,gn = -3.4, GridFactor=1, W_g=300, S_g=400,Nb_d=100,
                  D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
                  BField=[0],B_theta=[0],B_phi = [0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
                  TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
-                 SNjunc=['SNS'], ProOn=[1], delta=64e-6,DateT = '',TimeT = '',MasterMultiRun = False,
+                 SNjunc=['SNS'], ProOn=[1], delta=5.5e-3,DateT = '',TimeT = '',MasterMultiRun = False,
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
@@ -296,9 +305,10 @@ class Kwant_SSeS():
             self.GetReferenceData(self.ReferenceData)
         self.SeriesR = SeriesR
         self.a = a
+        self.Nb_d = Nb_d*1e-9
         t_test = 1000*(self.hbar ** 2 / (2 * self.m * (20*1e-9) ** 2))/self.e
         self.Orbit = AddOrbitEffect
-        self.delta = delta
+        self.delta_raw = delta
         self.Data = []
         self.TXT = []
         self.DefectNumPer = DefectNumPer
@@ -379,6 +389,7 @@ class Kwant_SSeS():
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
         self.W_r = W_r
         self.L_r = L_r
+        self.X1 = (self.L_r / 10000) * 1e-9 * (np.linspace(0, 10000, 10001) - 5000)
         self.W = int(W_r * GridFactor / self.a)  # (int) width of the junction (y direction)
         self.L = int(L_r * GridFactor / self.a)  # (int) length of the junction (x direction)
         self.WSC = int(WSC * GridFactor / self.a)  # (nm)
@@ -438,7 +449,7 @@ class Kwant_SSeS():
             self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(Phase)
         if self.CombineMu:
             self.comb_still = list(map(self.Upzip, self.comb_still))
-
+        self.TempDefineHc()
         self.Run_sweep()
     def Combine_Change(self,SNjunc,PeriBC,ProOn,Tev,Tev_Tunnel,B_theta,B_phi):
         if self.CombineTev:
@@ -574,9 +585,10 @@ class Kwant_SSeS():
                 TeV_NN_Txt = "*t(x,y)"
             if self.Orbit == False:  # add magntic field effect or not
                 self.Ham = """ 
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
-                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_x,sigma_z)+sin_theta*sin_phi*kron(sigma_y,sigma_z)+cos_theta*kron(sigma_z,sigma_z))""" + TeV_N_Txt + """ +
-                                           (alpha/e)*(k_x*kron(sigma_y, sigma_z) - k_y*kron(sigma_x, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
+                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
+                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt + """ +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
+                                           (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
                                            (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """+
                                            
                                       """
@@ -601,34 +613,30 @@ class Kwant_SSeS():
                 #                                            (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_0, sigma_y))""" + TeV_N_Txt + """
                 #                                        """
                 self.Ham = """
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
-                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_x,sigma_z)+sin_theta*sin_phi*kron(sigma_y,sigma_z)+cos_theta*kron(sigma_z,sigma_z))""" + TeV_N_Txt + """ +
-                                           (alpha/e)*(k_x*kron(sigma_y, sigma_z) - k_y*kron(sigma_x, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (beta/e)*(k_x*kron(sigma_z, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
+                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
+                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt + """ +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
+                                           (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
                                            (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """+
                                            ((e * (B**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
                                            (hbar*B*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
-                                           (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_y, sigma_z))""" + TeV_N_Txt + """
+                                           (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_0, sigma_y))""" + TeV_N_Txt + """
                                        """
 
             self.Ham_l_up_S = """
                                            ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu_S + V_bias)""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
-                                           (alpha/e)*(k_x*kron(sigma_y, sigma_z) - k_y*kron(sigma_x, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (beta/e)*(k_x*kron(sigma_z, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
                                            (Delta_SC_up*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_up_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """
                                        """
             self.Ham_l_dn_S = """
                                            ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S"""+ TeV_N_Txt+""")*kron(sigma_z, sigma_0) +
-                                           (alpha/e)*(k_x*kron(sigma_y, sigma_z) - k_y*kron(sigma_x, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """  +
-                                           (beta/e)*(k_x*kron(sigma_z, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
                                            (Delta_SC_dn*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_dn_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """
                                        """
             self.Ham_l_dn_N = """
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu_N - V_ref)""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
-                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_x,sigma_z)+sin_theta*sin_phi*kron(sigma_y,sigma_z)+cos_theta*kron(sigma_z,sigma_z))""" + TeV_N_Txt + """ +
-                                           (alpha/e)*(k_x*kron(sigma_y, sigma_z) - k_y*kron(sigma_x, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (beta/e)*(k_x*kron(sigma_z, sigma_z))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """
-                                       """
+                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
+                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt + """ +
+                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
+                                           (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
+                                         """
             self.Ham_l_N_metal = """
                                            ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
                                  """
@@ -719,6 +727,9 @@ class Kwant_SSeS():
             lead_dn = kwant.Builder(sym2)
             lead_dn.fill(template_l_dn_S, lead_shape, (int(self.L / 2), self.W + self.WSC))
 
+        # self.LeadTest = lead_dn
+
+
         sys.attach_lead(lead_up)
         sys.attach_lead(lead_dn)
 
@@ -799,7 +810,7 @@ class Kwant_SSeS():
                                                                                       np.round(self.t_Tunnel * 1e3, 3),
                                                                                       self.TunnelStrength,
                                                                                       self.DefectAmp,
-                                                                                      np.round(self.delta * 1e6, 3), \
+                                                                                      np.round(self.delta_raw * 1e6, 3), \
                                                                                       self.SaveNameNote]))
         else:
             self.SAVENOTE = np.vstack((self.SAVENOTE,
@@ -811,7 +822,7 @@ class Kwant_SSeS():
                                                                                       np.round(self.t_Tunnel * 1e3, 3),
                                                                                       self.TunnelStrength,
                                                                                       self.DefectAmp,
-                                                                                      np.round(self.delta * 1e6, 3), \
+                                                                                      np.round(self.delta_raw * 1e6, 3), \
                                                                                       self.SaveNameNote]))
             # self.SAVEFILENAME_origin = self.SN + '_' + self.PBtxt + '_' + self.Proximitytxt + '_t' + str(
         #     self.tmev) + 'meV_E_excited'+str(self.E)+'t_Tunnel' + str(self.TunnelStrength) + 't_Field' + str(self.B) + 'T'
@@ -821,10 +832,9 @@ class Kwant_SSeS():
                                                      np.round(self.mu_SC * 1e3, 3),
                                                      np.round(self.t * 1e3, 3),
                                                      np.round(self.t_Tunnel * 1e3, 3),
-                                                     self.TunnelStrength, self.DefectAmp, np.round(self.delta * 1e6, 3), \
-                                                     self.SaveNameNote]))
+                                                     self.TunnelStrength, self.DefectAmp, np.round(self.delta_raw * 1e6, 3)]))
         table = [["     Ee(t)     ", "  B(T)  ", "  Vg(V  )", "  VB(V)  ", "  Phi(pi)  ", "SN-SNS", "PB?", "Proxy?", "  muN(meV)  ",
-                  "  muS  ", "  t(meV)  ", "  t_tc(meV)  ", "  Tl(t)  ", "  DF(t)  ", "  Delta(ueV)  ", "Note"], table2]
+                  "  muS  ", "  t(meV)  ", "  t_tc(meV)  ", "  Tl(t)  ", "  DF(t)  ", "  Delta(ueV)  "], table2]
         Mese = PrettyTable(table[0])
         Mese.add_rows(table[1:])
         result = re.search('\n(.*)\n(.*)\n(.*)', str(Mese))
@@ -1187,28 +1197,62 @@ class Kwant_SSeS():
 
         X_m = 1e-9 * (X - (self.L - 1) / 2) * self.a / self.GridFactor
         Y_m = 1e-9 * Y * self.a / self.GridFactor
-        X1 = (self.L_r / 10000) * 1e-9 * (np.linspace(0, 10000, 10001) - 5000)  # in m
-        W = 1e-9 * self.W_r / 4
-        PHIJ = PHI0 / (2 * np.pi) + ((-1) ** leadN * X1 * Bz * (self.W_r + self.L_r) * 1e-9) / (
+         # in m
+        # W = 1e-9 * self.W_r / 4
+        PHIJ = PHI0 / (2 * np.pi) + ((-1) ** leadN * self.X1 * Bz * (self.W_r + self.L_r) * 1e-9) / (
                 4 * np.pi * self.hbar / (2 * self.e))
         lambda_sp = lambdaIn * np.exp(2 * np.pi * 1j * PHIJ)
-        a_B = self.epsilon_r * self.epsilon_0 * self.hbar ** 2 / (self.m * self.e ** 2)
-        kF = (4 * np.pi * self.n_2DEG) ** 0.5 / a_B
-        # kF = (2 * np.pi * 1e10) ** 0.5
-        vF = self.hbar * kF / self.m
 
-        Dk = self.gn * self.mu_B * Bx / (self.hbar * vF)
+
+        # kF = (2 * np.pi * 1e10) ** 0.5
+
+
+        Dk = self.gn * self.mu_B * Bx / (self.hbar * self.vF)
+        # if Dk != 0:
+        #     A = 1/Dk
+        #     print(1)
         # Dk = np.pi/(2*W)
-        gamma = Dk * (np.sin(alphaangle) * Y_m + np.cos(alphaangle) * (X_m - X1))
+        gamma = Dk * (np.sin(alphaangle) * Y_m + np.cos(alphaangle) * (X_m - self.X1))
 
         F = (np.exp(1j * gamma) + np.exp(-1j * gamma)) / (
-                8 * (np.pi ** 2) * self.hbar * self.m * ((X_m - X1) ** 2 + Y_m ** 2))
+                8 * (np.pi ** 2) * self.hbar * self.m * ((X_m - self.X1) ** 2 + Y_m ** 2))
 
-        ORDER = np.trapz(lambda_sp * F, X1) / (self.Factor)
+        ORDER = np.trapz(lambda_sp * F, self.X1) / (self.Factor)
 
         # A = abs(ORDER)/lambdaIn
 
         return ORDER
+    def TempDefineHc(self):
+        def equation(x, Nb_d, lambda_london):
+            return (4 * (x ** 2 - 1) * np.cosh(x * Nb_d / (2 * lambda_london))) / (
+                        1 - (lambda_london / (x * Nb_d)) * np.sinh(x * Nb_d / lambda_london)) - (2 - x ** 2) / (
+                        1 - (2 * lambda_london / (x * Nb_d)) * np.sinh(x * Nb_d / (2 * lambda_london)))
+
+        solutions = fsolve(equation, [1], args=(self.Nb_d, self.lambda_london))
+        A = solutions[0]
+        self.Hc = np.sqrt(self.Hcb ** 2 * A ** 2 * (2 - A ** 2) / (
+                1 - (2 * self.lambda_london / (A * self.Nb_d)) * np.tanh(A * self.Nb_d / self.lambda_london)))
+
+
+    def TempDefineGap(self):
+        # model in <Magnetic Field Dependence
+        # of the Superconducting Energy Gap
+        # in Ginzburg-Landau Theory with Application to Al>
+
+        def equation2(A0, Nb_d, lambda_london):
+            return self.B ** 2 - self.Hcb ** 2 * 4 * A0 ** 2 * (A0 ** 2 - 1) * np.cosh(A0 * Nb_d / (2 * lambda_london)) ** 2 / (
+                        1 - (lambda_london / (A0 * Nb_d)) * np.sinh(A0 * Nb_d / lambda_london))
+
+        # initial_guess = np.array([1])
+        if self.B <= self.Hc:
+            solutions = fsolve(equation2, [1], args=(self.Nb_d, self.lambda_london))
+            A2 = solutions[0]
+            self.delta = A2 * self.delta_raw
+        else:
+            self.delta = 0
+
+        # print(1)
+
 
     def Run_sweep(self):
 
@@ -1354,6 +1398,7 @@ class Kwant_SSeS():
 
 
             for Var1, Var2, Var3, Var4, Var5, Var6, Var7 in self.comb_still:
+                # self.delta = self.delta_raw
                 if self.SwpID == "Vbias":
                     self.mu_SC, self.mu_N, self.E, self.V_Applied, self.TunnelStrength, self.B, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
 
@@ -1380,7 +1425,8 @@ class Kwant_SSeS():
 
                 self.Gen_SaveFileName()
 
-
+                if self.SwpID != 'B':
+                    self.TempDefineGap()
 
                 if self.SwpID != 'Vg':
                     if self.DavidPot:
@@ -1389,7 +1435,7 @@ class Kwant_SSeS():
                         Index = self.VgList.index(self.V_Applied)
                         self.u_sl = self.Dict[Index]
 
-                        elf.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
+                        self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
                         # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
                         self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
                 now = datetime.now()
@@ -1415,6 +1461,7 @@ class Kwant_SSeS():
                         self.E = VSwp
                     elif self.SwpID == "B":
                         self.B = VSwp
+                        self.TempDefineGap()
                     elif self.SwpID == "Phase":
                         self.phi = VSwp
                     if not self.TeV_Normal:
@@ -1429,38 +1476,47 @@ class Kwant_SSeS():
 
                         if self.BlockWarnings:
                             warnings.filterwarnings("ignore")
-                        self.Factor = 1  # correct the proximity effect of order parameter
-                        if self.SN == 'SN':
-                            self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1, self.B, self.delta, 0,
-                                                                 -self.phi, Bx=0,
-                                                                 alphaangle=0) / self.delta)
-                        else:
-                            self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1, self.B, self.delta, 0,
-                                                                 -self.phi / 2, Bx=0,
-                                                                 alphaangle=0) + \
-                                                 self.orderDelta((self.L - 1) / 2, self.W - 1, self.B,
-                                                                 self.delta, 1, self.phi / 2, Bx=0,
-                                                                 alphaangle=0)) / self.delta
-                        if self.ProximityOn:
+
+                        if self.ProximityOn and not self.delta == 0:
+                            self.Factor = 1  # correct the proximity effect of order parameter
+                            if self.SN == 'SN':
+                                self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
+                                                                     self.B * np.sin(self.B_theta) * np.sin(self.B_phi),
+                                                                     self.delta, 0,
+                                                                     -self.phi,
+                                                                     Bx=self.B * np.sin(self.B_theta) * np.cos(
+                                                                         self.B_phi),
+                                                                     alphaangle=0) / self.delta)
+                            else:
+                                self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
+                                                                     self.B * np.sin(self.B_theta) * np.sin(self.B_phi),
+                                                                     self.delta, 0,
+                                                                     -self.phi / 2,
+                                                                     Bx=self.B * np.sin(self.B_theta) * np.cos(
+                                                                         self.B_phi),
+                                                                     alphaangle=0) + \
+                                                     self.orderDelta((self.L - 1) / 2, self.W - 1, self.B,
+                                                                     self.delta, 1, self.phi / 2, Bx=0,
+                                                                     alphaangle=0)) / self.delta
                             for i in range(len(self.XX)):
                                 for j in range(len(self.YY)):
                                     if self.SN == 'SN':
 
-                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B,
+                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
                                                                                      self.delta, 0,
-                                                                                     self.phi, Bx=0,
+                                                                                     self.phi, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
                                                                                      alphaangle=0)
 
                                     else:
 
-                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B,
+                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
                                                                                      self.delta, 0,
-                                                                                     -self.phi / 2, Bx=0,
+                                                                                     -self.phi / 2, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
                                                                                      alphaangle=0) + \
                                                                      self.orderDelta(self.XX[i],
                                                                                      self.W - self.YY[j] + 1,
-                                                                                     self.B,
-                                                                                     self.delta, 1, self.phi / 2, Bx=0,
+                                                                                     self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
+                                                                                     self.delta, 1, self.phi / 2, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
                                                                                      alphaangle=0)
                             # A = np.abs(self.SpatialDeltaMap).T
 
@@ -1485,6 +1541,10 @@ class Kwant_SSeS():
                                   Delta_SC_dn_prime=self.delta * np.exp(-1j * self.phi / 2),
                                   B=self.B, Y_rl=Y_rl_dis, c=self.c)
 
+                    # kwant.plotter.bands(self.LeadTest.finalized(), show=False,params = params)
+                    # plt.xlabel("momentum [(lattice constant)^-1]")
+                    # plt.ylabel("energy [t]")
+                    # plt.show()
 
                     SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
                                                             in_leads=[0, 1])
