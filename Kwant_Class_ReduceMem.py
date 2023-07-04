@@ -688,6 +688,21 @@ class Kwant_SSeS():
             #                            """
             #
 
+        def make_lead(a=1, t=1.0, W=1):
+            # Start with an empty lead with a single square lattice
+            lat = kwant.lattice.square(a)
+
+            sym_lead = kwant.TranslationalSymmetry((-a, 0))
+            lead = kwant.Builder(sym_lead)
+
+            # build up one unit cell of the lead, and add the hoppings
+            # to the next unit cell
+
+            return lead
+
+
+
+
         template = kwant.continuum.discretize(self.Ham)
         # template_l_up_S = kwant.continuum.discretize(self.Ham_l_up_S)
         # template_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_S)
@@ -712,8 +727,15 @@ class Kwant_SSeS():
         def lead_shape(site):
             (x, y) = site.pos
             return (1 <= x < self.L)
-
+        def lead_shape_test(site):
+            (x, y) = site.pos
+            return (1 <= x < 2)
         lead_up = kwant.Builder(sym1)
+
+        Test_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_N)
+        self.lead_test = kwant.Builder(sym2)
+        self.lead_test.fill(Test_l_dn_S, lead_shape_test, (0,0))
+
         lead_up.fill(template_l_up_S, lead_shape, (int(self.L / 2), -self.WSC))
         if self.SN == 'SN':
 
@@ -1541,10 +1563,10 @@ class Kwant_SSeS():
                                   Delta_SC_dn_prime=self.delta * np.exp(-1j * self.phi / 2),
                                   B=self.B, Y_rl=Y_rl_dis, c=self.c)
 
-                    # kwant.plotter.bands(self.LeadTest.finalized(), show=False,params = params)
-                    # plt.xlabel("momentum [(lattice constant)^-1]")
-                    # plt.ylabel("energy [t]")
-                    # plt.show()
+                    kwant.plotter.bands(self.lead_test.finalized(), show=False,params = params)
+                    plt.xlabel("momentum [(lattice constant)^-1]")
+                    plt.ylabel("energy [t]")
+                    plt.show()
 
                     SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
                                                             in_leads=[0, 1])
