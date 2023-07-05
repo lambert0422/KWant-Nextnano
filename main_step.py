@@ -16,6 +16,7 @@ ShowDensity = False
 
 master_file_path = __file__
 onedrivepath = '/mnt/c/Users/li244/OneDrive/'
+onedrivepath = '/mnt/d/OneDrive/'
 # RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 RefName = onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
