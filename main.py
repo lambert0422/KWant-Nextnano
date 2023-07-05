@@ -84,7 +84,7 @@ for DELTA in delta_list:
                           ProOn=ProximityOn_list, BField=[0], a=25,
                           ShowDensity=ShowDensity, Phase=np.around(np.arange(200)/200,5)*np.pi,
                           SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
+                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,showBands=True,NumBands=1,
                           muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
                           PlotbeforeFigures_Ana=20)
         # B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1500,

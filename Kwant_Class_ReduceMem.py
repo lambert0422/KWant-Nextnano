@@ -283,6 +283,8 @@ class Kwant_SSeS():
     # SwpID: what parameter to sweep and form figures: Vg/Vbias/E/B
     # AddOrbitEffect: whether to include orbital effect in the Hamiltonian
     # PlotbeforeFigures: how many figures between two displayed plots
+    # showBands: whether to plot the bands of the Hamiltonian
+    # NumBands: number of points to how bands, it equals the nunber of modes in the bands
     def __init__(self, DavidPot=False,alpha = 34e-3 ,beta = 34e-3,gn = -3.4, GridFactor=1, W_g=300, S_g=400,Nb_d=100,
                  D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
                  BField=[0],B_theta=[0],B_phi = [0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
@@ -291,12 +293,13 @@ class Kwant_SSeS():
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
                  ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
-                 BlockWarnings=True,
+                 BlockWarnings=True,showBands = False,NumBands = 1,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
 
         self.alpha =alpha  # eVnm SOI
         self.beta = beta
-
+        self.showBands = showBands
+        self.NumBands = NumBands
         self.gn = gn  # g-factor
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
@@ -734,7 +737,7 @@ class Kwant_SSeS():
         if self.showBands:
             def lead_shape_test(site):
                 (x, y) = site.pos
-                return (1 <= x < self.NumBands)
+                return (1 <= x < self.NumBands+1)
             Test_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_S)
             Test_Ham = kwant.continuum.discretize(self.Ham)
             Test_Metal = kwant.continuum.discretize(self.Ham_l_N_metal)
