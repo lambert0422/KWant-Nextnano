@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 import sys as syst
+import kwant
 import Kwant_Class_ReduceMem as KC
 from datetime import datetime
 
@@ -56,31 +57,35 @@ delta_list = [6.5e-4] # in eV
 # delta_list = [0.1] # in eV
 VGate_shift_list = [0]
 
+hamiltonian = "k_x**2 + k_y**2"
+template = kwant.continuum.discretize(hamiltonian)
+print(template)
+print(1)
 #
 # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
 # syst.stdout.flush()
 
-if DavidPot:
-    NName = ''
-else:
-    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
-ZipList = list(itertools.product(alpha_list,gn_list))
-for ALPHA, GN in ZipList:
-    for Tev in TeV_list:
-        for DELTA in delta_list:
-            for Vg_s in VGate_shift_list:
-                E_excited_list = np.arange(0, 3*DELTA/Tev,(3*DELTA/Tev)/50)
-                B = KC.Kwant_SSeS(NextNanoName=NName, alpha=ALPHA,gn=GN,Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
-                                  DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-                                  V_A=[0], TStrength=TStrength_list,TeV_Normal=True,
-                                  PeriBC=PeriBC_list, Tev=[Tev], Tev_Tunnel=TeV_T_list,
-                                  E_excited=E_excited_list, SNjunc=SNjunc_list,
-                                  ProOn=ProximityOn_list, BField=[0], a=25,
-                                  ShowDensity=ShowDensity, Phase=[np.pi / 2],
-                                  SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                                  muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
-                                  muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
-                                  PlotbeforeFigures_Ana=20)
+# if DavidPot:
+#     NName = ''
+# else:
+#     NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
+# ZipList = list(itertools.product(alpha_list,gn_list))
+# for ALPHA, GN in ZipList:
+#     for Tev in TeV_list:
+#         for DELTA in delta_list:
+#             for Vg_s in VGate_shift_list:
+#                 E_excited_list = np.arange(0, 3*DELTA/Tev,(3*DELTA/Tev)/50)
+#                 B = KC.Kwant_SSeS(NextNanoName=NName, alpha=ALPHA,gn=GN,Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
+#                                   DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
+#                                   V_A=[0], TStrength=TStrength_list,TeV_Normal=True,
+#                                   PeriBC=PeriBC_list, Tev=[Tev], Tev_Tunnel=TeV_T_list,
+#                                   E_excited=E_excited_list, SNjunc=SNjunc_list,
+#                                   ProOn=ProximityOn_list, BField=[0], a=25,
+#                                   ShowDensity=ShowDensity, Phase=[np.pi / 2],
+#                                   SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
+#                                   muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
+#                                   muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
+#                                   PlotbeforeFigures_Ana=20)
 
 
 
