@@ -727,14 +727,24 @@ class Kwant_SSeS():
         def lead_shape(site):
             (x, y) = site.pos
             return (1 <= x < self.L)
-        def lead_shape_test(site):
-            (x, y) = site.pos
-            return (1 <= x < 3)
+
         lead_up = kwant.Builder(sym1)
 
-        Test_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_S)
-        self.lead_test = kwant.Builder(sym2)
-        self.lead_test.fill(Test_l_dn_S, lead_shape_test, (1,1))
+
+        if self.showBands:
+            def lead_shape_test(site):
+                (x, y) = site.pos
+                return (1 <= x < self.NumBands)
+            Test_l_dn_S = kwant.continuum.discretize(self.Ham_l_dn_S)
+            Test_Ham = kwant.continuum.discretize(self.Ham)
+            Test_Metal = kwant.continuum.discretize(self.Ham_l_N_metal)
+            self.lead_test = kwant.Builder(sym2)
+            self.lead_test_Ham = kwant.Builder(sym2)
+            self.lead_test_Metal = kwant.Builder(sym2)
+
+            self.lead_test.fill(Test_l_dn_S, lead_shape_test, (1,1))
+            self.lead_test_Ham.fill(Test_Ham, lead_shape_test, (1, 1))
+            self.lead_test_Metal.fill(Test_Metal, lead_shape_test, (1, 1))
 
         lead_up.fill(template_l_up_S, lead_shape, (int(self.L / 2), -self.WSC))
         if self.SN == 'SN':
@@ -1563,10 +1573,6 @@ class Kwant_SSeS():
                                   Delta_SC_dn_prime=self.delta * np.exp(-1j * self.phi / 2),
                                   B=self.B, Y_rl=Y_rl_dis, c=self.c)
 
-                    kwant.plotter.bands(self.lead_test.finalized(), show=False,params = params)
-                    plt.xlabel("momentum [(lattice constant)^-1]")
-                    plt.ylabel("energy [t]")
-                    plt.show()
 
                     SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
                                                             in_leads=[0, 1])
@@ -1576,6 +1582,24 @@ class Kwant_SSeS():
 
                     if RunCount%self.PlotbeforeFigures_Ana == 0:
                         try:
+                            if self.showBands:
+                                kwant.plotter.bands(self.lead_test.finalized(), show=False, params=params)
+                                plt.xlabel("momentum [(lattice constant)^-1]")
+                                plt.ylabel("energy [t]")
+                                plt.title('Superconductor')
+                                plt.show()
+                                kwant.plotter.bands(self.lead_test_Ham.finalized(), show=False, params=params)
+                                plt.xlabel("momentum [(lattice constant)^-1]")
+                                plt.ylabel("energy [t]")
+                                plt.title('Semiconductor')
+                                plt.show()
+                                kwant.plotter.bands(self.lead_test_Metal.finalized(), show=False, params=params)
+                                plt.xlabel("momentum [(lattice constant)^-1]")
+                                plt.ylabel("energy [t]")
+                                plt.title('Metal')
+                                plt.show()
+
+
 
                             self.Gen_Site_Plot(sys, params)
                             self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' + str(VSwp) + "Sites.png")
