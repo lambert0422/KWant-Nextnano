@@ -14,7 +14,7 @@ Date = now.strftime("%YY%mM%dD")
 Time = now.strftime("%Hh%Mm%Ss")
 master_file_path = __file__
 RefName = None
-
+onedrivepath = '/mnt/c/Users/li244/OneDrive/'
 mu_N_list = [3.2e-3]
 mu_SC_list = [3.25e-3]
 
@@ -61,7 +61,7 @@ VGate_shift_list = [0]
 if DavidPot:
     NName = ''
 else:
-    NName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
+    NName = onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         E_excited_list = np.arange(-0.5, 0.5, 1/200) # the unit is in t(normalised)
