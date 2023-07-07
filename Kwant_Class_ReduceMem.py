@@ -1669,7 +1669,6 @@ class Kwant_SSeS():
                 elif self.SwpID == "Vg":
                     TitleTxt1 = ["Vg", "V", "Bias"]
                 elif self.SwpID == "E":
-                    self.VarSwp = 1000* self.VarSwp * self.t
                     TitleTxt1 = ["E", "meV", "Excitation_Energy"]
                 elif self.SwpID == "B":
                     TitleTxt1 = ["B", "T", "Magnetic_Field"]
@@ -1698,14 +1697,19 @@ class Kwant_SSeS():
             index=False, header=False)
         TitleTxtY1 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_Conductance']
 
-        Data = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY1 + list(self.conductances))]
+        if self.SwpID == 'E':
+            Xdata = 1000 * self.VarSwp * self.t
+        else:
+            Xdata = self.VarSwp
+
+        Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
         if self.SeriesR != 0:
             if self.BlockWarnings:
                 warnings.filterwarnings("ignore")
             D_R = (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5
             if self.BlockWarnings:
                 warnings.filterwarnings("always")
-            Data_R = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY1 + list(D_R))]
+            Data_R = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(D_R))]
 
 
         if self.GlobalVswpCount == 1:
@@ -1720,10 +1724,8 @@ class Kwant_SSeS():
             if self.SeriesR != 0:
                 savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                     round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
-        if self.SwpID == 'E':
-            self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances, self.SwpID+self.SwpUnit)
-        else:
-            self.Gen_Conduct_Plot(self.VarSwp, self.conductances, self.SwpID+self.SwpUnit)
+
+        self.Gen_Conduct_Plot(Xdata, self.conductances, self.SwpID+self.SwpUnit)
         self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ "-Conductance.png")
 
         if Plot == 1:
@@ -1733,7 +1735,7 @@ class Kwant_SSeS():
 
             TitleTxtY2 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_N-Ree+Reh']
 
-            Data_2 = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY2 + list(self.conductances2))]
+            Data_2 = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY2 + list(self.conductances2))]
 
             if self.SeriesR != 0:
                 if self.BlockWarnings:
@@ -1743,7 +1745,7 @@ class Kwant_SSeS():
                 if self.BlockWarnings:
                     warnings.filterwarnings("always")
 
-                Data_R_2 = [list(a) for a in zip(TitleTxtX + list(self.VarSwp), TitleTxtY2 + list(D_R2))]
+                Data_R_2 = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY2 + list(D_R2))]
 
 
             if self.GlobalVswpCount == 1:
@@ -1761,10 +1763,7 @@ class Kwant_SSeS():
                     savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                         round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
 
-            if self.SwpID == 'E':
-                self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances2, self.SwpID+self.SwpUnit)
-            else:
-                self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID+self.SwpUnit)
+            self.Gen_Conduct_Plot(Xdata, self.conductances2, self.SwpID+self.SwpUnit)
             self.fig.savefig(self.SAVEFILENAME+self.LocalSave + "-N-Ree+Reh.png")
             if Plot == 1:
                 self.fig.show()
