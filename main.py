@@ -14,7 +14,10 @@ Date = now.strftime("%YY%mM%dD")
 Time = now.strftime("%Hh%Mm%Ss")
 master_file_path = __file__
 RefName = None
-onedrivepath = '/mnt/c/Users/li244/OneDrive/'
+# onedrivepath = '/mnt/c/Users/li244/OneDrive/'
+
+
+onedrivepath = '/mnt/d/OneDrive/'
 mu_N_list = [3.2e-3]
 mu_SC_list = [3.25e-3]
 
@@ -80,11 +83,11 @@ for DELTA in delta_list:
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
                           V_A=[0], TStrength=TStrength_list, TeV_Normal=True, AddOrbitEffect=True,
                           PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                          E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
-                          ProOn=ProximityOn_list, BField=[0], a=25,
-                          ShowDensity=ShowDensity, Phase=np.around(np.arange(200)/200,5)*np.pi,
+                          E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi/2], B_phi=[0],
+                          ProOn=ProximityOn_list, BField=np.round(np.arange(0,100)*0.05,4), a=25,
+                          ShowDensity=ShowDensity, Phase=[3 * np.pi/4],
                           SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,showBands=True,NumBands=1,
+                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,showBands=False,NumBands=1,
                           muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
                           PlotbeforeFigures_Ana=20)
         # B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1500,
