@@ -92,7 +92,7 @@ for DELTA in delta_list:
                            PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,beta=0,
                            E_excited=E_excited_list, SNjunc=SNjunc_list,
                            ProOn=ProximityOn_list,BField=[0],a = 25,
-                           ShowDensity=ShowDensity,Phase=[np.pi],
+                           ShowDensity=ShowDensity,Phase=np.arange(50)/50*np.pi,
                            SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
                            muN=mu_N_list, DefectAmp=0,DefectNumPer=0,CombineMu=True,CombineTev=True,
                            muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)

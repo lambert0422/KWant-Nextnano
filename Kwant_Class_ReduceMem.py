@@ -796,14 +796,14 @@ class Kwant_SSeS():
         self.Proximitytxt = 'On' if self.ProximityOn == 1 else 'Off'
 
         self.SAVEFILENAME_origin = str(self.GlobalVswpCount + 1) + ':' + self.SaveTime
-        self.SAVENOTETitle = ["DATE(Y/M/D)", "TIME(h/m/s)", "Ee(t)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi_rad)",
+        self.SAVENOTETitle = ["DATE(Y/M/D)", "TIME(h/m/s)", "Ee(meV)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi_rad)",
                               "SN-SNS", "PB?", "Proxy?", "muN(meV)",
                               "muS(meV)", "t(meV)", "t_tunnelcouple(meV)", "Tl_B(t)", "Defect(t)", "Delta(ueV)", "Note"]
 
         if self.SwpID == "Vg":
             self.SAVEFILENAME = 'VgSwp'
 
-            self.SAVENOTE_buff = [self.E, self.B, "X", self.Vbias, self.phi / np.pi]
+            self.SAVENOTE_buff = [1000*self.E*self.t, self.B, "X", self.Vbias, self.phi / np.pi]
 
 
 
@@ -816,18 +816,18 @@ class Kwant_SSeS():
 
         elif self.SwpID == "B":
             self.SAVEFILENAME = 'BSwp'
-            self.SAVENOTE_buff = [self.E, "X", self.V_Applied, self.Vbias, self.phi / np.pi]
+            self.SAVENOTE_buff = [1000*self.E*self.t, "X", self.V_Applied, self.Vbias, self.phi / np.pi]
 
 
 
         elif self.SwpID == "Vbias":
             self.SAVEFILENAME = 'VbSwp'
-            self.SAVENOTE_buff = [self.E, self.B, self.V_Applied, "X", self.phi / np.pi]
+            self.SAVENOTE_buff = [1000*self.E*self.t, self.B, self.V_Applied, "X", self.phi / np.pi]
 
 
         elif self.SwpID == "Phase":
             self.SAVEFILENAME = 'PhaseSwp'
-            self.SAVENOTE_buff = [self.E, self.B, self.V_Applied, self.Vbias, "X"]
+            self.SAVENOTE_buff = [1000*self.E*self.t, self.B, self.V_Applied, self.Vbias, "X"]
 
         self.SAVEFILENAME = self.NextNanoName + self.fileEnd + '/' + self.SaveTime + '/' + self.SN + '-' + self.PBtxt + '-' + \
                             self.Proximitytxt + '-muN' + str(np.round(self.mu_N * 1e3, 3)) + 'meV-muS' + \
@@ -868,7 +868,7 @@ class Kwant_SSeS():
                                                      np.round(self.t * 1e3, 3),
                                                      np.round(self.t_Tunnel * 1e3, 3),
                                                      self.TunnelStrength, self.DefectAmp, np.round(self.delta_raw * 1e6, 3)]))
-        table = [["     Ee(t)     ", "  B(T)  ", "  Vg(V  )", "  VB(V)  ", "  Phi(pi)  ", "SN-SNS", "PB?", "Proxy?", "  muN(meV)  ",
+        table = [["     Ee(meV)     ", "  B(T)  ", "  Vg(V)  ", "  VB(V)  ", "  Phi(pi)  ", "SN-SNS", "PB?", "Proxy?", "  muN(meV)  ",
                   "  muS  ", "  t(meV)  ", "  t_tc(meV)  ", "  Tl(t)  ", "  DF(t)  ", "  Delta(ueV)  "], table2]
         Mese = PrettyTable(table[0])
         Mese.add_rows(table[1:])
@@ -1663,17 +1663,20 @@ class Kwant_SSeS():
                 # print('\n',end ="")
                 # syst.stdout.write("\r{0}".format('\n'))
                 # syst.stdout.flush()
-                xData = self.VarSwp
+                # xData = self.VarSwp
                 if self.SwpID == "Vbias":
                     TitleTxt1 = ["Vb", "V", "Bias_Voltage"]
                 elif self.SwpID == "Vg":
                     TitleTxt1 = ["Vg", "V", "Bias"]
                 elif self.SwpID == "E":
-                    TitleTxt1 = ["E", "eV", "Excitation_Energy"]
+                    self.VarSwp = 1000* self.VarSwp * self.t
+                    TitleTxt1 = ["E", "meV", "Excitation_Energy"]
                 elif self.SwpID == "B":
                     TitleTxt1 = ["B", "T", "Magnetic_Field"]
                 elif self.SwpID == "Phase":
                     TitleTxt1 = ["Theta", "rad", "Phase"]
+
+
 
                 if self.GlobalVswpCount%self.PlotbeforeFigures == 0:
                     self.SaveDatatoOrigin(TitleTxt1, Plot=1)
