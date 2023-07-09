@@ -621,9 +621,9 @@ class Kwant_SSeS():
                                            (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
                                            (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
                                            (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """+
-                                           ((e * (B**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
-                                           (hbar*B*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
-                                           (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_0, sigma_y))""" + TeV_N_Txt + """
+                                           ((e * ((cos_theta*B)**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
+                                           (hbar*(cos_theta*B)*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
+                                           (alpha*Y_rl(x,y)*(cos_theta*B)/(hbar*c))*kron(sigma_0, sigma_y))""" + TeV_N_Txt + """
                                        """
 
             # self.Ham_l_up_S = """
