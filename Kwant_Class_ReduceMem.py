@@ -292,9 +292,13 @@ class Kwant_SSeS():
                  SNjunc=['SNS'], ProOn=[1], delta=5.5e-3,DateT = '',TimeT = '',MasterMultiRun = False,
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
-                 ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True,
+                 ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
                  BlockWarnings=True,showBands = False,NumBands = 1,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
+
+        self.Zeeman = AddZeemanField
+        self.RashbaSOI = AddRashbaSOI
+        self.DresselhausSOI = AddDresselhausSOI
 
         self.alpha =alpha  # eVnm SOI
         self.beta = beta
@@ -586,16 +590,41 @@ class Kwant_SSeS():
                 TeV_N_Txt = "/t(x,y)"
             else:
                 TeV_NN_Txt = "*t(x,y)"
-            if self.Orbit == False:  # add magntic field effect or not
-                self.Ham = """ 
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
-                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt + """ +
-                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """
-                                           
-                                      """
+
+            if self.Orbit:
+                OrbitalHam = """
+                                   +((e * ((cos_theta*B)**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
+                                   (hbar*(cos_theta*B)*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
+                                   (alpha*Y_rl(x,y)*(cos_theta*B)/(hbar*c))*kron(sigma_0, sigma_y))
+                             """ + TeV_N_Txt
             else:
+                OrbitalHam = ""
+
+            if self.Zeeman:
+                ZeemanHam ="""+ (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt
+            else:
+                ZeemanHam = ""
+
+            if self.RashbaSOI:
+                HamPreRashba = """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt
+                RashbaHam = """+ (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt
+            else:
+                HamPreRashba = ""
+                RashbaHam = ""
+
+            if self.DresselhausSOI:
+                HamPreDresselhaus = """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt
+                DresselhausHam = """+(beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt
+            else:
+                HamPreDresselhaus = ""
+                DresselhausHam = ""
+
+            DeltaHam = """+(Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt
+
+            self.Ham = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + HamPreRashba + HamPreDresselhaus + """)*kron(sigma_z, sigma_0) """ + ZeemanHam +RashbaHam+DresselhausHam+DeltaHam+OrbitalHam
+
+
+
                 # self.Ham = """
                 #                                     ((k_x**2+k_y**2) - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))/t )*kron(sigma_z, sigma_0) +
                 #                                     EZ(x,y)*kron(sigma_0, sigma_x)/(e*t) +
@@ -615,16 +644,7 @@ class Kwant_SSeS():
                 #                                            (hbar*B*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
                 #                                            (alpha*Y_rl(x,y)*B/(hbar*c))*kron(sigma_0, sigma_y))""" + TeV_N_Txt + """
                 #                                        """
-                self.Ham = """
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
-                                           (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt + """ +
-                                           (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """+
-                                           ((e * ((cos_theta*B)**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
-                                           (hbar*(cos_theta*B)*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
-                                           (alpha*Y_rl(x,y)*(cos_theta*B)/(hbar*c))*kron(sigma_0, sigma_y))""" + TeV_N_Txt + """
-                                       """
+
 
             # self.Ham_l_up_S = """
             #                                ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu_S + V_bias)""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
