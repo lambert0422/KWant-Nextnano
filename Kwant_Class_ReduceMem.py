@@ -592,7 +592,7 @@ class Kwant_SSeS():
                                            (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt + """ +
                                            (alpha/e)*(k_x*kron(sigma_0, sigma_y) - k_y*kron(sigma_0, sigma_x))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
                                            (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """ +
-                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """+
+                                           (Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """
                                            
                                       """
             else:
@@ -1701,7 +1701,6 @@ class Kwant_SSeS():
             Xdata = 1000 * self.VarSwp * self.t
         else:
             Xdata = self.VarSwp
-
         Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
         if self.SeriesR != 0:
             if self.BlockWarnings:
@@ -1763,7 +1762,10 @@ class Kwant_SSeS():
                     savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                         round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
 
-            self.Gen_Conduct_Plot(Xdata, self.conductances2, self.SwpID+self.SwpUnit)
+            if self.SwpID == 'E':
+                self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances2, self.SwpID+self.SwpUnit)
+            else:
+                self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID+self.SwpUnit)
             self.fig.savefig(self.SAVEFILENAME+self.LocalSave + "-N-Ree+Reh.png")
             if Plot == 1:
                 self.fig.show()
