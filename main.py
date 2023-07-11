@@ -81,7 +81,8 @@ for DELTA in delta_list:
         #                   PlotbeforeFigures_Ana=20)
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-                          V_A=[0], TStrength=TStrength_list, TeV_Normal=True, AddOrbitEffect=False,
+                          V_A=[0], TStrength=TStrength_list, TeV_Normal=True,
+                          AddOrbitEffect=False, AddZeemanField= False,AddRashbaSOI=False,AddDresselhausSOI=False,
                           PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
                           ProOn=ProximityOn_list, BField=np.round(np.arange(0,100)*0.05,4), a=25,
