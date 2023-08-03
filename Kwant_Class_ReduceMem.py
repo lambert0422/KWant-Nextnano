@@ -285,6 +285,7 @@ class Kwant_SSeS():
     # PlotbeforeFigures: how many figures between two displayed plots
     # showBands: whether to plot the bands of the Hamiltonian
     # NumBands: number of points to how bands, it equals the nunber of modes in the bands
+    # ACFix and AC: fix the AC signal as the E excitation is in the unit of t and t is in unit of eV, so fix AC means fix product of E and t
     def __init__(self, DavidPot=False,alpha = 34e-3 ,beta = 34e-3,gn = -3.4, GridFactor=1, W_g=300, S_g=400,Nb_d=100,
                  D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
                  BField=[0],B_theta=[0],B_phi = [0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
@@ -292,7 +293,8 @@ class Kwant_SSeS():
                  SNjunc=['SNS'], ProOn=[1], delta=5.5e-3,DateT = '',TimeT = '',MasterMultiRun = False,
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
-                 ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
+                 ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, ACFix = False,AC = 0,
+                 AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
                  BlockWarnings=True,showBands = False,NumBands = 1,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
 
@@ -429,6 +431,11 @@ class Kwant_SSeS():
         self.Temp = T
 
         self.Combine_Change(SNjunc,PeriBC,ProOn,Tev,Tev_Tunnel,B_theta,B_phi)
+        if ACFix:
+            if not AC == 0:
+                E_excited = AC/Tev
+            else:
+                print('AC not fixed')
 
         if self.SwpID == "Vbias":
             self.Combine_Still(muSC,muN,E_excited,V_A,TStrength,BField,Phase)
@@ -823,7 +830,7 @@ class Kwant_SSeS():
         if self.SwpID == "Vg":
             self.SAVEFILENAME = 'VgSwp'
 
-            self.SAVENOTE_buff = [1000*self.E*self.t, self.B, "X", self.Vbias, self.phi / np.pi]
+            self.SAVENOTE_buff = [np.round(1000*self.E*self.t,5), self.B, "X", self.Vbias, self.phi / np.pi]
 
 
 
@@ -836,18 +843,18 @@ class Kwant_SSeS():
 
         elif self.SwpID == "B":
             self.SAVEFILENAME = 'BSwp'
-            self.SAVENOTE_buff = [1000*self.E*self.t, "X", self.V_Applied, self.Vbias, self.phi / np.pi]
+            self.SAVENOTE_buff = [np.round(1000*self.E*self.t,5), "X", self.V_Applied, self.Vbias, self.phi / np.pi]
 
 
 
         elif self.SwpID == "Vbias":
             self.SAVEFILENAME = 'VbSwp'
-            self.SAVENOTE_buff = [1000*self.E*self.t, self.B, self.V_Applied, "X", self.phi / np.pi]
+            self.SAVENOTE_buff = [np.round(1000*self.E*self.t,5), self.B, self.V_Applied, "X", self.phi / np.pi]
 
 
         elif self.SwpID == "Phase":
             self.SAVEFILENAME = 'PhaseSwp'
-            self.SAVENOTE_buff = [1000*self.E*self.t, self.B, self.V_Applied, self.Vbias, "X"]
+            self.SAVENOTE_buff = [np.round(1000*self.E*self.t,5), self.B, self.V_Applied, self.Vbias, "X"]
 
         self.SAVEFILENAME = self.NextNanoName + self.fileEnd + '/' + self.SaveTime + '/' + self.SN + '-' + self.PBtxt + '-' + \
                             self.Proximitytxt + '-muN' + str(np.round(self.mu_N * 1e3, 3)) + 'meV-muS' + \
