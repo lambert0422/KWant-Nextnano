@@ -84,16 +84,23 @@ else:
 
     # NName_list.append(onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M27D-08h34m13s')  # with 1.8 / 2.5 surface charge
 
-    NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y07M26D-23h04m09s')  # with 1.8 / 3.5 surface charge with 360nm gate split
-    NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y07M28D-16h54m39s')  # with 1.8 / 3.5 surface charge with 380nm gate split
-    NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y07M27D-23h00m59s')  # with 1.8 / 3.5 surface charge with 400nm gate split
+    # NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y07M26D-23h04m09s')  # with 1.8 / 3.5 surface charge with 360nm gate split
+    # NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y07M28D-16h54m39s')  # with 1.8 / 3.5 surface charge with 380nm gate split
+    # NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y07M27D-23h00m59s')  # with 1.8 / 3.5 surface charge with 400nm gate split
+
+    NName_list.append(
+        onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y08M10D-00h28m37s')  # with 1.8 / 4 surface charge with 360nm gate split
+    # NName_list.append(
+    #     onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y07M28D-16h54m39s')  # with 1.8 / 4 surface charge with 380nm gate split
+    NName_list.append(
+        onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y08M08D-11h31m59s')  # with 1.8 / 4 surface charge with 400nm gate split
 
     #
     # NName_list.append(onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M28D-12h21m17s')  # with 1.8 / 3 surface charge
     #
     # NName_list.append(onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M22D-16h26m01s')  # with 2 / 2.3 surface charge
     # NName_list.append(onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M24D-09h15m55s')  # with 2 / 2.5 surface charge
-    NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M28D-12h21m17s')  # with 1.8 / 3 surface charge(Best)
+    # NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y05M28D-12h21m17s')  # with 1.8 / 3 surface charge(Best)
 # for DELTA in delta_list:
 #     for Vg_s in VGate_shift_list:
 #         for NName in NName_list:
