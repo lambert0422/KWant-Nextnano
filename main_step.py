@@ -24,8 +24,8 @@ mu_N_list = [3.5e-3]
 mu_SC_list =   [3.5e-3]
 
 AC = 5e-6
-TeV_list =  np.array([6e-3])
-TeV_T_list = np.array([6e-3])
+TeV_list =  np.array([4e-3])
+TeV_T_list = np.array([4e-3])
 
 E_excited_list =AC/TeV_list # get around 5uV excitation energy which fit to the measurement
 # TeV_list = [2.44e-3]

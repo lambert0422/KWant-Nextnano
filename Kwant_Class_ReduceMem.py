@@ -255,6 +255,7 @@ class Kwant_SSeS():
     # GridFactor: tune the discretized grid size
     # DavidPot: use David method or Nextnano potential
     # W_r, L_r, D_2DEG: width, length and depth of 2DEG in nm
+    # L_s: the length of the region that have superconductor contact
     # d: thickness of the Nb in nm
     # T: temperature
     # BField: list of all magnetic field to sweep
@@ -287,13 +288,13 @@ class Kwant_SSeS():
     # NumBands: number of points to how bands, it equals the nunber of modes in the bands
     # ACFix and AC: fix the AC signal as the E excitation is in the unit of t and t is in unit of eV, so fix AC means fix product of E and t
     def __init__(self, DavidPot=False,alpha = 34e-3 ,beta = 34e-3,gn = -3.4, GridFactor=1, W_g=300, S_g=400,Nb_d=100,
-                 D_2DEG=120, W_r=1400, L_r=5000, WSC=200, a=30, T=0.1,
+                 D_2DEG=120, W_r=1400, L_r=5000, L_s = 4000,WSC=200, a=30, T=0.1,
                  BField=[0],B_theta=[0],B_phi = [0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
                  TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
                  SNjunc=['SNS'], ProOn=[1], delta=5.5e-3,DateT = '',TimeT = '',MasterMultiRun = False,
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
-                 ShowDensity=False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, ACFix = False,AC = 0,
+                 ShowDensity=False, ShowCurrent = False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, ACFix = False,AC = 0,
                  AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
                  BlockWarnings=True,showBands = False,NumBands = 1,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
@@ -322,7 +323,7 @@ class Kwant_SSeS():
         self.TXT = []
         self.DefectNumPer = DefectNumPer
 
-
+        self.ShowCurrent = ShowCurrent
         self.TeV_Normal = TeV_Normal
         self.CombineMu = CombineMu
         self.CombineTev = CombineTev
@@ -401,6 +402,7 @@ class Kwant_SSeS():
         self.X1 = (self.L_r / 10000) * 1e-9 * (np.linspace(0, 10000, 10001) - 5000)
         self.W = int(W_r * GridFactor / self.a)  # (int) width of the junction (y direction)
         self.L = int(L_r * GridFactor / self.a)  # (int) length of the junction (x direction)
+        self.L_extract_half = int((L_r - L_s) * GridFactor / (2*self.a))
         self.WSC = int(WSC * GridFactor / self.a)  # (nm)
         now = datetime.now()
         self.Date = now.strftime("%YY%mM%dD")
@@ -554,8 +556,13 @@ class Kwant_SSeS():
         def central_region(site):
             x, y = site.pos
             if self.SN == 'SN':
+                # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L-self.L_extract_half and -self.WSC <= y < 0) or (
+                #         self.L_extract_half <= x <= self.L-self.L_extract_half and self.W <= y <=(self.W - int(self.W_reduced_r / self.a)) )
                 return 0 <= x <= self.L and -self.WSC <= y <= (self.W - int(self.W_reduced_r / self.a))
             else:
+                # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L - self.L_extract_half and -self.WSC <= y < 0) or (
+                #             self.L_extract_half <= x <= self.L - self.L_extract_half and self.W <= y <= (self.W + self.WSC))
+
                 return 0 <= x <= self.L and -self.WSC <= y <= (self.W + self.WSC)
 
         lat = kwant.lattice.square(norbs=4)
@@ -661,6 +668,10 @@ class Kwant_SSeS():
                                            ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S"""+ TeV_N_Txt+""")*kron(sigma_z, sigma_0) +
                                            (Delta_SC_dn*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_dn_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """
                                        """
+            self.Ham_l_Se = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_N""" + TeV_N_Txt + HamPreRashba + HamPreDresselhaus + """)*kron(sigma_z, sigma_0) """ + ZeemanHam +RashbaHam+DresselhausHam+OrbitalHam
+
+
+
             # self.Ham_l_dn_N = """
             #                                ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
             #                                (EZ(x,y)/e)*(sin_theta*cos_phi*kron(sigma_0,sigma_x)+sin_theta*sin_phi*kron(sigma_0,sigma_y)+cos_theta*kron(sigma_0,sigma_z))""" + TeV_N_Txt + """ +
@@ -739,6 +750,7 @@ class Kwant_SSeS():
 
         template_l_up_S = kwant.continuum.discretize(self.Ham_l_N_metal)
         template_l_dn_S = kwant.continuum.discretize(self.Ham_l_N_metal)
+
         # template_l_dn_N = kwant.continuum.discretize(self.Ham_l_dn_N)
         # print(template)
         template_l_dn_N = kwant.continuum.discretize(self.Ham_l_N_metal)
@@ -756,9 +768,50 @@ class Kwant_SSeS():
 
         def lead_shape(site):
             (x, y) = site.pos
-            return (1 <= x < self.L)
+            return (self.L_extract_half <= x < self.L-self.L_extract_half)
 
         lead_up = kwant.Builder(sym1)
+        if self.PB == 1 :
+            def lead_shape_PB(site):
+                (x, y) = site.pos
+                if self.SN == 'SN':
+                    return (-self.WSC <= y <= (self.W - int(self.W_reduced_r / self.a)))
+                else:
+                    return (-self.WSC <= y <= (self.W + self.WSC))
+            def lead_shape_PB_2(site):
+                (x, y) = site.pos
+
+                return (0 <= x < self.L_extract_half)
+
+            def lead_shape_PB_3(site):
+                (x, y) = site.pos
+
+                return ((self.L - self.L_extract_half) <= x < self.L)
+
+            sym3 = kwant.TranslationalSymmetry((-1, 0))
+            sym4 = kwant.TranslationalSymmetry((1, 0))
+            template_l_Se = kwant.continuum.discretize(self.Ham_l_Se)
+            lead_left = kwant.Builder(sym3)
+            lead_right = kwant.Builder(sym4)
+            if self.L_extract_half > 0:
+                lead_up_PB1 = kwant.Builder(sym1)
+                lead_dn_PB1= kwant.Builder(sym2)
+                lead_up_PB2 = kwant.Builder(sym1)
+                lead_dn_PB2 = kwant.Builder(sym2)
+                lead_up_PB1.fill(template_l_Se, lead_shape_PB_2, (0, -self.WSC))
+                lead_up_PB2.fill(template_l_Se, lead_shape_PB_3, ((self.L - self.L_extract_half), -self.WSC))
+                if self.SN == 'SN':
+                    lead_dn_PB1.fill(template_l_Se, lead_shape_PB_2, (0, self.W - int(self.W_reduced_r / self.a)))
+                    lead_dn_PB2.fill(template_l_Se, lead_shape_PB_3,
+                                     ((self.L - self.L_extract_half), self.W - int(self.W_reduced_r / self.a)))
+                else:
+                    lead_dn_PB1.fill(template_l_Se, lead_shape_PB_2, (0, self.W + self.WSC))
+                    lead_dn_PB2.fill(template_l_Se, lead_shape_PB_3,
+                                     ((self.L - self.L_extract_half), self.W + self.WSC))
+
+            lead_left.fill(template_l_Se, lead_shape_PB, (0, int(self.W/2)))
+            lead_right.fill(template_l_Se, lead_shape_PB, (int(self.L), int(self.W/2)))
+
 
 
         if self.showBands:
@@ -776,7 +829,7 @@ class Kwant_SSeS():
             self.lead_test_Ham.fill(Test_Ham, lead_shape_test, (1, 1))
             self.lead_test_Metal.fill(Test_Metal, lead_shape_test, (1, 1))
 
-        lead_up.fill(template_l_up_S, lead_shape, (int(self.L / 2), -self.WSC))
+        lead_up.fill(template_l_up_S, lead_shape, (int(self.L / 2), -self.WSC)) # this is attached at y = negative value
         if self.SN == 'SN':
 
             lead_dn = kwant.Builder(sym2, conservation_law=-np.kron(self.s_z, self.s_0),
@@ -794,13 +847,21 @@ class Kwant_SSeS():
 
         sys.attach_lead(lead_up)
         sys.attach_lead(lead_dn)
-
+        if self.PB == 1:
+            sys.attach_lead(lead_left)
+            sys.attach_lead(lead_right)
+            if  self.L_extract_half>0:
+                sys.attach_lead(lead_up_PB1)
+                sys.attach_lead(lead_dn_PB1)
+                sys.attach_lead(lead_up_PB2)
+                sys.attach_lead(lead_dn_PB2)
         return sys.finalized()
         #
 
     def density(self, sys, params, lead_nr):
+
         wf = kwant.wave_function(sys, self.E, params=params, check_hermiticity=True)
-        A = wf(lead_nr)
+        A = wf(lead_nr) # it is 2D array the first axis is the mode number, so need to sum all the mode
         # maxtri = wf.rhs[0]
         # plt.spy(maxtri)
         # plt.show()
@@ -815,7 +876,15 @@ class Kwant_SSeS():
             self.E * self.t * self.e / (2 * self.kB * self.Temp))).sum(axis=0) + \
               ((A2[:, e_up] * np.conj(A2[:, h_down]) + A2[:, e_down] * np.conj(A2[:, h_up])) * np.tanh(
                   self.E * self.t * self.e / (2 * self.kB * self.Temp))).sum(axis=0)
-        self.d = (abs(wf(lead_nr)) ** 2).sum(axis=0)
+        self.d_raw = (abs(wf(lead_nr)) ** 2).sum(axis=0)
+        if self.ShowCurrent:
+            self.Current = kwant.operator.Current(sys, sum=False).bind(params=params)
+            for i in range(wf(lead_nr).shape[0]):
+                if i == 0:
+                    self.CurrentOp = self.Current(wf(lead_nr)[0])
+                else:
+                    self.CurrentOp = self.CurrentOp + self.Current(wf(lead_nr)[i])
+
         self.Deltamap = Ans
 
     def Gen_SaveFileName(self):
@@ -915,13 +984,18 @@ class Kwant_SSeS():
     def Gen_Site_Plot(self, sys, params):
 
         self.density(sys, params, 1)  # Calculate density
-        pick_electron = np.arange(0, len(self.d), 4)  # pickout the electron density part
-        self.d = self.d[pick_electron]
+        pick_electron_up = np.arange(0, len(self.d_raw), 4)  # pickout the electron density part
+
+        # pickout the electron density part
+        self.d = self.d_raw[pick_electron_up] + self.d_raw[pick_electron_up+1]
+
+
         local_dos = kwant.ldos(sys, params=params, energy=self.E)  # Calculate local density of state
-        self.local_dos = local_dos[pick_electron]  # pickout the electron LDOS
+        self.local_dos = local_dos[pick_electron_up] + local_dos[pick_electron_up+1]  # pickout the electron LDOS
         sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
         coords = kwant.plotter.sys_leads_pos(sys, sites)
         self.img, Amin, Amax = kwant.plotter.mask_interpolate(coords, self.d)  # Make colormap
+        self.img_LDOS, Amin2, Amax2 = kwant.plotter.mask_interpolate(coords, self.local_dos)  # Make colormap
 
         if self.BlockWarnings:
             warnings.filterwarnings("ignore")
@@ -930,47 +1004,55 @@ class Kwant_SSeS():
         set_size(6, 2, Ax0)
         kwant.plotter.plot(sys, ax=Ax0)
         plt.axis('off')
+
         Ax1 = plt.subplot(3, 3, 2)
         kwant.plotter.map(sys, self.local_dos, ax=Ax1)
         plt.title('LDOS')
         plt.axis('off')
-        Ax2 = plt.subplot(3, 3, 3)
 
+        Ax2 = plt.subplot(3, 3, 3)
         # kwant.plotter.map(sys, np.abs(self.Deltamap), ax=Ax2)
         pcolor = Ax2.imshow(np.abs(self.SpatialDeltaMap).T)
-
         plt.title('Order Parameter')
         plt.axis('off')
+
         Ax3 = plt.subplot(3, 3, 4)
         pcolor = Ax3.imshow(self.Defect_Map.T)
         # cbar = fig0.colorbar(pcolor)
         plt.title('Defect')
         plt.axis('off')
+
         Ax4 = plt.subplot(3, 3, 5)
         pcolor = Ax4.imshow(self.Delta_abs_Map.T)
         # cbar = fig0.colorbar(pcolor)
         plt.title('Delta_abs')
         plt.axis('off')
+
         Ax5 = plt.subplot(3, 3, 6)
         pcolor = Ax5.imshow(self.Delta_phase_Map.T)
         # cbar = fig0.colorbar(pcolor)
         plt.title('Delta_phase')
         plt.axis('off')
+
         Ax6 = plt.subplot(3, 3, 7)
+        # kwant.plotter.current(sys, self.CurrentOp, ax=Ax6)
         pcolor = Ax6.imshow(self.gn_Map.T)
         # cbar = fig0.colorbar(pcolor)
         plt.title('gn')
         plt.axis('off')
+
         Ax7 = plt.subplot(3, 3, 8)
         pcolor = Ax7.imshow(self.Vbias_Map.T)
         # cbar = fig0.colorbar(pcolor)
         plt.title('Vbias')
         plt.axis('off')
+
         Ax8 = plt.subplot(3, 3, 9)
         pcolor = Ax8.imshow(self.Tunnel_Map.T)
         # cbar = fig0.colorbar(pcolor)
         plt.title('Tunnel barrier')
         plt.axis('off')
+
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
                             right=0.9,
@@ -1025,8 +1107,15 @@ class Kwant_SSeS():
         plt.title('Delta')
 
         ax5 = plt.subplot(3, 3, 5)
-        ax5.plot(self.img.T[int(np.shape(self.img.T)[0] / 2), :])
-        plt.title('Wf left right cut(Gate)')
+        ax5_2 = ax5.twinx()
+        ax5.plot(self.img.T[int(np.shape(self.img.T)[0] / 2), :],color = '#0000FF')
+        ax5_2.plot(self.img_LDOS.T[int(np.shape(self.img_LDOS.T)[0] / 2), :],color = '#FF0000')
+        ax5.tick_params(axis="y", labelcolor='#0000FF')
+        ax5_2.tick_params(axis="y", labelcolor='#FF0000')
+
+        ax5.axvline(x=3*self.L_extract_half, linestyle='--')
+        ax5.axvline(x=3*(self.L-self.L_extract_half), linestyle='--')
+        plt.title('Wf/LDOS left right cut(Gate)')
 
         ax6 = plt.subplot(3, 3, 6)
         # pcolor = ax4.pcolormesh(Potential_Map.T, shading='auto')
@@ -1330,12 +1419,14 @@ class Kwant_SSeS():
             if self.ProximityOn == 1:
                 if (0 <= x < self.L) and (0 <= y < self.W):
                     DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
+
+            if (x < self.L_extract_half or x > self.L-self.L_extract_half ):
+                DELTA = 0
             self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.abs(DELTA)
             # self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
 
             self.Delta_phase_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
             # self.Delta_induced = np.min(self.Delta_abs_Map)
-
             return DELTA
 
         def Delta_0_prime_dis(x, y):
@@ -1349,6 +1440,10 @@ class Kwant_SSeS():
             if self.ProximityOn == 1:
                 if (0 <= x < self.L) and (0 <= y < self.W):
                     DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
+
+            if (x < self.L_extract_half or x > self.L-self.L_extract_half ):
+                DELTA = 0
+
             return np.conjugate(DELTA)
 
         def EZ_dis(x, y):
@@ -1611,37 +1706,48 @@ class Kwant_SSeS():
                     self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
 
                     if RunCount%self.PlotbeforeFigures_Ana == 0:
-                        try:
-                            if self.showBands:
-                                kwant.plotter.bands(self.lead_test.finalized(), show=False, params=params)
-                                plt.xlabel("momentum [(lattice constant)^-1]")
-                                plt.ylabel("energy [t]")
-                                plt.title('Superconductor')
-                                plt.show()
-                                kwant.plotter.bands(self.lead_test_Ham.finalized(), show=False, params=params)
-                                plt.xlabel("momentum [(lattice constant)^-1]")
-                                plt.ylabel("energy [t]")
-                                plt.title('Semiconductor')
-                                plt.show()
-                                kwant.plotter.bands(self.lead_test_Metal.finalized(), show=False, params=params)
-                                plt.xlabel("momentum [(lattice constant)^-1]")
-                                plt.ylabel("energy [t]")
-                                plt.title('Metal')
-                                plt.show()
+                        # try:
+                        if self.showBands:
+                            kwant.plotter.bands(self.lead_test.finalized(), show=False, params=params)
+                            plt.xlabel("momentum [(lattice constant)^-1]")
+                            plt.ylabel("energy [t]")
+                            plt.title('Superconductor')
+                            plt.show()
+                            kwant.plotter.bands(self.lead_test_Ham.finalized(), show=False, params=params)
+                            plt.xlabel("momentum [(lattice constant)^-1]")
+                            plt.ylabel("energy [t]")
+                            plt.title('Semiconductor')
+                            plt.show()
+                            kwant.plotter.bands(self.lead_test_Metal.finalized(), show=False, params=params)
+                            plt.xlabel("momentum [(lattice constant)^-1]")
+                            plt.ylabel("energy [t]")
+                            plt.title('Metal')
+                            plt.show()
 
 
 
-                            self.Gen_Site_Plot(sys, params)
-                            self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' + str(VSwp) + "Sites.png")
+                        self.Gen_Site_Plot(sys, params)
+                        self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' + str(VSwp) + "Sites.png")
+                        if self.ShowDensity == 1:
+                            self.fig.show()
+                        self.Gen_Ana_Plot()
+                        self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' + str(VSwp) + "Ana.png")
+                        if self.ShowDensity == 1:
+                            self.fig.show()
+                        if self.ShowCurrent:
+                            self.fig = plt.figure(figsize=(14, 11))
+                            Ax0 = plt.subplot(1, 1, 1)
+                            kwant.plotter.current(sys, self.CurrentOp,colorbar=False,fig_size = (10, 10),ax = Ax0)
+                            # pcolor = Ax6.imshow(self.gn_Map.T)
+                            # cbar = fig0.colorbar(pcolor)
+                            plt.title('Current')
+                            plt.axis('off')
                             if self.ShowDensity == 1:
                                 self.fig.show()
-                            self.Gen_Ana_Plot()
-                            self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' + str(VSwp) + "Ana.png")
-                            if self.ShowDensity == 1:
-                                self.fig.show()
-                        except:
-                            syst.stdout.write("Site plot not generated")
-                            syst.stdout.flush()
+                            self.fig.savefig(self.SAVEFILENAME + self.LocalSave + '_' + str(VSwp) + "Current.png")
+                        # except:
+                        #     syst.stdout.write("Site plot not generated")
+                        #     syst.stdout.flush()
 
                     if self.BlockWarnings:
                         warnings.filterwarnings("always")
