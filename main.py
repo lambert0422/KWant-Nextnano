@@ -37,7 +37,7 @@ TeV_T_list = [4.5e-3]
 # TeV_list = [3e-3]
 
 
-PeriBC_list = [0]
+PeriBC_list = [1]
 # TStrength_list = np.round(np.arange(0,2,0.04),5)
 TStrength_list = [0]
 SNjunc_list = ['SNS']
@@ -79,68 +79,33 @@ for DELTA in delta_list:
         #                   muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
         #                   muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
         #                   PlotbeforeFigures_Ana=20)
+        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
+                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=-30,L_s = 4000,
+                          V_A=[0], TStrength=TStrength_list, TeV_Normal=True,
+                          AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
+                          PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+                          E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
+                          ProOn=ProximityOn_list, BField=np.round(np.arange(0, 50) * 0.1, 4), a=20,
+                          ShowDensity=ShowDensity, ShowCurrent=True, Phase=[np.pi],
+                          SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
+                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False, showBands=False,
+                          NumBands=1,
+                          muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
+                          PlotbeforeFigures_Ana=20)
 
-        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=200,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,gn=-10,
-                          V_A=[0], TStrength=TStrength_list, TeV_Normal=True,
-                          AddOrbitEffect=True, AddZeemanField= True,AddRashbaSOI=True,AddDresselhausSOI=True,
-                          PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                          E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
-                          ProOn=ProximityOn_list, BField=np.round(np.arange(0, 50) * 0.1, 4), a=20,
-                          ShowDensity=ShowDensity, Phase=[np.pi],
-                          SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,showBands=False,NumBands=1,
-                          muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
-                          PlotbeforeFigures_Ana=20)
-        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=200,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=-10,
+        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
+                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=-30,L_s = 4000,
                           V_A=[0], TStrength=TStrength_list, TeV_Normal=True,
                           AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                           PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
                           ProOn=ProximityOn_list, BField=np.round(np.arange(0, 50) * 0.1, 4), a=20,
-                          ShowDensity=ShowDensity, Phase=[3*np.pi/4],
+                          ShowDensity=ShowDensity, ShowCurrent=True, Phase=[np.pi/4],
                           SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False, showBands=False,
                           NumBands=1,
                           muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
                           PlotbeforeFigures_Ana=20)
-        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=200,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=-20,
-                          V_A=[0], TStrength=TStrength_list, TeV_Normal=True,
-                          AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                          E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
-                          ProOn=ProximityOn_list, BField=np.round(np.arange(0, 50) * 0.1, 4), a=20,
-                          ShowDensity=ShowDensity, Phase=[np.pi],
-                          SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False, showBands=False,
-                          NumBands=1,
-                          muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
-                          PlotbeforeFigures_Ana=20)
-        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=200,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=-20,
-                          V_A=[0], TStrength=TStrength_list, TeV_Normal=True,
-                          AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                          E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
-                          ProOn=ProximityOn_list, BField=np.round(np.arange(0, 50) * 0.1, 4), a=20,
-                          ShowDensity=ShowDensity, Phase=[3 * np.pi / 4],
-                          SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                          muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False, showBands=False,
-                          NumBands=1,
-                          muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
-                          PlotbeforeFigures_Ana=20)
-        # B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1500,
-        #                   DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,WSC=500,
-        #                   V_A=[0], TStrength=TStrength_list,TeV_Normal=True,
-        #                   PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-        #                   E_excited=E_excited_list, SNjunc=SNjunc_list,
-        #                   ProOn=ProximityOn_list, BField=[0], a=25,
-        #                   ShowDensity=ShowDensity, Phase=[np.pi / 4],
-        #                   SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-        #                   muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False,
-        #                   muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
-        #                   PlotbeforeFigures_Ana=20)
+
 
 
