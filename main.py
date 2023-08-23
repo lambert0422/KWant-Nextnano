@@ -34,6 +34,7 @@ TeV_T_list = [4.5e-3]
 # mu_SC_list = [1e-3,2e-3]
 # # E_excited_list = [0.023,0.024]
 # E_excited_list = [0.01]
+
 # TeV_list = [3e-3]
 
 
@@ -86,7 +87,7 @@ for DELTA in delta_list:
                           PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
                           ProOn=ProximityOn_list, BField=np.round(np.arange(0, 50) * 0.1, 4), a=20,
-                          ShowDensity=ShowDensity, ShowCurrent=True, Phase=[np.pi],
+                          ShowDensity=ShowDensity, ShowCurrent=True,GetLDOS=True, Phase=[np.pi],
                           SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False, showBands=False,
                           NumBands=1,
@@ -99,7 +100,7 @@ for DELTA in delta_list:
                           PeriBC=PeriBC_list, Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[0], B_phi=[0],
                           ProOn=ProximityOn_list, BField=np.round(np.arange(0, 50) * 0.1, 4), a=20,
-                          ShowDensity=ShowDensity, ShowCurrent=True, Phase=[np.pi/4],
+                          ShowDensity=ShowDensity, ShowCurrent=True,GetLDOS=True, Phase=[np.pi/4],
                           SaveNameNote=NName, SeriesR=500, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, DefectAmp=0, DefectNumPer=0, CombineMu=True, CombineTev=False, showBands=False,
                           NumBands=1,

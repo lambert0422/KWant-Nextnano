@@ -294,7 +294,7 @@ class Kwant_SSeS():
                  SNjunc=['SNS'], ProOn=[1], delta=5.5e-3,DateT = '',TimeT = '',MasterMultiRun = False,
                  muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
-                 ShowDensity=False, ShowCurrent = False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, ACFix = False,AC = 0,
+                 ShowDensity=False, ShowCurrent = False, GetLDOS = False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, ACFix = False,AC = 0,
                  AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
                  BlockWarnings=True,showBands = False,NumBands = 1,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
@@ -302,7 +302,7 @@ class Kwant_SSeS():
         self.Zeeman = AddZeemanField
         self.RashbaSOI = AddRashbaSOI
         self.DresselhausSOI = AddDresselhausSOI
-
+        self.GetLDOS = GetLDOS
         self.alpha =alpha  # eVnm SOI
         self.beta = beta
         self.showBands = showBands
@@ -1142,7 +1142,7 @@ class Kwant_SSeS():
 
         self.fig.tight_layout()
 
-    def Gen_Conduct_Plot(self, x, y, Xlabel):
+    def Gen_Conduct_Plot(self, x, y, Xlabel,Ylabel):
         if self.BlockWarnings:
             warnings.filterwarnings("ignore")
         self.fig = plt.figure(figsize=(14, 11))
@@ -1169,7 +1169,8 @@ class Kwant_SSeS():
             ax0.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
         ax0.legend()
         plt.xlabel(Xlabel)
-        plt.ylabel("G/G0[/(2e^2/h)]")
+
+        plt.ylabel(Ylabel)
         ax1 = plt.subplot(1, 2, 2)
         ax1.plot(x, (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
                  label=str(self.SeriesR)+" Ohm")
@@ -1177,7 +1178,7 @@ class Kwant_SSeS():
         if self.ReferenceData != None:
             ax1.plot(self.referdata.Vg1, self.referdata.G1, self.referdata.Vg2, self.referdata.G2)
         plt.xlabel(Xlabel)
-        plt.ylabel("G/G0[/(2e^2/h)]")
+        plt.ylabel(Ylabel)
         # ax2 = plt.subplot(2, 3, 3)
         # ax2.plot(x, (1 / (1000 + 1 / (7.74809173e-5 * np.array(y)))) / 7.74809173e-5,
         #          label=" 1000 Ohm")
@@ -1578,6 +1579,9 @@ class Kwant_SSeS():
 
                 self.conductances = []
                 self.conductances2 = []
+                if self.GetLDOS:
+                    self.LDOS_edge = []
+                    self.LDOS_bulk = []
                 RunCount = 0
 
                 self.Gen_SaveFileName()
@@ -1701,6 +1705,31 @@ class Kwant_SSeS():
 
                     SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
                                                             in_leads=[0, 1])
+                    if self.GetLDOS:
+                        LDOS =  kwant.ldos(sys, params=params, energy=self.E)
+                        pick_electron_up = np.arange(0, len(LDOS), 4)
+                        LDOS = LDOS[pick_electron_up] + LDOS[pick_electron_up + 1]
+                        sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
+                        coords = kwant.plotter.sys_leads_pos(sys, sites)
+                        # LDOS, Amin, Amax = kwant.plotter.mask_interpolate(coords, LDOS)
+                        def find_row_index_numpy(matrix, target_row):
+                            matrix_np = np.array(matrix)
+                            target_row_np = np.array(target_row)
+
+                            matching_rows = np.where(np.all(matrix_np == target_row_np, axis=1))[0]
+
+                            if matching_rows.size > 0:
+                                return matching_rows[0]
+                            else:
+                                return -1
+                        target_row_edge = [self.L_extract_half+1, int(self.W/2)]
+                        target_row_bulk = [int(self.L/2), int(self.W / 2)]
+                        found_row_edge = find_row_index_numpy(coords, target_row_edge)
+                        found_row_bulk = find_row_index_numpy(coords, target_row_bulk)
+                        C_edge = LDOS[found_row_edge]
+                        C_bulk = LDOS[found_row_bulk]
+                        self.LDOS_edge.append(C_edge)
+                        self.LDOS_bulk.append(C_bulk)
                     if self.BlockWarnings:
                         warnings.filterwarnings("ignore")
                     self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
@@ -1835,6 +1864,12 @@ class Kwant_SSeS():
         else:
             Xdata = self.VarSwp
         Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
+        if self.GetLDOS:
+            TitleTxtY_LDOS_e = ["LDOS", " ", 'Edge']
+            TitleTxtY_LDOS_b = ["LDOS", " ", 'Bulk']
+            Data_LDOS_edge = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY_LDOS_e + list(self.LDOS_edge))]
+            Data_LDOS_bulk = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY_LDOS_b + list(self.LDOS_bulk))]
+
         if self.SeriesR != 0:
             if self.BlockWarnings:
                 warnings.filterwarnings("ignore")
@@ -1847,21 +1882,40 @@ class Kwant_SSeS():
         if self.GlobalVswpCount == 1:
             savedata(self.OriginFilePath + self.SaveTime + '.txt',
                      init=True, initdata=Data)
+            if self.GetLDOS:
+                savedata(self.OriginFilePath + self.SaveTime + 'LDOS_e.txt',
+                         init=True, initdata=Data_LDOS_edge)
+                savedata(self.OriginFilePath + self.SaveTime + 'LDOS_b.txt',
+                         init=True, initdata=Data_LDOS_bulk)
+
             if self.SeriesR != 0:
                 savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                     round(self.SeriesR, 3)) + '.txt', init=True, initdata=Data_R)
         else:
             savedata(self.OriginFilePath + self.SaveTime + '.txt',
                      init=False, newcol=Data)
+            if self.GetLDOS:
+                savedata(self.OriginFilePath + self.SaveTime + 'LDOS_e.txt',
+                         init=False, newcol=Data_LDOS_edge)
+                savedata(self.OriginFilePath + self.SaveTime + 'LDOS_b.txt',
+                         init=False, newcol=Data_LDOS_bulk)
             if self.SeriesR != 0:
                 savedata(self.OriginFilePath + self.SaveTime + '-' + str(
                     round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
 
-        self.Gen_Conduct_Plot(Xdata, self.conductances, self.SwpID+self.SwpUnit)
+        self.Gen_Conduct_Plot(Xdata, self.conductances, self.SwpID+self.SwpUnit,"G/G0[/(2e^2/h)]")
         self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ "-Conductance.png")
-
         if Plot == 1:
             self.fig.show()
+        if self.GetLDOS:
+            self.Gen_Conduct_Plot(Xdata, self.LDOS_edge, self.SwpID + self.SwpUnit,"LDOS")
+            self.fig.savefig(self.SAVEFILENAME + self.LocalSave + "-LDOS_e.png")
+            self.Gen_Conduct_Plot(Xdata, self.LDOS_bulk, self.SwpID + self.SwpUnit,"LDOS")
+            self.fig.savefig(self.SAVEFILENAME + self.LocalSave + "-LDOS_b.png")
+            if Plot == 1:
+                self.fig.show()
+
+
 
         if self.SN == 'SN':
 
@@ -1896,9 +1950,9 @@ class Kwant_SSeS():
                         round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
 
             if self.SwpID == 'E':
-                self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances2, self.SwpID+self.SwpUnit)
+                self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances2, self.SwpID+self.SwpUnit,"G/G0[/(2e^2/h)]")
             else:
-                self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID+self.SwpUnit)
+                self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID+self.SwpUnit,"G/G0[/(2e^2/h)]")
             self.fig.savefig(self.SAVEFILENAME+self.LocalSave + "-N-Ree+Reh.png")
             if Plot == 1:
                 self.fig.show()
