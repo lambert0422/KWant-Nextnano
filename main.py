@@ -93,6 +93,7 @@ for DELTA in delta_list:
                           NumBands=1,
                           muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
                           PlotbeforeFigures_Ana=20)
+
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=400,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=-30,L_s = 4000,
                           V_A=[0], TStrength=TStrength_list, TeV_Normal=True,
@@ -106,5 +107,6 @@ for DELTA in delta_list:
                           NumBands=1,
                           muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s, SwpID="E", PlotbeforeFigures=1,
                           PlotbeforeFigures_Ana=20)
+
 
 
