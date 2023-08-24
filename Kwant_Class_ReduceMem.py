@@ -1708,7 +1708,7 @@ class Kwant_SSeS():
                     if self.GetLDOS:
                         LDOS =  kwant.ldos(sys, params=params, energy=self.E)
                         pick_electron_up = np.arange(0, len(LDOS), 4)
-                        LDOS = LDOS[pick_electron_up] + LDOS[pick_electron_up + 1]
+                        LDOS = LDOS[pick_electron_up] + LDOS[pick_electron_up + 1]+LDOS[pick_electron_up+2] + LDOS[pick_electron_up + 3]
                         sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                         coords = kwant.plotter.sys_leads_pos(sys, sites)
                         # LDOS, Amin, Amax = kwant.plotter.mask_interpolate(coords, LDOS)
