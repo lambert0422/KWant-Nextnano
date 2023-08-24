@@ -1722,8 +1722,8 @@ class Kwant_SSeS():
                                 return matching_rows[0]
                             else:
                                 return -1
-                        target_row_edge = [self.L_extract_half+1, int(self.W/2)]
-                        target_row_bulk = [int(self.L/2), int(self.W / 2)]
+                        target_row_edge = [self.L_extract_half + 5, int(self.W / 2)]
+                        target_row_bulk = [int(self.L / 2), int(self.W / 2)]
                         found_row_edge = find_row_index_numpy(coords, target_row_edge)
                         found_row_bulk = find_row_index_numpy(coords, target_row_bulk)
                         C_edge = LDOS[found_row_edge]
@@ -1865,8 +1865,8 @@ class Kwant_SSeS():
             Xdata = self.VarSwp
         Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
         if self.GetLDOS:
-            TitleTxtY_LDOS_e = ["LDOS", " ", 'Edge']
-            TitleTxtY_LDOS_b = ["LDOS", " ", 'Bulk']
+            TitleTxtY_LDOS_e = ["LDOS", " ", self.SAVEFILENAME_origin + '_Edge']
+            TitleTxtY_LDOS_b = ["LDOS", " ", self.SAVEFILENAME_origin + '_Bulk']
             Data_LDOS_edge = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY_LDOS_e + list(self.LDOS_edge))]
             Data_LDOS_bulk = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY_LDOS_b + list(self.LDOS_bulk))]
 
