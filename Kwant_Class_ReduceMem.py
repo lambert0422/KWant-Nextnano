@@ -296,7 +296,7 @@ class Kwant_SSeS():
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
                  ShowDensity=False, ShowCurrent = False, GetLDOS = False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, ACFix = False,AC = 0,
                  AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
-                 BlockWarnings=True,showBands = False,NumBands = 1,
+                 BlockWarnings=True,showBands = False,NumBands = 1,Mapping = False,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
 
         self.Zeeman = AddZeemanField
@@ -308,6 +308,7 @@ class Kwant_SSeS():
         self.showBands = showBands
         self.NumBands = NumBands
         self.gn = gn  # g-factor
+        self.Mapping = Mapping
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
         self.ReferenceData = ReferenceData
@@ -354,6 +355,13 @@ class Kwant_SSeS():
         elif self.SwpID == 'Vbias':
             self.SwpUnit = ' (V)'
         elif self.SwpID == 'E':
+            if self.Mapping:
+                if len(BField)>len(Phase):
+                    self.VarMap = BField
+                    self.VarMaptxt = 'B (T)'
+                elif len(Phase)>len(BField):
+                    self.VarMap = Phase
+                    self.VarMaptxt = 'Phase (rad)'
             self.SwpUnit = ' (meV)'
         elif self.SwpID == 'B':
             self.SwpUnit = ' (T)'
@@ -1712,22 +1720,32 @@ class Kwant_SSeS():
                         sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                         coords = kwant.plotter.sys_leads_pos(sys, sites)
                         # LDOS, Amin, Amax = kwant.plotter.mask_interpolate(coords, LDOS)
-                        def find_row_index_numpy(matrix, target_row):
-                            matrix_np = np.array(matrix)
-                            target_row_np = np.array(target_row)
+                        def find_coordinates_in_range(arr, x_range, y_range):
+                            # Convert the N by 2 array to a NumPy array
+                            np_arr = np.array(arr)
 
-                            matching_rows = np.where(np.all(matrix_np == target_row_np, axis=1))[0]
+                            # Find the indices of coordinates within the specified ranges
+                            x_indices = np.where((np_arr[:, 0] >= x_range[0]) & (np_arr[:, 0] <= x_range[1]))
+                            y_indices = np.where((np_arr[:, 1] >= y_range[0]) & (np_arr[:, 1] <= y_range[1]))
 
-                            if matching_rows.size > 0:
-                                return matching_rows[0]
-                            else:
-                                return -1
-                        target_row_edge = [self.L_extract_half + 5, int(self.W / 2)]
-                        target_row_bulk = [int(self.L / 2), int(self.W / 2)]
-                        found_row_edge = find_row_index_numpy(coords, target_row_edge)
-                        found_row_bulk = find_row_index_numpy(coords, target_row_bulk)
-                        C_edge = LDOS[found_row_edge]
-                        C_bulk = LDOS[found_row_bulk]
+                            # Find the common indices that satisfy both x and y conditions
+                            common_row_indices = np.intersect1d(x_indices, y_indices)
+
+                            return common_row_indices
+
+                        x_range = (4, 11)
+                        y_range = (3, 9)
+
+                        target_X_edge = [self.L_extract_half, self.L_extract_half+10]
+                        target_Y_edge = [1, self.W-1]
+                        target_X_bulk = [int(self.L / 2)-5, int(self.L / 2)+5]
+                        target_Y_bulk = [1, self.W - 1]
+
+                        found_row_edge = find_coordinates_in_range(coords, target_X_edge,target_Y_edge)
+                        found_row_bulk = find_coordinates_in_range(coords, target_X_bulk,target_Y_bulk)
+
+                        C_edge = np.mean(LDOS[found_row_edge])
+                        C_bulk = np.mean(LDOS[found_row_bulk])
                         self.LDOS_edge.append(C_edge)
                         self.LDOS_bulk.append(C_bulk)
                     if self.BlockWarnings:
@@ -1843,12 +1861,44 @@ class Kwant_SSeS():
                     self.SaveDatatoOrigin(TitleTxt1, Plot=1)
                 else:
                     self.SaveDatatoOrigin(TitleTxt1)
+            if self.Mapping and self.SwpID == "E":
+
+                self.LoadDatatoPlot(self.OriginFilePath + self.SaveTime + '.txt',self.VarSwp,self.VarMap,'G',
+                                    'Conductance','V (meV)',self.VarMaptxt)
+                self.fig.savefig(self.SAVEFILENAME + self.LocalSave + "-GMap.png")
+                self.fig.show()
+                self.LoadDatatoPlot(self.OriginFilePath + self.SaveTime + 'LDOS_b.txt',self.VarSwp,self.VarMap,'LDOS',
+                                    'Bulk LDOS','V (meV)',self.VarMaptxt)
+                self.fig.savefig(self.SAVEFILENAME + self.LocalSave + "-LDOS_b_Map.png")
+                self.fig.show()
+                self.LoadDatatoPlot(self.OriginFilePath + self.SaveTime + 'LDOS_e.txt',self.VarSwp,self.VarMap,'LDOS',
+                                    'Edge LDOS','V (meV)',self.VarMaptxt)
+                self.fig.savefig(self.SAVEFILENAME + self.LocalSave + "-LDOS_e_Map.png")
+                self.fig.show()
+
 
         # print('---------------------- All Finished (Total Time:'+TimeFormat(
         #                 TimeSpend)+') ----------------------')
         syst.stdout.write("\r{0}".format('------------------------- All Finished (Total:' + TimeFormat(
             TimeSpend) + '/Ave:' + TimeFormat(elapsed_tol / self.GlobalRunCount) + '/run) -------------------------'))
         syst.stdout.flush()
+    def LoadDatatoPlot(self,datapath,xdata,ydata,zlabel,title,xlabel,ylabel):
+        if self.SwpID == 'E':
+            xdata = 1000 * xdata * self.t
+
+        data_frame = pd.read_csv(datapath, delimiter='\t')
+        zdata_columns = [column for column in data_frame.columns if column.startswith(zlabel)]
+        zdata = data_frame[zdata_columns]
+        zdata = zdata[2:].astype(float)
+        zdata = zdata.to_numpy()
+        self.fig = plt.figure(figsize = (14,11))
+        plt.pcolormesh(ydata, xdata, zdata)
+        plt.title(title,fontsize=24)
+        plt.yticks(fontsize=18)
+        plt.xticks(fontsize=18)
+        plt.xlabel(xlabel,fontsize=18)
+        plt.ylabel(ylabel,fontsize=18)
+
 
     def SaveDatatoOrigin(self, TitleTxtX, Plot=0):
 
