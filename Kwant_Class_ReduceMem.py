@@ -287,7 +287,7 @@ class Kwant_SSeS():
     # showBands: whether to plot the bands of the Hamiltonian
     # NumBands: number of points to how bands, it equals the nunber of modes in the bands
     # ACFix and AC: fix the AC signal as the E excitation is in the unit of t and t is in unit of eV, so fix AC means fix product of E and t
-    def __init__(self, DavidPot=False,alpha = 34e-3 ,beta = 34e-3,gn = -3.4, GridFactor=1, W_g=300, S_g=400,Nb_d=100,
+    def __init__(self, DavidPot=False,alpha = 2.25e-3 ,beta = 34e-3,gn = -3.4, GridFactor=1, W_g=300, S_g=400,Nb_d=100,
                  D_2DEG=120, W_r=1400, L_r=5000, L_s = 4000,WSC=200, a=30, T=0.1,
                  BField=[0],B_theta=[0],B_phi = [0], V_A=np.arange(0, -1.49, -0.01), Tev=[1e-3], Tev_Tunnel=[2e-3], E_excited=[5e-3],
                  TStrength=[0], TunnelLength=3, Phase=[np.pi / 4], Vbias_List=[0], PeriBC=[0],
@@ -1699,7 +1699,7 @@ class Kwant_SSeS():
 
 
                     params = dict(a=1e-9, e=self.e, Delta_0=Delta_0_dis, EZ=EZ_dis, TB=TunnelBarrier_dis,
-                                  V=V_dis, VG=VGate_dis, alpha=self.alpha * (1e-9) * self.e, hbar=self.hbar,
+                                  V=V_dis, VG=VGate_dis, alpha=self.alpha * self.e, hbar=self.hbar,
                                   m=self.m,beta=self.beta * (1e-9) * self.e,
                                   mu=mu_dis, mu_S=self.mu_SC, mu_N=self.mu_N,sin_theta = np.sin(self.B_theta),sin_phi=np.sin(self.B_phi),cos_phi=np.cos(self.B_phi),cos_theta = np.cos(self.B_theta),
                                   EZ_fix=self.gn * self.mu_B * self.B / 2,
