@@ -1427,8 +1427,13 @@ class Kwant_SSeS():
                 y - self.W, 1)
             DELTA = Delta_Spatial * np.exp(Phase_Spatial * 1j / 2)
             if self.ProximityOn == 1:
+
                 if (0 <= x < self.L) and (0 <= y < self.W):
-                    DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
+                    if self.constantDelta:
+
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * np.exp((-self.phi * 2 * (0.5 - np.heaviside(y, 0))) * 1j / 2) * Square
+                    else:
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
 
             if (x < self.L_extract_half or x > self.L-self.L_extract_half ):
                 DELTA = 0
@@ -1449,8 +1454,12 @@ class Kwant_SSeS():
             DELTA = Delta_Spatial * np.exp(Phase_Spatial * 1j / 2)
             if self.ProximityOn == 1:
                 if (0 <= x < self.L) and (0 <= y < self.W):
-                    DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
+                    if self.constantDelta:
 
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)]* np.exp((-self.phi * 2 * (0.5 - np.heaviside(y, 0))) * 1j / 2) * Square
+
+                    else:
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] *Square
             if (x < self.L_extract_half or x > self.L-self.L_extract_half ):
                 DELTA = 0
 
