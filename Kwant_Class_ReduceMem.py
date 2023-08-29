@@ -269,6 +269,7 @@ class Kwant_SSeS():
     # PeriBC: list of whether or not to have periodic boundary condition (0/1)
     # SNjunc: list of whether to have two superconducting leads or one normal one superconducting ('SN'/'SNS')
     # ProximityOn: list of turn on off proximity effect(0/1)
+    # constantDelta: when have proximity on, this flags a constant induced delta in the 2DEG having the value of parent gap
     # delta: superconductor pairing, order parameter, superconductor gap
     # NextNanoName: the folder path of the Nextnano result
     # ShowDensity: whether to plot density plot or not
@@ -296,7 +297,7 @@ class Kwant_SSeS():
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,
                  ShowDensity=False, ShowCurrent = False, GetLDOS = False, Swave=False, TeV_Normal=True, CombineTev=True, CombineMu=False, ACFix = False,AC = 0,
                  AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
-                 BlockWarnings=True,showBands = False,NumBands = 1,Mapping = False,
+                 BlockWarnings=True,showBands = False,NumBands = 1,Mapping = False,constantDelta = False,
                  SwpID="Vg", Digits=5, PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
 
         self.Zeeman = AddZeemanField
@@ -309,6 +310,7 @@ class Kwant_SSeS():
         self.NumBands = NumBands
         self.gn = gn  # g-factor
         self.Mapping = Mapping
+        self.constantDelta = constantDelta
         # a = 30  # nm # grid point separation
         self.BlockWarnings = BlockWarnings
         self.ReferenceData = ReferenceData
@@ -676,9 +678,8 @@ class Kwant_SSeS():
                                            ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S"""+ TeV_N_Txt+""")*kron(sigma_z, sigma_0) +
                                            (Delta_SC_dn*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) + Delta_SC_dn_prime*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt + """
                                        """
-            self.Ham_l_Se = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_N""" + TeV_N_Txt + HamPreRashba + HamPreDresselhaus + """)*kron(sigma_z, sigma_0) """ + ZeemanHam +RashbaHam+DresselhausHam+OrbitalHam
-
-
+            # self.Ham_l_Se = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_N""" + TeV_N_Txt + HamPreRashba + HamPreDresselhaus + """)*kron(sigma_z, sigma_0) """ + ZeemanHam +RashbaHam+DresselhausHam+OrbitalHam
+            self.Ham_l_Se = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_N""" + TeV_N_Txt  + """)*kron(sigma_z, sigma_0) """ + ZeemanHam + RashbaHam + DresselhausHam + OrbitalHam
 
             # self.Ham_l_dn_N = """
             #                                ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - (mu(x,y)+V(x,y)-VG(x,y)-TB(x,y))""" + TeV_N_Txt + """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt + """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0) +
@@ -1647,47 +1648,50 @@ class Kwant_SSeS():
                             warnings.filterwarnings("ignore")
 
                         if self.ProximityOn and not self.delta == 0:
-                            self.Factor = 1  # correct the proximity effect of order parameter
-                            if self.SN == 'SN':
-                                self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
-                                                                     self.B * np.sin(self.B_theta) * np.sin(self.B_phi),
-                                                                     self.delta, 0,
-                                                                     -self.phi,
-                                                                     Bx=self.B * np.sin(self.B_theta) * np.cos(
-                                                                         self.B_phi),
-                                                                     alphaangle=0) / self.delta)
+                            if self.constantDelta:
+                                self.SpatialDeltaMap[:,:] = self.delta
                             else:
-                                self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
-                                                                     self.B * np.sin(self.B_theta) * np.sin(self.B_phi),
-                                                                     self.delta, 0,
-                                                                     -self.phi / 2,
-                                                                     Bx=self.B * np.sin(self.B_theta) * np.cos(
-                                                                         self.B_phi),
-                                                                     alphaangle=0) + \
-                                                     self.orderDelta((self.L - 1) / 2, self.W - 1, self.B,
-                                                                     self.delta, 1, self.phi / 2, Bx=0,
-                                                                     alphaangle=0)) / self.delta
-                            for i in range(len(self.XX)):
-                                for j in range(len(self.YY)):
-                                    if self.SN == 'SN':
+                                self.Factor = 1  # correct the proximity effect of order parameter
+                                if self.SN == 'SN':
+                                    self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
+                                                                         self.B * np.sin(self.B_theta) * np.sin(self.B_phi),
+                                                                         self.delta, 0,
+                                                                         -self.phi,
+                                                                         Bx=self.B * np.sin(self.B_theta) * np.cos(
+                                                                             self.B_phi),
+                                                                         alphaangle=0) / self.delta)
+                                else:
+                                    self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
+                                                                         self.B * np.sin(self.B_theta) * np.sin(self.B_phi),
+                                                                         self.delta, 0,
+                                                                         -self.phi / 2,
+                                                                         Bx=self.B * np.sin(self.B_theta) * np.cos(
+                                                                             self.B_phi),
+                                                                         alphaangle=0) + \
+                                                         self.orderDelta((self.L - 1) / 2, self.W - 1, self.B,
+                                                                         self.delta, 1, self.phi / 2, Bx=0,
+                                                                         alphaangle=0)) / self.delta
+                                for i in range(len(self.XX)):
+                                    for j in range(len(self.YY)):
+                                        if self.SN == 'SN':
 
-                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
-                                                                                     self.delta, 0,
-                                                                                     self.phi, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
-                                                                                     alphaangle=0)
+                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
+                                                                                         self.delta, 0,
+                                                                                         self.phi, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
+                                                                                         alphaangle=0)
 
-                                    else:
+                                        else:
 
-                                        self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
-                                                                                     self.delta, 0,
-                                                                                     -self.phi / 2, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
-                                                                                     alphaangle=0) + \
-                                                                     self.orderDelta(self.XX[i],
-                                                                                     self.W - self.YY[j] + 1,
-                                                                                     self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
-                                                                                     self.delta, 1, self.phi / 2, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
-                                                                                     alphaangle=0)
-                            # A = np.abs(self.SpatialDeltaMap).T
+                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
+                                                                                         self.delta, 0,
+                                                                                         -self.phi / 2, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
+                                                                                         alphaangle=0) + \
+                                                                         self.orderDelta(self.XX[i],
+                                                                                         self.W - self.YY[j] + 1,
+                                                                                         self.B*np.sin(self.B_theta)*np.sin(self.B_phi),
+                                                                                         self.delta, 1, self.phi / 2, Bx=self.B*np.sin(self.B_theta)*np.cos(self.B_phi),
+                                                                                         alphaangle=0)
+                                # A = np.abs(self.SpatialDeltaMap).T
 
                         if self.BlockWarnings:
                             warnings.filterwarnings("always")
@@ -1733,11 +1737,9 @@ class Kwant_SSeS():
 
                             return common_row_indices
 
-                        x_range = (4, 11)
-                        y_range = (3, 9)
 
                         target_X_edge = [self.L_extract_half, self.L_extract_half+10]
-                        target_Y_edge = [1, self.W-1]
+                        target_Y_edge = [1, self.W - 1]
                         target_X_bulk = [int(self.L / 2)-5, int(self.L / 2)+5]
                         target_Y_bulk = [1, self.W - 1]
 
