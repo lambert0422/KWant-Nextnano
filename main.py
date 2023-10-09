@@ -172,4 +172,3 @@ for DELTA in delta_list:
         #                   muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
         #                   PlotbeforeFigures=100,
         #                   PlotbeforeFigures_Ana=10).Run_sweep()
-
