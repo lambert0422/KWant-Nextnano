@@ -1,7 +1,7 @@
 import os
 import csv
 from os import system, name
-from scipy.optimize import fsolve
+
 from prettytable import PrettyTable
 # import colorama
 # colorama.init()
@@ -19,7 +19,11 @@ import matplotlib.pyplot as plt
 # import tinyarray
 import warnings
 import kwant
+import scipy.sparse.linalg as sla
 
+from scipy.optimize import fsolve
+from scipy.linalg import ishermitian, eig, eigh
+from scipy.sparse import diags,coo_matrix
 import kwant.continuum
 import pandas as pd
 import itertools
@@ -290,8 +294,9 @@ class Kwant_SSeS():
     # showBands: whether to plot the bands of the Hamiltonian
     # NumBands: number of points to how bands, it equals the nunber of modes in the bands
     # ACFix and AC: fix the AC signal as the E excitation is in the unit of t and t is in unit of eV, so fix AC means fix product of E and t
+    # CloseSystem: whether to perform a extra calculation on a closed system of the scattering region, get k_Num lowest eigenvector and output the mode_Num waverfucntion density
     def __init__(self, DavidPot=False,alpha = 2.25e-3 ,beta = 2.25e-3,gn = -3.4,
-                 Temp=0.1,delta=0.125, delta_real = 0.58e-3,muN=0, muSC=10e-3, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
+                 Temp=0.1,delta=0.125, delta_real = 0.58e-3,muN=0.25, muSC=0.25,muLead=0.25, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  W_g=300, S_g=400, Nb_d=100, D_2DEG=120, W_r=1400, L_r=5000, L_s=4000, WSC=200, a=30, GridFactor=1,
                  BField=[0],B_theta=[0],B_phi = [0], V_A=np.arange(0, -1.49, -0.01), Vbias_List=[0],Tev=[1e-3], Tev_Tunnel=[2e-3],
                  E_excited=[5e-3],TStrength=[0], TunnelLength=3, Phase=[np.pi / 4],  PeriBC=[0],SNjunc=['SNS'], ProOn=[1],
@@ -299,10 +304,9 @@ class Kwant_SSeS():
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,FieldDependentGap = True,
                  ShowDensity=False, ShowCurrent = False, GetLDOS = False, GetConductance = True, Swave=False, TeV_Normal=True,
                  CombineTev=True, CombineMu=False, ACFix = False, AC = 0, Mapping = False,constantDelta = False,
-                 MasterMultiRun=False, BlockWarnings=True, showBands=False,NumBands = 1,
+                 MasterMultiRun=False, BlockWarnings=True, showBands=False,NumBands = 1,CloseSystem = False,mode_Num = 5, k_Num = 10,
                  AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
                  PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
-
         self.DavidPot = DavidPot
         self.alpha = alpha
         self.beta = beta
@@ -313,8 +317,9 @@ class Kwant_SSeS():
         self.Temp = Temp
         self.deltaPairingMatrix=deltaPairingMatrix
         self.deltaPairingMatrix_sign=deltaPairingMatrix_sign
-
-
+        self.CloseSystem = CloseSystem
+        self.mode_Num =mode_Num
+        self.k_Num =k_Num
         if ACFix:
             if not AC == 0:
                 E_excited = AC/Tev
@@ -451,27 +456,27 @@ class Kwant_SSeS():
 
 
         if self.SwpID == "Vbias":
-            self.Combine_Still(muSC,muN,E_excited,V_A,TStrength,BField,Phase)
+            self.Combine_Still(muSC,muN,muLead,E_excited,V_A,TStrength,BField,Phase)
             self.VarSwp = Vbias_List
             self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(Vbias_List)
 
         elif self.SwpID == "Vg":
-            self.Combine_Still(muSC, muN, E_excited, TStrength, BField,Vbias_List, Phase)
+            self.Combine_Still(muSC, muN, muLead,E_excited, TStrength, BField,Vbias_List, Phase)
             self.VarSwp = V_A
             self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(V_A)
 
         elif self.SwpID == "E":
-            self.Combine_Still(muSC, muN, V_A, TStrength, BField, Vbias_List, Phase)
+            self.Combine_Still(muSC, muN, muLead,V_A, TStrength, BField, Vbias_List, Phase)
             self.VarSwp = E_excited
             self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len( E_excited)
 
         elif self.SwpID == "B":
-            self.Combine_Still(muSC, muN, E_excited, V_A,TStrength, Vbias_List, Phase)
+            self.Combine_Still(muSC, muN,muLead, E_excited, V_A,TStrength, Vbias_List, Phase)
             self.VarSwp = BField
             self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(BField)
 
         elif self.SwpID == "Phase":
-            self.Combine_Still(muSC, muN, E_excited,V_A, TStrength, Vbias_List, BField)
+            self.Combine_Still(muSC, muN,muLead, E_excited,V_A, TStrength, Vbias_List, BField)
             self.VarSwp = Phase
             self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(Phase)
         if self.CombineMu:
@@ -487,17 +492,32 @@ class Kwant_SSeS():
             self.comb_change = list(
                 itertools.product(list(SNjunc), list(PeriBC), list(ProOn),list(B_theta),list(B_phi), list(Tev),list(Tev_Tunnel)))
 
-    def Combine_Still(self,V1,V2,V3,V4,V5,V6,V7):
+    def Combine_Still(self,V1,V2,V3,V4,V5,V6,V7,V8):
         if self.CombineMu:
             self.comb_still = list(
                 itertools.product(zip(list(V1), list(V2)), list(V3), list(V4),
-                                  list(V5), list(V6), list(V7)))
+                                  list(V5), list(V6), list(V7),list(V8)))
+
         else:
             self.comb_still = list(
                 itertools.product(list(V1), list(V2), list(V3), list(V4),
-                                  list(V5), list(V6), list(V7)))
+                                  list(V5), list(V6), list(V7),list(V8)))
     def GetReferenceData(self, Path):
         self.referdata = pd.read_excel(Path)
+
+    def DiracDelta(self,En, mu, sigma):
+        En = np.array(En)
+        ans = np.zeros(En.size, dtype=complex)
+        lim = 500
+
+
+        ans[np.real(En - mu) ** 2 / (2 * sigma ** 2) > lim] = 0
+        ans[np.real(En - mu) ** 2 / (2 * sigma ** 2) < -lim] = 0
+        ans[(np.real(En - mu) ** 2 / (2 * sigma ** 2) <= lim) & (
+                np.real(En - mu) ** 2 / (2 * sigma ** 2) >= -lim)] = (1 / np.sqrt(2 * np.pi * sigma ** 2)) * np.exp(
+            -np.real(En[(np.real(En - mu) ** 2 / (2 * sigma ** 2) <= lim) & (
+                    np.real(En - mu) ** 2 / (2 * sigma ** 2) >= -lim)] - mu) ** 2 / (2 * sigma ** 2))
+        return ans
 
     def Fermi(self, En, mu):
 
@@ -506,20 +526,16 @@ class Kwant_SSeS():
 
         lim = 500
         if self.Temp == 0:
-            if np.real(En - mu) > 0:
-                ans = 0
-            elif np.real(En - mu) < 0:
-                ans = 1
-            else:
-                ans = 0.5
+            ans[np.real(En - mu) > 0] = 0
+            ans[np.real(En - mu) < 0] = 1
+            ans[np.real(En - mu) ==0] = 0.5
+
         else:
-            if np.real(En - mu) / (self.kB * self.Temp) > lim:
-                ans = 0
-            elif np.real(En - mu) / (self.kB * self.Temp) < -lim:
-                ans = 1
-            else:
-                ans = 1 / (np.exp(np.real(En[(np.real(En - mu) / (self.kB * self.Temp) <= lim) & (
-                        np.real(En - mu) / (self.kB * self.Temp) >= -lim)] - mu) / (self.kB * self.Temp)) + 1)
+            ans[np.real(En - mu) / (self.kB * self.Temp) > lim] = 0
+            ans[np.real(En - mu) / (self.kB * self.Temp) < -lim] = 1
+            ans[(np.real(En - mu) / (self.kB * self.Temp) <= lim) & (np.real(En - mu) / (self.kB * self.Temp) >= -lim)] = (
+                    1 / (np.exp(np.real(En[(np.real(En - mu) / (self.kB * self.Temp) <= lim) & (
+                        np.real(En - mu) / (self.kB * self.Temp) >= -lim)] - mu) / (self.kB * self.Temp)) + 1))
             # ans = 1 / (np.exp((En - mu) / (kB * T)) + 1)
         return ans
 
@@ -585,6 +601,12 @@ class Kwant_SSeS():
         # other parameter mu V etc, should be in eV unit
         if self.Swave:
             PHMatrix = "sigma_z"
+
+
+
+
+
+
             PHMatrix_sign = "+"
         else:
             PHMatrix = self.deltaPairingMatrix
@@ -676,7 +698,7 @@ class Kwant_SSeS():
             #                  """
 
 
-            # self.Ham_l_Se = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_N""" + TeV_N_Txt + HamPreRashba + HamPreDresselhaus + """)*kron(sigma_z, sigma_0) """ + ZeemanHam +RashbaHam+DresselhausHam+OrbitalHam
+            #self.Ham_l_Se = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_N""" + TeV_N_Txt + HamPreRashba + HamPreDresselhaus + """)*kron(sigma_z, sigma_0) """ + ZeemanHam +RashbaHam+DresselhausHam+OrbitalHam
             self.Ham_l_Se = """ ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_N""" + TeV_N_Txt  + """)*kron(sigma_z, sigma_0) """ + ZeemanHam_Fix + RashbaHam_Fix + DresselhausHam_Fix + OrbitalHam
             # self.Ham_l_Se = """ ((k_x**2+k_y**2) - 0.25)*kron(sigma_z, sigma_0) """ + ZeemanHam + RashbaHam
 
@@ -687,7 +709,7 @@ class Kwant_SSeS():
             #                                (beta/e)*(k_x*kron(sigma_0, sigma_x) - k_y*kron(sigma_0, sigma_y))*kron(sigma_z, sigma_0)""" + TeV_N_Txt + """
             #                              """
             self.Ham_l_N_metal = """
-                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_S""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
+                                           ((k_x**2+k_y**2)""" + TeV_NN_Txt + """ - mu_Lead""" + TeV_N_Txt + """)*kron(sigma_z, sigma_0)
                                  """
             # self.Ham_l_N_metal = """
             #                 ((k_x**2+k_y**2) - 0.25)*kron(sigma_z, sigma_0)
@@ -770,6 +792,9 @@ class Kwant_SSeS():
 
         sys = kwant.Builder()
         sys.fill(template, central_region, (0, 0));
+        if self.CloseSystem:
+            sys_close = kwant.Builder()
+            sys_close.fill(template, central_region, (0, 0));
         ########################################################################################
 
         ########################################################################################
@@ -870,6 +895,11 @@ class Kwant_SSeS():
                 sys.attach_lead(lead_up_PB2)
                 sys.attach_lead(lead_dn_PB2)
         syst = sys.finalized()
+
+        if self.CloseSystem:
+            syst_close = sys_close.finalized()
+        else:
+            syst_close = []
         # # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
         # monitorX = int(self.L/2)
         # monitorY = int(self.W/2)
@@ -879,8 +909,8 @@ class Kwant_SSeS():
         # monitorY_SC_up = int(self.W+self.WSC/2)
         # monitorY_SC_dn = int(-self.WSC / 2)
         # self.MidSiteID = syst.id_by_site[lat(monitorX, monitorY)]
-        # self.MidSiteXID = syst.id_by_site[lat(monitorX-1, monitorY)]
-        # self.MidSiteYID = syst.id_by_site[lat(monitorX , monitorY-1)]
+        # self.MidSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY)]
+        # self.MidSiteYID = syst.id_by_site[lat(monitorX , monitorY + 1)]
         # self.SemiSiteID = syst.id_by_site[lat(monitorX, monitorY_Semi)]
         # self.SemiSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_Semi)]
         # self.SemiSiteYID = syst.id_by_site[lat(monitorX, monitorY_Semi + 1)]
@@ -890,7 +920,7 @@ class Kwant_SSeS():
         # self.SCdnSiteID = syst.id_by_site[lat(monitorX, monitorY_SC_dn)]
         # self.SCdnSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_SC_dn)]
         # self.SCdnSiteYID = syst.id_by_site[lat(monitorX, monitorY_SC_dn + 1)]
-        return syst
+        return syst, syst_close
         #
 
     def density(self, sys, params, lead_nr):
@@ -929,7 +959,7 @@ class Kwant_SSeS():
         self.SAVEFILENAME_origin = str(self.GlobalVswpCount + 1) + ':' + self.SaveTime
         self.SAVENOTETitle = ["DATE(Y/M/D)", "TIME(h/m/s)", "Ee(meV)", "B(T)", "Vg(V)", "VB(V)", "Phase(pi_rad)",
                               "SN-SNS", "PB?", "Proxy?", "muN(meV)",
-                              "muS(meV)", "t(meV)", "t_tunnelcouple(meV)", "Tl_B(t)", "Defect(t)", "Delta(ueV)", "Note"]
+                              "muS(meV)","muLead(meV)", "t(meV)", "t_tunnelcouple(meV)", "Tl_B(t)", "Defect(t)", "Delta(ueV)", "Note"]
 
         if self.SwpID == "Vg":
             self.SAVEFILENAME = 'VgSwp'
@@ -972,6 +1002,7 @@ class Kwant_SSeS():
                                                                                       self.Proximitytxt,
                                                                                       np.round(self.mu_N * 1e3/self.deltaNormalitionFactor, 3), \
                                                                                       np.round(self.mu_SC * 1e3/self.deltaNormalitionFactor, 3),
+                                                                                      np.round(self.mu_Lead * 1e3 / self.deltaNormalitionFactor,3),
                                                                                       np.round(self.t * 1e3/self.deltaNormalitionFactor, 3),
                                                                                       np.round(self.t_Tunnel * 1e3/self.deltaNormalitionFactor, 3),
                                                                                       self.TunnelStrength,
@@ -984,6 +1015,7 @@ class Kwant_SSeS():
                                                                                       self.Proximitytxt,
                                                                                       np.round(self.mu_N * 1e3/self.deltaNormalitionFactor, 3), \
                                                                                       np.round(self.mu_SC * 1e3/self.deltaNormalitionFactor, 3),
+                                                                                      np.round(self.mu_Lead * 1e3 / self.deltaNormalitionFactor,3),
                                                                                       np.round(self.t * 1e3/self.deltaNormalitionFactor, 3),
                                                                                       np.round(self.t_Tunnel * 1e3/self.deltaNormalitionFactor, 3),
                                                                                       self.TunnelStrength,
@@ -996,11 +1028,12 @@ class Kwant_SSeS():
         table2 = list(map(str, self.SAVENOTE_buff + [self.SN, self.PBtxt, self.Proximitytxt,
                                                      np.round(self.mu_N * 1e3/self.deltaNormalitionFactor, 3), \
                                                      np.round(self.mu_SC * 1e3/self.deltaNormalitionFactor, 3),
+                                                     np.round(self.mu_Lead * 1e3 / self.deltaNormalitionFactor, 3),
                                                      np.round(self.t * 1e3/self.deltaNormalitionFactor, 3),
                                                      np.round(self.t_Tunnel * 1e3/self.deltaNormalitionFactor, 3),
                                                      self.TunnelStrength, self.DefectAmp, np.round(self.delta_raw * 1e6/self.deltaNormalitionFactor, 3)]))
         table = [["     Ee(meV)     ", "  B(T)  ", "  Vg(V)  ", "  VB(V)  ", "  Phi(pi)  ", "SN-SNS", "PB?", "Proxy?", "  muN(meV)  ",
-                  "  muS  ", "  t(meV)  ", "  t_tc(meV)  ", "  Tl(t)  ", "  DF(t)  ", "  Delta(ueV)  "], table2]
+                  "  muS  ","  muL  ", "  t(meV)  ", "  t_tc(meV)  ", "  Tl(t)  ", "  DF(t)  ", "  Delta(ueV)  "], table2]
         Mese = PrettyTable(table[0])
         Mese.add_rows(table[1:])
         result = re.search('\n(.*)\n(.*)\n(.*)', str(Mese))
@@ -1018,14 +1051,9 @@ class Kwant_SSeS():
 
     def Gen_Site_Plot(self, sys, params):
 
-        self.density(sys, params, 1)  # Calculate density
-        pick_electron_up = np.arange(0, len(self.d_raw), 4)  # pickout the electron density part
-
-        # pickout the electron density part
-        self.d = self.d_raw[pick_electron_up] + self.d_raw[pick_electron_up+1]
-
 
         local_dos = kwant.ldos(sys, params=params, energy=self.E)  # Calculate local density of state
+        pick_electron_up = np.arange(0, len(local_dos), 4)
         self.local_dos = local_dos[pick_electron_up] + local_dos[pick_electron_up+1]  # pickout the electron LDOS
         sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
         coords = kwant.plotter.sys_leads_pos(sys, sites)
@@ -1334,7 +1362,48 @@ class Kwant_SSeS():
         print('s_he + s_eh^*: \n',
               np.round(s_he + s_eh[::-1, ::-1].conj(), 3))
 
+    def MakeClosePB(self,Ham,coords):
+        yMatrixLenUnit = 4 * (self.W + 2 * self.WSC)
+        xMax = self.L
+        Ham_Buff = Ham.toarray()
+        def extract_subarray(arr, start_row, end_row, start_col, end_col):
+            # Extract a subarray based on the given row and column range
+            subarray = []
+            for i in range(start_row, end_row + 1):
+                subarray_row = arr[i][start_col:end_col + 1]
+                subarray.append(subarray_row)
+            return subarray
 
+        def replace_subarray(arr, start_row, end_row, start_col, end_col, new_subarray):
+
+            # Get the dimensions of the new subarray7
+            if not new_subarray == 0:
+                new_rows = len(new_subarray)
+                new_cols = len(new_subarray[0])
+
+                # Check if the dimensions of the new subarray match the specified range
+                if (end_row - start_row + 1 != new_rows) or (end_col - start_col + 1 != new_cols):
+                    raise ValueError("Dimensions of new subarray do not match specified range")
+
+            # Replace the subarray with the new subarray
+            for i in range(start_row, end_row + 1):
+                for j in range(start_col, end_col + 1):
+                    if new_subarray == 0:
+                        arr[i][j] = 0
+                    else:
+                        arr[i][j] = new_subarray[i - start_row][j - start_col]
+
+        A = extract_subarray(Ham_Buff,0,yMatrixLenUnit-1,yMatrixLenUnit,2*yMatrixLenUnit-1)
+        B = extract_subarray(Ham_Buff, yMatrixLenUnit, 2 * yMatrixLenUnit - 1,0,yMatrixLenUnit-1 )
+
+        replace_subarray(Ham_Buff,0,yMatrixLenUnit-1,(xMax-1)*yMatrixLenUnit,xMax*yMatrixLenUnit-1,A)
+        replace_subarray(Ham_Buff, (xMax-1)*yMatrixLenUnit,xMax*yMatrixLenUnit-1,0,yMatrixLenUnit-1 , B)
+        # plt.spy(Ham_Buff, precision=0.1, markersize=5)
+        # plt.show()
+        Ham = None
+        A = None
+        B = None
+        return Ham_Buff
     def GaussianDefect(self, FWHM):
 
 
@@ -1535,8 +1604,8 @@ class Kwant_SSeS():
             return np.conjugate(DELTA)
 
         def EZ_dis(x, y):
-            # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
-            # g = Square*self.gn
+            #Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            #g = Square*self.gn
             g = self.gn
             self.gn_Map[int(x), int(y) + self.WSC] = np.real(g)
 
@@ -1545,7 +1614,7 @@ class Kwant_SSeS():
             # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
             # alpha =Square* self.alpha
             alpha = self.alpha
-            self.alpha_Map[int(x), int(y) + self.WSC] = alpha
+            self.alpha_Map[int(x), int(y) + self.WSC] = abs(alpha)
             return alpha
 
         def beta_dis(x, y):
@@ -1646,7 +1715,7 @@ class Kwant_SSeS():
 
 
 
-            sys = self.make_system()
+            sys,sys_close = self.make_system()
 
 
 
@@ -1659,25 +1728,28 @@ class Kwant_SSeS():
 
 
             VarMap = []
-            for Var1, Var2, Var3, Var4, Var5, Var6, Var7 in self.comb_still:
+            for Var1, Var2, Var3, Var4, Var5, Var6, Var7, Var8 in self.comb_still:
                 # self.delta = self.delta_raw
                 if self.SwpID == "Vbias":
-                    self.mu_SC, self.mu_N, self.E, self.V_Applied, self.TunnelStrength, self.B, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
+                    self.mu_SC, self.mu_N, self.mu_Lead,self.E, self.V_Applied, self.TunnelStrength, self.B, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7, Var8
 
                 elif self.SwpID == "Vg":
-                    self.mu_SC, self.mu_N, self.E, self.TunnelStrength, self.B, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
+                    self.mu_SC, self.mu_N, self.mu_Lead,self.E, self.TunnelStrength, self.B, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7, Var8
 
                 elif self.SwpID == "E":
-                    self.mu_SC, self.mu_N, self.V_Applied, self.TunnelStrength, self.B, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
+                    self.mu_SC, self.mu_N, self.mu_Lead,self.V_Applied, self.TunnelStrength, self.B, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7, Var8
 
                 elif self.SwpID == "B":
-                    self.mu_SC, self.mu_N, self.E, self.V_Applied, self.TunnelStrength, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7
+                    self.mu_SC, self.mu_N, self.mu_Lead,self.E, self.V_Applied, self.TunnelStrength, self.Vbias, self.phi = Var1, Var2, Var3, Var4, Var5, Var6, Var7, Var8
 
                 elif self.SwpID == "Phase":
-                    self.mu_SC, self.mu_N, self.E, self.V_Applied, self.TunnelStrength, self.Vbias, self.B = Var1, Var2, Var3, Var4, Var5, Var6, Var7
+                    self.mu_SC, self.mu_N, self.mu_Lead,self.E, self.V_Applied, self.TunnelStrength, self.Vbias, self.B = Var1, Var2, Var3, Var4, Var5, Var6, Var7, Var8
 
+                if not self.SwpID == "E":
 
-
+                    if not self.TeV_Normal:
+                        self.E = self.E/ self.deltaNormalitionFactor
+                    VarSwp_buff2 = [self.E]
 
                 self.GammaTunnel = self.TunnelStrength
 
@@ -1717,36 +1789,47 @@ class Kwant_SSeS():
                 DateLocal = now.strftime("%YY%mM%dD")
                 TimeLocal = now.strftime("%Hh%Mm%Ss")
                 self.LocalSave = DateLocal + '-' + TimeLocal
-                for VSwp in self.VarSwp:
-                    TimeBeforeEverySwp = time.time()
+                VarSwp_buff = self.VarSwp
+
+                if self.SwpID == "E":
+                    VarSwp_buff = [0]
+                    if not self.TeV_Normal:
+                        self.VarSwp = self.VarSwp / self.deltaNormalitionFactor
+                    VarSwp_buff2 = self.VarSwp
+
+
+
+                for VSwp in VarSwp_buff:
+                    if not self.SwpID == "E":
+                        TimeBeforeEverySwp = time.time()
                     if self.SwpID == "Vbias":
                         self.Vbias = VSwp
+
                     elif self.SwpID == "Vg":
+
                         self.V_Applied = VSwp
                         if self.DavidPot:
                             self.DavidPotential()
                         else:
                             Index = self.VgList.index(self.V_Applied)
                             self.u_sl = self.Dict[Index]
-
                             self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
                             # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
                             self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
-                    elif self.SwpID == "E":
-                        self.E = VSwp
                     elif self.SwpID == "B":
+
                         self.B = VSwp
                         self.TempDefineGap()
                     elif self.SwpID == "Phase":
+
                         self.phi = VSwp
-                    if not self.TeV_Normal:
-                        self.E = self.E / self.deltaNormalitionFactor
+
                     self.VStr = str(round(self.V_Applied, 5))
-                    self.GlobalRunCount = self.GlobalRunCount + 1
-                    RunCount = RunCount + 1
+
+
 
                     # Get the initial reference gate potential and proximity effect factor depend on B
-                    if RunCount == 1 or self.SwpID == 'B' or self.SwpID == 'Phase':
+                    if RunCount == 0 or self.SwpID == 'B' or self.SwpID == 'Phase':
 
 
                         if self.BlockWarnings:
@@ -1807,11 +1890,12 @@ class Kwant_SSeS():
 
 
 
-                    params = dict(a=1e-9, e=self.e, Delta_0=Delta_0_dis, EZ=EZ_dis, TB=TunnelBarrier_dis,
+                    params = dict(a=1e-9, e=self.e, Delta_0=Delta_0_dis, EZ=EZ_dis, TB=TunnelBarrier_dis,mu_Lead = self.mu_Lead,
                                   V=V_dis, VG=VGate_dis, alpha_dis=alpha_dis, hbar=self.hbar,alpha_fix = self.alpha, beta_fix = self.beta,
                                   m=self.m,beta_dis=beta_dis,delta_NormalizationFactor = self.deltaNormalitionFactor,
-                                  mu=mu_dis, mu_S=self.mu_SC, mu_N=self.mu_N,sin_theta = np.sin(self.B_theta),
-                                  sin_phi=np.sin(self.B_phi),cos_phi=np.cos(self.B_phi),cos_theta = np.cos(self.B_theta),
+                                  mu=mu_dis, mu_S=self.mu_SC, mu_N=self.mu_N,sin_theta = np.round(np.sin(self.B_theta),13),
+                                  sin_phi=np.round(np.sin(self.B_phi),13),cos_phi= np.round(np.cos(self.B_phi),13),
+                                  cos_theta = np.round(np.cos(self.B_theta),13),
                                   EZ_fix=np.round(self.deltaNormalitionFactor*self.gn * self.mu_B * self.B /2,15),
                                   V_ref=V_ref_dis, t=t_dis, Delta_0_prime=Delta_0_prime_dis, V_bias=self.Vbias,
                                   Delta_SC_up=self.delta * ExpRounded(- self.phi / 2),
@@ -1836,9 +1920,9 @@ class Kwant_SSeS():
                     # # TestHam2 = sys.hamiltonian_submatrix(0,1,params = params)
                     # ParaDict = {
                     #     'Ez' : self.deltaNormalitionFactor*self.gn * self.mu_B * self.B / (2*self.t),
-                    #     'Angle':(np.sin(self.B_theta) * np.cos(self.B_phi) * np.kron(self.I, self.taux) +
-                    #              np.sin(self.B_theta) * np.sin(self.B_phi) * np.kron(self.I, self.tauy) +
-                    #              np.cos(self.B_theta) * np.kron(self.I, self.tauz)),
+                    #     'Angle':(np.round(np.sin(self.B_theta),13) * np.round(np.cos(self.B_phi),13) * np.kron(self.I, self.taux) +
+                    #              np.round(np.sin(self.B_theta),13) * np.round(np.sin(self.B_phi),13) * np.kron(self.I, self.tauy) +
+                    #              np.round(np.cos(self.B_theta),13)* np.kron(self.I, self.tauz)),
                     #
                     #     'alpha' : self.alpha /self.t,
                     #     'alphaHamTerm': self.m**2*self.alpha**2/(self.hbar**2),
@@ -1851,151 +1935,259 @@ class Kwant_SSeS():
                     #     'dletaMatrix4': np.kron(self.taux + 1j * self.tauy, 1j*self.taux)-np.kron(self.taux - 1j * self.tauy, 1j*self.taux),
                     #     'dletaMatrix5': np.kron(self.taux + 1j * self.tauy, 1j * self.tauy)-np.kron(self.taux - 1j * self.tauy, 1j * self.tauy)
                     # }
-                    if self.GetConductance:
-                        SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
-                                                                in_leads=[0, 1])
-                    if self.GetLDOS:
-                        LDOS =  kwant.ldos(sys, params=params, energy=self.E)
-                        pick_electron_up = np.arange(0, len(LDOS), 4)
-                        LDOS_e_Up = LDOS[pick_electron_up]
-                        LDOS_e_Dn = LDOS[pick_electron_up+1]
-                        LDOS_h_Dn = LDOS[pick_electron_up+2]
-                        LDOS_h_Up = LDOS[pick_electron_up+3]
-                        sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
-                        coords = kwant.plotter.sys_leads_pos(sys, sites)
-                        # LDOS, Amin, Amax = kwant.plotter.mask_interpolate(coords, LDOS)
-                        def find_coordinates_in_range(arr, x_range, y_range):
-                            # Convert the N by 2 array to a NumPy array
-                            np_arr = np.array(arr)
 
-                            # Find the indices of coordinates within the specified ranges
-                            x_indices = np.where((np_arr[:, 0] >= x_range[0]) & (np_arr[:, 0] <= x_range[1]))
-                            y_indices = np.where((np_arr[:, 1] >= y_range[0]) & (np_arr[:, 1] <= y_range[1]))
+                    if self.CloseSystem:
+                        TimeBeforeEverySwp = time.time()
+                        ham_mat = sys_close.hamiltonian_submatrix(sparse=True, params=params)
+                        if self.PB:
+                            sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
+                            coords = kwant.plotter.sys_leads_pos(sys, sites)
 
-                            # Find the common indices that satisfy both x and y conditions
-                            common_row_indices = np.intersect1d(x_indices, y_indices)
+                            ham_mat = self.MakeClosePB(ham_mat,coords)
+                            evals, evecs = eigh(ham_mat)
+                        else:
+                            evals, evecs = eigh(ham_mat.toarray())
+                        # round the eigenvector
+                        evecs = np.round(evecs.real,3)+np.round(evecs.imag,3)*1j
 
-                            return common_row_indices
+                        ham_mat = None
+                        LDOS = np.abs(evecs)**2
 
+                        if self.SwpID == 'E':
+                            pick_electron = np.vstack((np.arange(0, len(LDOS), 4), np.arange(1, len(LDOS), 4))).reshape((-1,), order='F')
+                            LDOS_Electron =LDOS[pick_electron,:]
+                            LDOS_Hole =LDOS[pick_electron+2,:]
+                            LDOS_e_Up_list = []
+                            LDOS_e_Dn_list = []
+                            LDOS_h_Dn_list = []
+                            LDOS_h_Up_list = []
+                            for E_ID in range(len(VarSwp_buff2)):
+                                E = VarSwp_buff2[E_ID]
+                                pick_electron_up = np.arange(0, LDOS_Electron.shape[0], 2)
 
-                        target_X_edge = [self.L_extract_half, self.L_extract_half+10]
-                        target_Y_edge = [1, self.W - 1]
-                        target_X_bulk = [int(self.L / 2)-5, int(self.L / 2)+5]
-                        target_Y_bulk = [1, self.W - 1]
+                                GaussianSelection = np.real(self.DiracDelta(evals, E, 0.02 * 2 * self.delta))
+                                #GaussianSelectionRev = np.real(self.DiracDelta(-evals, E,0.02*2*self.delta))
 
-                        found_row_edge = find_coordinates_in_range(coords, target_X_edge,target_Y_edge)
-                        found_row_bulk = find_coordinates_in_range(coords, target_X_bulk,target_Y_bulk)
+                                LDOS_buff = np.sum(LDOS_Electron * GaussianSelection, axis=1)
 
-                        C_edge_e_Up = np.mean(LDOS_e_Up[found_row_edge])
-                        C_bulk_e_Up = np.mean(LDOS_e_Up[found_row_bulk])
-                        C_edge_e_Dn = np.mean(LDOS_e_Dn[found_row_edge])
-                        C_bulk_e_Dn = np.mean(LDOS_e_Dn[found_row_bulk])
-                        C_edge_h_Dn = np.mean(LDOS_h_Dn[found_row_edge])
-                        C_bulk_h_Dn = np.mean(LDOS_h_Dn[found_row_bulk])
-                        C_edge_h_Up = np.mean(LDOS_h_Up[found_row_edge])
-                        C_bulk_h_Up = np.mean(LDOS_h_Up[found_row_bulk])
+                                LDOS_e_Up_list.append(list(LDOS_buff[pick_electron_up]))
+                                LDOS_e_Dn_list.append(list(LDOS_buff[pick_electron_up + 1]))
 
-                        self.LDOS_edge_e_Up.append(C_edge_e_Up)
-                        self.LDOS_bulk_e_Up.append(C_bulk_e_Up)
-                        self.LDOS_edge_e_Dn.append(C_edge_e_Dn)
-                        self.LDOS_bulk_e_Dn.append(C_bulk_e_Dn)
-                        self.LDOS_edge_h_Dn.append(C_edge_h_Dn)
-                        self.LDOS_bulk_h_Dn.append(C_bulk_h_Dn)
-                        self.LDOS_edge_h_Up.append(C_edge_h_Up)
-                        self.LDOS_bulk_h_Up.append(C_bulk_h_Up)
+                                LDOS_buff = np.sum(LDOS_Hole * GaussianSelection, axis=1)
 
-                    if self.BlockWarnings:
-                        warnings.filterwarnings("ignore")
-                    self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
+                                LDOS_h_Dn_list.append(list(LDOS_buff[pick_electron_up]))
+                                LDOS_h_Up_list.append(list(LDOS_buff[pick_electron_up + 1]))
+                            pick_electron = None
+                            pick_electron_up = None
+                            LDOS_Electron = None
+                            LDOS_Hole = None
+                            GaussianSelection = None
+                            LDOS_buff = None
+                            LDOS = None
+                        evecs = None
+                        evals = None
 
-                    if RunCount%self.PlotbeforeFigures_Ana == 0:
-                        # try:
-                        if self.showBands:
-                            fig = kwant.plotter.bands(self.lead_test.finalized(), show=False, params=params)
-                            fig.xlabel("momentum [(lattice constant)^-1]")
-                            fig.ylabel("energy [t]")
-                            fig.title('Superconductor')
-                            fig.show()
-                            fig = kwant.plotter.bands(self.lead_test_Ham.finalized(), show=False, params=params)
-                            fig.xlabel("momentum [(lattice constant)^-1]")
-                            fig.ylabel("energy [t]")
-                            fig.title('Semiconductor')
-                            fig.show()
-                            fig = kwant.plotter.bands(self.lead_test_Metal.finalized(), show=False, params=params)
-                            fig.xlabel("momentum [(lattice constant)^-1]")
-                            fig.ylabel("energy [t]")
-                            fig.title('Metal')
-                            fig.show()
+                            # TargetEigenValueIndices = np.arange(len(evals) - next(x for x, val in enumerate(reversed(evals)) if val <= np.min(self.VarSwp)) -1,next(x for x, val in enumerate(evals)if val > np.max(self.VarSwp))+1)
+                            # self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(TargetEigenValueIndices)
+                            # self.evals = evals[TargetEigenValueIndices]
+                            # VarSwp_buff2 = evals[TargetEigenValueIndices]
+                            # evecs = evecs[:,TargetEigenValueIndices]
+
+                            # if len(evals) == 0:
+                            #     raise('Energy range not valid!')
 
 
 
-                        self.Gen_Site_Plot(sys, params)
-                        self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' +self.SwpID+ str(np.round(VSwp,5)) + "_Sites.png")
-                        if self.ShowDensity == 1:
-                            self.fig.show()
-                        self.Gen_Ana_Plot()
-                        self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' +self.SwpID+  str(np.round(VSwp,5)) + "_Ana.png")
-                        if self.ShowDensity == 1:
-                            self.fig.show()
-                        if self.ShowCurrent:
-                            self.fig = plt.figure(figsize=(14, 11))
-                            Ax0 = plt.subplot(1, 1, 1)
-                            kwant.plotter.current(sys, self.CurrentOp,colorbar=False,fig_size = (10, 10),ax = Ax0)
-                            # pcolor = Ax6.imshow(self.gn_Map.T)
-                            # cbar = fig0.colorbar(pcolor)
-                            plt.title('Current')
-                            plt.axis('off')
+
+
+                    for E_ID in range(len(VarSwp_buff2)):
+                        if self.SwpID == 'E' and not self.CloseSystem:
+                            TimeBeforeEverySwp = time.time()
+                        RunCount = RunCount + 1
+                        self.GlobalRunCount = self.GlobalRunCount + 1
+
+                        self.E = VarSwp_buff2[E_ID]
+
+                        if self.GetConductance:
+                            SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
+                                                                    in_leads=[0, 1])
+                        if self.GetLDOS:
+
+                            if self.CloseSystem:
+
+
+                                if self.SwpID == "E":
+
+                                    LDOS_e_Up = np.array(LDOS_e_Up_list[E_ID])
+                                    LDOS_e_Dn = np.array(LDOS_e_Dn_list[E_ID])
+
+                                    LDOS_h_Dn = np.array(LDOS_h_Dn_list[E_ID])
+                                    LDOS_h_Up = np.array(LDOS_h_Up_list[E_ID])
+
+                                else:
+                                    LDOS = np.abs(evecs[:, self.mode_Num]) ** 2
+                                    pick_electron_up = np.arange(0, len(LDOS), 4)
+                                    LDOS_e_Up = LDOS[pick_electron_up]
+                                    LDOS_e_Dn = LDOS[pick_electron_up + 1]
+                                    LDOS_h_Dn = LDOS[pick_electron_up + 2]
+                                    LDOS_h_Up = LDOS[pick_electron_up + 3]
+                            else:
+
+                                LDOS =  kwant.ldos(sys, params=params, energy=self.E)
+                                pick_electron_up = np.arange(0, len(LDOS), 4)
+                                LDOS_e_Up = LDOS[pick_electron_up]
+                                LDOS_e_Dn = LDOS[pick_electron_up+1]
+                                LDOS_h_Dn = LDOS[pick_electron_up+2]
+                                LDOS_h_Up = LDOS[pick_electron_up+3]
+
+                            sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
+                            coords = kwant.plotter.sys_leads_pos(sys, sites)
+                            # LDOS, Amin, Amax = kwant.plotter.mask_interpolate(coords, LDOS)
+                            def find_coordinates_in_range(arr, x_range, y_range):
+                                # Convert the N by 2 array to a NumPy array
+                                np_arr = np.array(arr)
+
+                                # Find the indices of coordinates within the specified ranges
+                                x_indices = np.where((np_arr[:, 0] >= x_range[0]) & (np_arr[:, 0] <= x_range[1]))
+                                y_indices = np.where((np_arr[:, 1] >= y_range[0]) & (np_arr[:, 1] <= y_range[1]))
+
+                                # Find the common indices that satisfy both x and y conditions
+                                common_row_indices = np.intersect1d(x_indices, y_indices)
+
+                                return common_row_indices
+
+
+                            target_X_edge = [self.L_extract_half, self.L_extract_half + 9]
+                            target_Y_edge = [0, self.W - 1]
+                            target_X_bulk = [int(self.L / 2)-5, int(self.L / 2)+4]
+                            target_Y_bulk = [0, self.W - 1]
+                            # target_Y_edge = [-self.WSC, self.W + self.WSC]
+                            # target_Y_bulk = [-self.WSC, self.W + self.WSC]
+                            # target_Y_edge = [int(self.W/4), int(3*self.W/4)]
+                            # target_Y_bulk = [int(self.W/4), int(3*self.W/4)]
+
+                            found_row_edge = find_coordinates_in_range(coords, target_X_edge,target_Y_edge)
+                            found_row_bulk = find_coordinates_in_range(coords, target_X_bulk,target_Y_bulk)
+
+                            C_edge_e_Up = np.mean(LDOS_e_Up[found_row_edge])
+                            C_bulk_e_Up = np.mean(LDOS_e_Up[found_row_bulk])
+                            C_edge_e_Dn = np.mean(LDOS_e_Dn[found_row_edge])
+                            C_bulk_e_Dn = np.mean(LDOS_e_Dn[found_row_bulk])
+                            C_edge_h_Dn = np.mean(LDOS_h_Dn[found_row_edge])
+                            C_bulk_h_Dn = np.mean(LDOS_h_Dn[found_row_bulk])
+                            C_edge_h_Up = np.mean(LDOS_h_Up[found_row_edge])
+                            C_bulk_h_Up = np.mean(LDOS_h_Up[found_row_bulk])
+
+                            self.LDOS_edge_e_Up.append(C_edge_e_Up)
+                            self.LDOS_bulk_e_Up.append(C_bulk_e_Up)
+                            self.LDOS_edge_e_Dn.append(C_edge_e_Dn)
+                            self.LDOS_bulk_e_Dn.append(C_bulk_e_Dn)
+                            self.LDOS_edge_h_Dn.append(C_edge_h_Dn)
+                            self.LDOS_bulk_h_Dn.append(C_bulk_h_Dn)
+                            self.LDOS_edge_h_Up.append(C_edge_h_Up)
+                            self.LDOS_bulk_h_Up.append(C_bulk_h_Up)
+
+                        if self.BlockWarnings:
+                            warnings.filterwarnings("ignore")
+                        self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
+
+                        if RunCount%self.PlotbeforeFigures_Ana == 0 and not self.CloseSystem:
+                            # try:
+                            if self.showBands:
+                                fig = kwant.plotter.bands(self.lead_test.finalized(), show=False, params=params)
+                                fig.xlabel("momentum [(lattice constant)^-1]")
+                                fig.ylabel("energy [t]")
+                                fig.title('Superconductor')
+                                fig.show()
+                                fig = kwant.plotter.bands(self.lead_test_Ham.finalized(), show=False, params=params)
+                                fig.xlabel("momentum [(lattice constant)^-1]")
+                                fig.ylabel("energy [t]")
+                                fig.title('Semiconductor')
+                                fig.show()
+                                fig = kwant.plotter.bands(self.lead_test_Metal.finalized(), show=False, params=params)
+                                fig.xlabel("momentum [(lattice constant)^-1]")
+                                fig.ylabel("energy [t]")
+                                fig.title('Metal')
+                                fig.show()
+
+                            # if self.CloseSystem:
+                            #     if self.SwpID == "E":
+                            #         WF = np.abs(evecs[:,E_ID]) ** 2
+                            #     else:
+                            #         WF = np.abs(evecs[:, self.mode_Num]) ** 2
+                            #
+                            #     self.d = WF[pick_electron_up]+WF[pick_electron_up+1]
+                            # else:
+                            self.density(sys, params, 1)  # Calculate density
+                            pick_electron_up = np.arange(0, len(self.d_raw), 4)  # pickout the electron density part
+                            # pickout the electron density part
+                            self.d = self.d_raw[pick_electron_up] + self.d_raw[pick_electron_up + 1]
+
+
+                            self.Gen_Site_Plot(sys, params)
+                            self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' +self.SwpID+ str(np.round(VSwp,5)) + "_Sites.png")
                             if self.ShowDensity == 1:
                                 self.fig.show()
-                            self.fig.savefig(self.SAVEFILENAME + self.LocalSave + '_' +self.SwpID+  str(np.round(VSwp,5)) + "_Current.png")
-                        # except:
-                        #     syst.stdout.write("Site plot not generated")
-                        #     syst.stdout.flush()
+                            self.Gen_Ana_Plot()
+                            self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ '_' +self.SwpID+  str(np.round(VSwp,5)) + "_Ana.png")
+                            if self.ShowDensity == 1:
+                                self.fig.show()
+                            if self.ShowCurrent:
+                                self.fig = plt.figure(figsize=(14, 11))
+                                Ax0 = plt.subplot(1, 1, 1)
+                                kwant.plotter.current(sys, self.CurrentOp,colorbar=False,fig_size = (10, 10),ax = Ax0)
+                                # pcolor = Ax6.imshow(self.gn_Map.T)
+                                # cbar = fig0.colorbar(pcolor)
+                                plt.title('Current')
+                                plt.axis('off')
+                                if self.ShowDensity == 1:
+                                    self.fig.show()
+                                self.fig.savefig(self.SAVEFILENAME + self.LocalSave + '_' +self.SwpID+  str(np.round(VSwp,5)) + "_Current.png")
+                            # except:
+                            #     syst.stdout.write("Site plot not generated")
+                            #     syst.stdout.flush()
 
-                    if self.BlockWarnings:
-                        warnings.filterwarnings("always")
-                    if self.GetConductance:
-                        if self.SN == 'SN':
-                            # A = SMatrix.submatrix((1, 0), (1, 0))
-                            C1 = SMatrix.transmission(1, 0) / 2  # /2 to became 2e^2/h
-                            C2 = (SMatrix.submatrix((1, 0), (1, 0)).shape[0] - SMatrix.transmission((1, 0), (
-                                1, 0)) + SMatrix.transmission((1, 1), (1, 0))) / 2
+                        if self.BlockWarnings:
+                            warnings.filterwarnings("always")
+                        if self.GetConductance:
+                            if self.SN == 'SN':
+                                # A = SMatrix.submatrix((1, 0), (1, 0))
+                                C1 = SMatrix.transmission(1, 0) / 2  # /2 to became 2e^2/h
+                                C2 = (SMatrix.submatrix((1, 0), (1, 0)).shape[0] - SMatrix.transmission((1, 0), (
+                                    1, 0)) + SMatrix.transmission((1, 1), (1, 0))) / 2
 
-                            self.conductances2.append(C2)
-                        else:
-                            # A = SMatrix.submatrix((1, 0), (1, 0))
-                            C1 = SMatrix.transmission(1, 0) / 2
-                            self.conductances2.append('nan')
-                        self.conductances.append(C1)
-                    elapsed = np.round(time.time() - TimeBeforeEverySwp, 2)
-                    elapsed_tol = elapsed_tol + elapsed
-                    Elapsed = TimeFormat(elapsed)
-                    LeftRuns = np.round(self.TotalNrun - self.GlobalRunCount, 0)
-                    TimeSpend = np.round(time.time() - self.GlobalStartTime, 2)
-                    TimeTXT = 'total:' + TimeFormat(TimeSpend) + '/left:' + TimeFormat(
-                        LeftRuns * elapsed_tol / self.GlobalRunCount) + ' ' + TimeFormat(
-                        elapsed_tol / self.GlobalRunCount) + '/point'
+                                self.conductances2.append(C2)
+                            else:
+                                # A = SMatrix.submatrix((1, 0), (1, 0))
+                                C1 = SMatrix.transmission(1, 0) / 2
+                                self.conductances2.append('nan')
+                            self.conductances.append(C1)
 
-                    # Mese =self.PBtxt + ';' + self.Proximitytxt + ';' + self.SN + ';TB=' + \
-                    #        str(self.TunnelStrength) + "t;Vg=" + self.VStr + ";t=" + str(self.t) + ";E=" +\
-                    #       str(self.E)+ ";muN=" + str(self.mu_N)+ ";muSC=" + str(self.mu_SC)+\
-                    #       "eV;B=" + str(self.B) + 'T'
-                    # print(Mese)
 
-                    # syst.stdout.flush()
+                        elapsed = np.round(time.time() - TimeBeforeEverySwp, 2)
+                        elapsed_tol = elapsed_tol + elapsed
+                        # Elapsed = TimeFormat(elapsed)
+                        LeftRuns = np.round(self.TotalNrun - self.GlobalRunCount, 0)
+                        TimeSpend = np.round(time.time() - self.GlobalStartTime, 2)
+                        TimeTXT = 'total:' + TimeFormat(TimeSpend) + '/left:' + TimeFormat(
+                            LeftRuns * elapsed_tol / self.GlobalRunCount) + ' ' + TimeFormat(
+                            elapsed_tol / self.GlobalRunCount) + '/point'
+                        if self.CloseSystem:
+                            TimeBeforeEverySwp = time.time()
+                        if RunCount == 1:
+                            if self.GlobalVswpCount == 0:
+                                syst.stdout.write("\r{0}".format(self.MeseTitle))
+                                syst.stdout.write("\n")
+                                syst.stdout.write("\r{0}".format(self.MeseValue))
+                                syst.stdout.write("\n")
+                            else:
 
-                    # syst.stdout.flush()
-                    if RunCount == 1:
-                        if self.GlobalVswpCount == 0:
-                            syst.stdout.write("\r{0}".format(self.MeseTitle))
-                            syst.stdout.write("\n")
-                            syst.stdout.write("\r{0}".format(self.MeseValue))
-                            syst.stdout.write("\n")
-                        else:
+                                syst.stdout.write("\r{0}".format(self.MeseValue))
+                                syst.stdout.write("\n")
+                        self.ProgressBar(TimeTXT)
 
-                            syst.stdout.write("\r{0}".format(self.MeseValue))
-                            syst.stdout.write("\n")
-                    self.ProgressBar(TimeTXT)
+
+
                 self.GlobalVswpCount = self.GlobalVswpCount + 1
                 # print('\n',end ="")
                 # syst.stdout.write("\r{0}".format('\n'))
@@ -2052,7 +2244,7 @@ class Kwant_SSeS():
         # print('---------------------- All Finished (Total Time:'+TimeFormat(
         #                 TimeSpend)+') ----------------------')
         syst.stdout.write("\r{0}".format('------------------------- All Finished (Total:' + TimeFormat(
-            TimeSpend) + '/Ave:' + TimeFormat(elapsed_tol / self.GlobalRunCount) + '/run) -------------------------'))
+            TimeSpend) + ';   Ave:' + TimeFormat(elapsed_tol / self.GlobalRunCount) + '/run) -------------------------'))
         syst.stdout.flush()
     def LoadDatatoPlot(self,datapathlist,xdata,ydata,zlabel,title,xlabel,ylabel,savefilename,):
 
@@ -2124,17 +2316,20 @@ class Kwant_SSeS():
             self.OriginFilePath + self.SaveTime + '-SwpDetail.xlsx',
             index=False, header=False)
 
-
-        if self.SwpID == 'E':
-            Xdata = 1000 * self.VarSwp * self.t
-        else:
-            Xdata = self.VarSwp
+        Xdata = self.VarSwp
+        # if self.SwpID == 'E':
+        #     Xdata = 1000 * self.VarSwp * self.t
+        # else:
+        #     Xdata = self.VarSwp
         if self.GetConductance:
             TitleTxtY1 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_Conductance']
             Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
         if self.GetLDOS:
             TitleTxtY_LDOS_e = ["LDOS", " ", self.SAVEFILENAME_origin + '_Edge']
             TitleTxtY_LDOS_b = ["LDOS", " ", self.SAVEFILENAME_origin + '_Bulk']
+
+
+
             Data_LDOS_edge_e_Up = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY_LDOS_e + list(self.LDOS_edge_e_Up))]
             Data_LDOS_bulk_e_Up = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY_LDOS_b + list(self.LDOS_bulk_e_Up))]
             Data_LDOS_edge_e_Dn = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY_LDOS_e + list(self.LDOS_edge_e_Dn))]
