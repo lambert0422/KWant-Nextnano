@@ -96,7 +96,8 @@ for DELTA in delta_list:
         #                   muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
         #                   PlotbeforeFigures=1,
         #                   PlotbeforeFigures_Ana=20).Run_sweep()
-        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=82, WSC=162,
+
+        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=82, WSC=242,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4001, L_s=4001,
                           alpha=alphaTest, beta=0,
                           V_A=[0], TStrength=[0], TeV_Normal=True,
