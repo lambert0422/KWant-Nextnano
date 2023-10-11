@@ -97,12 +97,12 @@ for DELTA in delta_list:
         #                   PlotbeforeFigures=1,
         #                   PlotbeforeFigures_Ana=20).Run_sweep()
 
-        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=82, WSC=242,
+        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=81, WSC=161,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4001, L_s=4001,
                           alpha=alphaTest, beta=0,
                           V_A=[0], TStrength=[0], TeV_Normal=True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+                          PeriBC=[1], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi / 2], B_phi=[0],
                           ProOn=[0], constantDelta=True, BField=BTest, a=20,
                           ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
