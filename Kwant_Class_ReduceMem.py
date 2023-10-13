@@ -901,25 +901,25 @@ class Kwant_SSeS():
         else:
             syst_close = []
         # # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
-        # monitorX = int(self.L/2)
-        # monitorY = int(self.W/2)
-        #
-        #
-        # monitorY_Semi = int(self.W / 3)
-        # monitorY_SC_up = int(self.W+self.WSC/2)
-        # monitorY_SC_dn = int(-self.WSC / 2)
-        # self.MidSiteID = syst.id_by_site[lat(monitorX, monitorY)]
-        # self.MidSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY)]
-        # self.MidSiteYID = syst.id_by_site[lat(monitorX , monitorY + 1)]
-        # self.SemiSiteID = syst.id_by_site[lat(monitorX, monitorY_Semi)]
-        # self.SemiSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_Semi)]
-        # self.SemiSiteYID = syst.id_by_site[lat(monitorX, monitorY_Semi + 1)]
-        # self.SCupSiteID = syst.id_by_site[lat(monitorX, monitorY_SC_up)]
-        # self.SCupSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_SC_up)]
-        # self.SCupSiteYID = syst.id_by_site[lat(monitorX, monitorY_SC_up + 1)]
-        # self.SCdnSiteID = syst.id_by_site[lat(monitorX, monitorY_SC_dn)]
-        # self.SCdnSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_SC_dn)]
-        # self.SCdnSiteYID = syst.id_by_site[lat(monitorX, monitorY_SC_dn + 1)]
+        monitorX = int(self.L/2)
+        monitorY = int(self.W/2)
+
+
+        monitorY_Semi = int(self.W / 3)
+        monitorY_SC_up = int(self.W+self.WSC/2)
+        monitorY_SC_dn = int(-self.WSC / 2)
+        self.MidSiteID = syst.id_by_site[lat(monitorX, monitorY)]
+        self.MidSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY)]
+        self.MidSiteYID = syst.id_by_site[lat(monitorX , monitorY + 1)]
+        self.SemiSiteID = syst.id_by_site[lat(monitorX, monitorY_Semi)]
+        self.SemiSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_Semi)]
+        self.SemiSiteYID = syst.id_by_site[lat(monitorX, monitorY_Semi + 1)]
+        self.SCupSiteID = syst.id_by_site[lat(monitorX, monitorY_SC_up)]
+        self.SCupSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_SC_up)]
+        self.SCupSiteYID = syst.id_by_site[lat(monitorX, monitorY_SC_up + 1)]
+        self.SCdnSiteID = syst.id_by_site[lat(monitorX, monitorY_SC_dn)]
+        self.SCdnSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_SC_dn)]
+        self.SCdnSiteYID = syst.id_by_site[lat(monitorX, monitorY_SC_dn + 1)]
         return syst, syst_close
         #
 
@@ -1413,16 +1413,11 @@ class Kwant_SSeS():
             replace_subarray(Ham_Buff, 0, yMatrixLenUnit - 1, (xMax - 1) * yMatrixLenUnit, xMax * yMatrixLenUnit - 1, A)
             replace_subarray(Ham_Buff, (xMax - 1) * yMatrixLenUnit, xMax * yMatrixLenUnit - 1, 0, yMatrixLenUnit - 1, B)
             for i in range(xMax):
-                A = extract_subarray(Ham_Buff, i * yMatrixLenUnit, i * yMatrixLenUnit + xMatrixLenUnit - 1,
-                                     i * yMatrixLenUnit + xMatrixLenUnit, i * yMatrixLenUnit + 2 * xMatrixLenUnit - 1)
-                B = extract_subarray(Ham_Buff, i * yMatrixLenUnit + xMatrixLenUnit,
-                                     i * yMatrixLenUnit + 2 * xMatrixLenUnit - 1, i * yMatrixLenUnit,
-                                     i * yMatrixLenUnit + xMatrixLenUnit - 1)
+                A = extract_subarray(Ham_Buff, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, i*yMatrixLenUnit+xMatrixLenUnit, i*yMatrixLenUnit+2 * xMatrixLenUnit - 1)
+                B = extract_subarray(Ham_Buff, i*yMatrixLenUnit+xMatrixLenUnit, i*yMatrixLenUnit+2 * xMatrixLenUnit - 1, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1)
 
-                replace_subarray(Ham_Buff, i * yMatrixLenUnit, i * yMatrixLenUnit + xMatrixLenUnit - 1,
-                                 (i + 1) * yMatrixLenUnit - xMatrixLenUnit, (i + 1) * yMatrixLenUnit - 1, A)
-                replace_subarray(Ham_Buff, (i + 1) * yMatrixLenUnit - xMatrixLenUnit, (i + 1) * yMatrixLenUnit - 1,
-                                 i * yMatrixLenUnit, i * yMatrixLenUnit + xMatrixLenUnit - 1, B)
+                replace_subarray(Ham_Buff, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, (i+1)*yMatrixLenUnit - xMatrixLenUnit, (i+1)*yMatrixLenUnit - 1, A)
+                replace_subarray(Ham_Buff, (i+1)*yMatrixLenUnit - xMatrixLenUnit, (i+1)*yMatrixLenUnit - 1, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, B)
 
         # plt.spy(Ham_Buff, precision=0.1, markersize=5)
         # plt.show()
@@ -1929,38 +1924,38 @@ class Kwant_SSeS():
                                   Delta_SC_up_prime=self.delta * ExpRounded(self.phi / 2),
                                   Delta_SC_dn_prime=self.delta * ExpRounded(- self.phi / 2),
                                   B=self.B, Y_rl=Y_rl_dis, c=self.c)
-                    # sites = sys.sites
-                    #
-                    # TestHam = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteID,params = params))
-                    # TestHopx = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteXID, params=params))
-                    # TestHopy = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteYID, params=params))
-                    # TestHam_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteID, params=params))
-                    # TestHopx_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteXID, params=params))
-                    # TestHopy_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteYID, params=params))
-                    # TestHam_SC_up = np.array(sys.hamiltonian(self.SCupSiteID, self.SCupSiteID, params=params))
-                    # TestHopx_SC_up = np.array(sys.hamiltonian(self.SCupSiteID, self.SCupSiteXID, params=params))
-                    # TestHopy_SC_up = np.array(sys.hamiltonian(self.SCupSiteID, self.SCupSiteYID, params=params))
-                    # TestHam_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteID, params=params))
-                    # TestHopx_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteXID, params=params))
-                    # TestHopy_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteYID, params=params))
-                    # # TestHam2 = sys.hamiltonian_submatrix(0,1,params = params)
-                    # ParaDict = {
-                    #     'Ez' : self.deltaNormalitionFactor*self.gn * self.mu_B * self.B / (2*self.t),
-                    #     'Angle':(np.round(np.sin(self.B_theta),13) * np.round(np.cos(self.B_phi),13) * np.kron(self.I, self.taux) +
-                    #              np.round(np.sin(self.B_theta),13) * np.round(np.sin(self.B_phi),13) * np.kron(self.I, self.tauy) +
-                    #              np.round(np.cos(self.B_theta),13)* np.kron(self.I, self.tauz)),
-                    #
-                    #     'alpha' : self.alpha /self.t,
-                    #     'alphaHamTerm': self.m**2*self.alpha**2/(self.hbar**2),
-                    #     'mu_N': self.mu_N/self.t,
-                    #     'mu_Sc': self.mu_SC/self.t,
-                    #     'Delta': self.delta/self.t,
-                    #     'dletaMatrix1': np.kron(self.taux+1j*self.tauy,self.taux)+np.kron(self.taux-1j*self.tauy,self.taux),
-                    #     'dletaMatrix2': np.kron(self.taux + 1j * self.tauy, self.tauy)+np.kron(self.taux - 1j * self.tauy, self.tauy),
-                    #     'dletaMatrix3': np.kron(self.taux + 1j * self.tauy, self.tauz)+np.kron(self.taux - 1j * self.tauy, self.tauz),
-                    #     'dletaMatrix4': np.kron(self.taux + 1j * self.tauy, 1j*self.taux)-np.kron(self.taux - 1j * self.tauy, 1j*self.taux),
-                    #     'dletaMatrix5': np.kron(self.taux + 1j * self.tauy, 1j * self.tauy)-np.kron(self.taux - 1j * self.tauy, 1j * self.tauy)
-                    # }
+                    sites = sys.sites
+
+                    TestHam = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteID,params = params))
+                    TestHopx = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteXID, params=params))
+                    TestHopy = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteYID, params=params))
+                    TestHam_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteID, params=params))
+                    TestHopx_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteXID, params=params))
+                    TestHopy_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteYID, params=params))
+                    TestHam_SC_up = np.array(sys.hamiltonian(self.SCupSiteID, self.SCupSiteID, params=params))
+                    TestHopx_SC_up = np.array(sys.hamiltonian(self.SCupSiteID, self.SCupSiteXID, params=params))
+                    TestHopy_SC_up = np.array(sys.hamiltonian(self.SCupSiteID, self.SCupSiteYID, params=params))
+                    TestHam_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteID, params=params))
+                    TestHopx_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteXID, params=params))
+                    TestHopy_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteYID, params=params))
+                    # TestHam2 = sys.hamiltonian_submatrix(0,1,params = params)
+                    ParaDict = {
+                        'Ez' : self.deltaNormalitionFactor*self.gn * self.mu_B * self.B / (2*self.t),
+                        'Angle':(np.round(np.sin(self.B_theta),13) * np.round(np.cos(self.B_phi),13) * np.kron(self.I, self.taux) +
+                                 np.round(np.sin(self.B_theta),13) * np.round(np.sin(self.B_phi),13) * np.kron(self.I, self.tauy) +
+                                 np.round(np.cos(self.B_theta),13)* np.kron(self.I, self.tauz)),
+
+                        'alpha' : self.alpha /self.t,
+                        'alphaHamTerm': self.m**2*self.alpha**2/(self.hbar**2),
+                        'mu_N': self.mu_N/self.t,
+                        'mu_Sc': self.mu_SC/self.t,
+                        'Delta': self.delta/self.t,
+                        'dletaMatrix1': np.kron(self.taux+1j*self.tauy,self.taux)+np.kron(self.taux-1j*self.tauy,self.taux),
+                        'dletaMatrix2': np.kron(self.taux + 1j * self.tauy, self.tauy)+np.kron(self.taux - 1j * self.tauy, self.tauy),
+                        'dletaMatrix3': np.kron(self.taux + 1j * self.tauy, self.tauz)+np.kron(self.taux - 1j * self.tauy, self.tauz),
+                        'dletaMatrix4': np.kron(self.taux + 1j * self.tauy, 1j*self.taux)-np.kron(self.taux - 1j * self.tauy, 1j*self.taux),
+                        'dletaMatrix5': np.kron(self.taux + 1j * self.tauy, 1j * self.tauy)-np.kron(self.taux - 1j * self.tauy, 1j * self.tauy)
+                    }
 
                     if self.CloseSystem:
                         TimeBeforeEverySwp = time.time()
