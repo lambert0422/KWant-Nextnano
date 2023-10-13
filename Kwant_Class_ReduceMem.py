@@ -1406,6 +1406,18 @@ class Kwant_SSeS():
 
                 replace_subarray(Ham_Buff, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, (i+1)*yMatrixLenUnit - xMatrixLenUnit, (i+1)*yMatrixLenUnit - 1, A)
                 replace_subarray(Ham_Buff, (i+1)*yMatrixLenUnit - xMatrixLenUnit, (i+1)*yMatrixLenUnit - 1, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, B)
+        elif Dirc == 'xy':
+            A = extract_subarray(Ham_Buff, 0, yMatrixLenUnit - 1, yMatrixLenUnit, 2 * yMatrixLenUnit - 1)
+            B = extract_subarray(Ham_Buff, yMatrixLenUnit, 2 * yMatrixLenUnit - 1, 0, yMatrixLenUnit - 1)
+
+            replace_subarray(Ham_Buff, 0, yMatrixLenUnit - 1, (xMax - 1) * yMatrixLenUnit, xMax * yMatrixLenUnit - 1, A)
+            replace_subarray(Ham_Buff, (xMax - 1) * yMatrixLenUnit, xMax * yMatrixLenUnit - 1, 0, yMatrixLenUnit - 1, B)
+            for i in range(xMax):
+                A = extract_subarray(Ham_Buff, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, i*yMatrixLenUnit+xMatrixLenUnit, i*yMatrixLenUnit+2 * xMatrixLenUnit - 1)
+                B = extract_subarray(Ham_Buff, i*yMatrixLenUnit+xMatrixLenUnit, i*yMatrixLenUnit+2 * xMatrixLenUnit - 1, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1)
+
+                replace_subarray(Ham_Buff, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, (i+1)*yMatrixLenUnit - xMatrixLenUnit, (i+1)*yMatrixLenUnit - 1, A)
+                replace_subarray(Ham_Buff, (i+1)*yMatrixLenUnit - xMatrixLenUnit, (i+1)*yMatrixLenUnit - 1, i*yMatrixLenUnit, i*yMatrixLenUnit+xMatrixLenUnit - 1, B)
         # plt.spy(Ham_Buff, precision=0.1, markersize=5)
         # plt.show()
         Ham = None
@@ -1951,7 +1963,7 @@ class Kwant_SSeS():
                             sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                             # coords = kwant.plotter.sys_leads_pos(sys, sites)
 
-                            ham_mat = self.MakeClosePB(ham_mat,'y')
+                            ham_mat = self.MakeClosePB(ham_mat,'xy')
                             evals, evecs = eigh(ham_mat)
                         else:
                             evals, evecs = eigh(ham_mat.toarray())
