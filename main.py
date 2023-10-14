@@ -54,11 +54,11 @@ delta_list = [0.125] # in eV
 # delta_list = [6.4e-6]
 # delta_list = [0.1] # in eV
 Vg_s = [0]
-alphaList = [0,0.1,0.5,1,1.5,2]
+alphaList = [1]
 #
 # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
 # syst.stdout.flush()
-BTest_list = [0,0.1,0.5,1,1.5,2]
+BTest_list = [1]
 if DavidPot:
     NName = ''
 else:
@@ -80,11 +80,11 @@ for DELTA in delta_list:
             BTest = [BTest]
 
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=81, WSC=161,
-                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
+                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4001, L_s=4001,
                               alpha=alphaTest, beta=0,
                               V_A=[0], TStrength=[0], TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                              PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+                              PeriBC=[1], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                               E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi / 2], B_phi=[0],
                               ProOn=[0], constantDelta=True, BField=BTest, a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
