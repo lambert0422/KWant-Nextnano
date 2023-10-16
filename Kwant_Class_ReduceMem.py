@@ -585,7 +585,7 @@ class Kwant_SSeS():
             if self.SN == 'SN':
                 # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L-self.L_extract_half and -self.WSC <= y < 0) or (
                 #         self.L_extract_half <= x <= self.L-self.L_extract_half and self.W <= y <=(self.W - int(self.W_reduced_r / self.a)) )
-                return 0 <= x <= self.L and -self.WSC <= y <= (self.W - int(self.W_reduced_r / self.a))
+                return 0 <= x <= self.L and -self.WSC <= y < (self.W - int(self.W_reduced_r / self.a))
             else:
                 # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L - self.L_extract_half and -self.WSC <= y < 0) or (
                  #             self.L_extract_half <= x <= self.L - self.L_extract_half and self.W <= y <= (self.W + self.WSC))
@@ -2595,3 +2595,4 @@ class Kwant_SSeS():
                 locs.append(loc)
                 start_at = loc
         return locs
+
