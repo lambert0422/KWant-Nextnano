@@ -119,7 +119,7 @@ for DELTA in delta_list:
         for NName in NName_list:
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1500,
                               WSC=500,
-                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
+                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=5000, L_s=5000,
                               alpha=[1], beta=0,
                               V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
