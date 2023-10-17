@@ -59,10 +59,14 @@ alphaList = [1]
 # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
 # syst.stdout.flush()
 BTest_list = [1]
+
+# W_r_list = [41]
+# WSC_list = [161]
 if DavidPot:
     NName = ''
 else:
     NName = onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/UpdateSiDopedLayerThickness/2023Y03M23D-17h59m57s'
+
 for DELTA in delta_list:
     for alphaTest in alphaList:
         for BTest in BTest_list:
@@ -80,7 +84,7 @@ for DELTA in delta_list:
             BTest = [BTest]
 
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=81, WSC=161,
-                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4001, L_s=4001,
+                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
                               alpha=alphaTest, beta=0,
                               V_A=[0], TStrength=[0], TeV_Normal=True,
                               AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
@@ -89,8 +93,8 @@ for DELTA in delta_list:
                               ProOn=[0], constantDelta=True, BField=BTest, a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
-                              Phase=np.round(np.arange(0, 101) / 50, 5) * np.pi,
-                              CloseSystem=False, k_Num=50, mode_Num=2000,
+                              Phase=np.round(np.arange(0, 51) / 25, 5) * np.pi,
+                              CloseSystem=True, k_Num=50, mode_Num=2000,
                               SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                               muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
                               CombineTev=False, showBands=False,
