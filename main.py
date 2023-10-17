@@ -66,7 +66,7 @@ else:
 for DELTA in delta_list:
     for alphaTest in alphaList:
         for BTest in BTest_list:
-            Estep = 0.001
+            Estep = 0.005
             # Estep = 0.03
             Emin = -0.25
             Emax = 0.25
@@ -83,14 +83,14 @@ for DELTA in delta_list:
                               DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4001, L_s=4001,
                               alpha=alphaTest, beta=0,
                               V_A=[0], TStrength=[0], TeV_Normal=True,
-                              AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
+                              AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                               E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi / 2], B_phi=[0],
                               ProOn=[0], constantDelta=True, BField=BTest, a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
                               Phase=np.round(np.arange(0, 101) / 50, 5) * np.pi,
-                              CloseSystem=True, k_Num=50, mode_Num=2000,
+                              CloseSystem=False, k_Num=50, mode_Num=2000,
                               SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                               muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
                               CombineTev=False, showBands=False,
