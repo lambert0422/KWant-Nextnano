@@ -24,8 +24,8 @@ mu_N_list = [3.5e-3]
 mu_SC_list =   [3.5e-3]
 
 AC = 5e-6
-TeV_list =  np.array([4e-3])
-TeV_T_list = np.array([4e-3])
+TeV_list =  np.array([1])
+TeV_T_list = np.array([1])
 
 E_excited_list =AC/TeV_list # get around 5uV excitation energy which fit to the measurement
 # TeV_list = [2.44e-3]
@@ -47,7 +47,7 @@ lenswp = len(mu_SC_list) * len(mu_N_list) * len(E_excited_list) * len(TeV_list) 
 # np.round(np.arange(0.5,-1.2,-0.01),3),
 # delta_list = [6.5e-4] # in eV
 # delta_list = [6.5e-4] # in eV
-delta_list = [5.5e-4]
+delta_list = [0.125]
 # delta_list = [0.1] # in eV
 VGate_shift_list = [0]
 
@@ -118,24 +118,21 @@ for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         for NName in NName_list:
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1500,
-                              WSC=500,
-                              DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=5000, L_s=5000,
-                              alpha=[1], beta=0,
+                              WSC=500, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=5000, L_s=5000,
+                              alpha=1, beta=0,
                               V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                              E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi / 2], B_phi=[0],
+                              E_excited=[0], SNjunc=SNjunc_list, B_theta=[np.pi / 2], B_phi=[0],
                               ProOn=[0], constantDelta=True, BField=[0], a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
-                              Phase=[3*np.pi/4],
-                              CloseSystem=False, k_Num=50, mode_Num=2000,
+                              Phase=[3*np.pi/4], CloseSystem=False, k_Num=50, mode_Num=2000,
                               SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                               muN=[0.25], muLead=[0.25], DefectAmp=0, DefectNumPer=0, CombineMu=True,
                               CombineTev=False, showBands=False,
                               NumBands=1, Mapping=False, GetConductance=True,
                               muSC=[0.25], delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="Vg",
-                              PlotbeforeFigures=1,
-                              PlotbeforeFigures_Ana=20).Run_sweep()
+                              PlotbeforeFigures=1, PlotbeforeFigures_Ana=5).Run_sweep()
 
 
