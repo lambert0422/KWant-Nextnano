@@ -70,7 +70,7 @@ else:
 for DELTA in delta_list:
     for alphaTest in alphaList:
         for BTest in BTest_list:
-            Estep = 0.001
+            Estep = 0.005
             # Estep = 0.03
             Emin = -0.25
             Emax = 0.25
@@ -87,7 +87,7 @@ for DELTA in delta_list:
                               DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
                               alpha=alphaTest, beta=0,
                               V_A=[0], TStrength=[0], TeV_Normal=True,
-                              AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
+                              AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                               E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi / 2], B_phi=[0],
                               ProOn=[0], constantDelta=True, BField=BTest, a=20,
