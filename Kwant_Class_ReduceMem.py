@@ -313,7 +313,8 @@ class Kwant_SSeS():
         self.delta_raw = delta
         self.deltaNormalitionFactor = delta / delta_real
         # self.gn = gn  # g-factor
-        self.gn = 0.2 / (self.deltaNormalitionFactor * self.mu_B)  # this is normalized to EZ = 0.1 with B = 1T
+        self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
+
         self.Temp = Temp
         self.deltaPairingMatrix=deltaPairingMatrix
         self.deltaPairingMatrix_sign=deltaPairingMatrix_sign
@@ -642,10 +643,11 @@ class Kwant_SSeS():
 
             if self.Orbit:
                 OrbitalHam = """
-                                   +((e * ((cos_theta*B)**2) * (Y_rl(x,y)**2) /(2*m* (c**2)))*kron(sigma_z, sigma_0) -
-                                   (hbar*(cos_theta*B)*Y_rl(x,y)*k_x/(m*c))*kron(sigma_0, sigma_0) -
-                                   (alpha*e*Y_rl(x,y)*(cos_theta*B)/(hbar*c))*kron(sigma_0, sigma_y))
+                                   +(((Y_rl(x,y)**2)*Orbital1)*kron(sigma_z, sigma_0)  -
+                                   (Y_rl(x,y)*Orbital2)*kron(sigma_0, sigma_0) -
+                                   (Y_rl(x,y)*Orbital3)*kron(sigma_0, sigma_y))
                              """ + TeV_N_Txt
+
             else:
                 OrbitalHam = ""
 
@@ -901,23 +903,7 @@ class Kwant_SSeS():
         else:
             syst_close = []
         # # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
-        monitorX = int(self.L/2)
-        monitorY = int(self.W/2)
 
-
-        monitorY_Semi = int(self.W / 3)
-
-        monitorY_SC_dn = int(-self.WSC / 2)
-        self.MidSiteID = syst.id_by_site[lat(monitorX, monitorY)]
-        self.MidSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY)]
-        self.MidSiteYID = syst.id_by_site[lat(monitorX , monitorY + 1)]
-        self.SemiSiteID = syst.id_by_site[lat(monitorX, monitorY_Semi)]
-        self.SemiSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_Semi)]
-        self.SemiSiteYID = syst.id_by_site[lat(monitorX, monitorY_Semi + 1)]
-
-        self.SCdnSiteID = syst.id_by_site[lat(monitorX, monitorY_SC_dn)]
-        self.SCdnSiteXID = syst.id_by_site[lat(monitorX + 1, monitorY_SC_dn)]
-        self.SCdnSiteYID = syst.id_by_site[lat(monitorX, monitorY_SC_dn + 1)]
         return syst, syst_close
         #
 
@@ -1519,7 +1505,7 @@ class Kwant_SSeS():
         # kF = (2 * np.pi * 1e10) ** 0.5
 
 
-        Dk = self.gn * self.mu_B * Bx / (self.hbar * self.vF)
+        Dk = self.gn_muB * Bx / (self.hbar * self.vF)
         # if Dk != 0:
         #     A = 1/Dk
         #     print(1)
@@ -1623,16 +1609,16 @@ class Kwant_SSeS():
             return np.conjugate(DELTA)
 
         def EZ_dis(x, y):
-            #Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
             #g = Square*self.gn
-            g = self.gn
-            self.gn_Map[int(x), int(y) + self.WSC] = np.real(g)
+            g_muB = Square*self.gn_muB
+            self.gn_Map[int(x), int(y) + self.WSC] = np.real(g_muB)
 
-            return np.round(self.deltaNormalitionFactor * g * self.mu_B * self.B / 2,15)
+            return np.round(self.deltaNormalitionFactor * g_muB * self.B / 2,15)
         def alpha_dis(x, y):
-            # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
-            # alpha =Square* self.alpha
-            alpha = self.alpha
+            Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            alpha =Square* self.alpha
+            # alpha = self.alpha
             self.alpha_Map[int(x), int(y) + self.WSC] = abs(alpha)
             return alpha
 
@@ -1689,7 +1675,9 @@ class Kwant_SSeS():
             return t
 
         def Y_rl_dis(x, y):
-            result = 1e-9 * (y - self.W / 2) * self.a / self.GridFactor
+            Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+
+            result = Square * 1e-9 * (y - self.W / 2) * self.a / self.GridFactor
 
             return result  # in actual nm
 
@@ -1910,48 +1898,72 @@ class Kwant_SSeS():
 
 
 
-                    params = dict(a=1e-9, e=self.e, Delta_0=Delta_0_dis, EZ=EZ_dis, TB=TunnelBarrier_dis,mu_Lead = self.mu_Lead,
-                                  V=V_dis, VG=VGate_dis, alpha_dis=alpha_dis, hbar=self.hbar,alpha_fix = self.alpha, beta_fix = self.beta,
-                                  m=self.m,beta_dis=beta_dis,delta_NormalizationFactor = self.deltaNormalitionFactor,
-                                  mu=mu_dis, mu_S=self.mu_SC, mu_N=self.mu_N,sin_theta = np.round(np.sin(self.B_theta),13),
-                                  sin_phi=np.round(np.sin(self.B_phi),13),cos_phi= np.round(np.cos(self.B_phi),13),
+                    params = dict(a=1e-9, e=self.e, m=self.m, mu_S=self.mu_SC, mu_N=self.mu_N,mu_Lead = self.mu_Lead,hbar=self.hbar, B=self.B,
+                                  mu=mu_dis,
+                                  EZ=EZ_dis,                            EZ_fix=np.round(self.deltaNormalitionFactor*self.gn_muB * self.B /2,15),
+                                  alpha_dis=alpha_dis,                  alpha_fix = self.alpha,
+                                  beta_dis=beta_dis,                    beta_fix = self.beta,
+                                  V=V_dis,                              V_bias=self.Vbias,
+                                  VG=VGate_dis,                         V_ref=V_ref_dis,
+                                  Delta_0=Delta_0_dis,                  Delta_0_prime=Delta_0_prime_dis,
+                                  Y_rl=Y_rl_dis,
+                                  TB=TunnelBarrier_dis,
+                                  t=t_dis,
+
+                                  sin_theta=np.round(np.sin(self.B_theta), 13),
+                                  sin_phi=np.round(np.sin(self.B_phi),13),
+                                  cos_phi= np.round(np.cos(self.B_phi),13),
                                   cos_theta = np.round(np.cos(self.B_theta),13),
-                                  EZ_fix=np.round(self.deltaNormalitionFactor*self.gn * self.mu_B * self.B /2,15),
-                                  V_ref=V_ref_dis, t=t_dis, Delta_0_prime=Delta_0_prime_dis, V_bias=self.Vbias,
+
                                   Delta_SC_up=self.delta * ExpRounded(- self.phi / 2),
                                   Delta_SC_dn=self.delta * ExpRounded(self.phi / 2),
                                   Delta_SC_up_prime=self.delta * ExpRounded(self.phi / 2),
                                   Delta_SC_dn_prime=self.delta * ExpRounded(- self.phi / 2),
-                                  B=self.B, Y_rl=Y_rl_dis, c=self.c)
-                    sites = sys.sites
 
-                    TestHam = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteID,params = params))
-                    TestHopx = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteXID, params=params))
-                    TestHopy = np.array(sys.hamiltonian(self.MidSiteID, self.MidSiteYID, params=params))
-                    TestHam_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteID, params=params))
-                    TestHopx_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteXID, params=params))
-                    TestHopy_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteYID, params=params))
-                    TestHam_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteID, params=params))
-                    TestHopx_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteXID, params=params))
-                    TestHopy_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteYID, params=params))
-                    # TestHam2 = sys.hamiltonian_submatrix(0,1,params = params)
-                    ParaDict = {
-                        'Ez' : self.deltaNormalitionFactor*self.gn * self.mu_B * self.B / (2*self.t),
-                        'Angle':(np.round(np.sin(self.B_theta),13) * np.round(np.cos(self.B_phi),13) * np.kron(self.I, self.taux) +
-                                 np.round(np.sin(self.B_theta),13) * np.round(np.sin(self.B_phi),13) * np.kron(self.I, self.tauy) +
-                                 np.round(np.cos(self.B_theta),13)* np.kron(self.I, self.tauz)),
+                                  Orbital1 = (self.deltaNormalitionFactor*self.e * ((np.round(np.cos(self.B_theta),13)*self.B)**2)/(2*self.m)),
+                                  Orbital2 = ((self.deltaNormalitionFactor*np.round(np.cos(self.B_theta),13) * self.B)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor)))),
+                                  Orbital3 =  ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) * (np.round(np.cos(self.B_theta),13) * self.B)),
+                                  )
 
-                        'alpha' : self.alpha /self.t,
-                        'alphaHamTerm': self.m**2*self.alpha**2/(self.hbar**2),
-                        'mu_N': self.mu_N/self.t,
-                        'mu_Sc': self.mu_SC/self.t,
-                        'Delta': self.delta/self.t,
-                        'dletaMatrix1': np.kron(self.taux+1j*self.tauy,self.taux)+np.kron(self.taux-1j*self.tauy,self.taux),
-                        'dletaMatrix2': np.kron(self.taux + 1j * self.tauy, self.tauy)+np.kron(self.taux - 1j * self.tauy, self.tauy),
-                        'dletaMatrix3': np.kron(self.taux + 1j * self.tauy, self.tauz)+np.kron(self.taux - 1j * self.tauy, self.tauz),
-                        'dletaMatrix4': np.kron(self.taux + 1j * self.tauy, 1j*self.taux)-np.kron(self.taux - 1j * self.tauy, 1j*self.taux),
-                        'dletaMatrix5': np.kron(self.taux + 1j * self.tauy, 1j * self.tauy)-np.kron(self.taux - 1j * self.tauy, 1j * self.tauy)
-                    }
+
+                    # monitorX = int(self.L / 3)
+                    # monitorY_Semi = 0
+                    # monitorY_SC_dn = int(-self.WSC / 2)
+                    # lat = kwant.lattice.square(norbs=4)
+                    # self.SemiSiteID = sys.id_by_site[lat(monitorX, monitorY_Semi)]
+                    # self.SemiSiteXID = sys.id_by_site[lat(monitorX + 1, monitorY_Semi)]
+                    # self.SemiSiteYID = sys.id_by_site[lat(monitorX, monitorY_Semi + 1)]
+                    # self.SCdnSiteID = sys.id_by_site[lat(monitorX, monitorY_SC_dn)]
+                    # self.SCdnSiteXID = sys.id_by_site[lat(monitorX + 1, monitorY_SC_dn)]
+                    # self.SCdnSiteYID = sys.id_by_site[lat(monitorX, monitorY_SC_dn + 1)]
+                    # TestHam_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteID, params=params))
+                    # TestHopx_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteXID, params=params))
+                    # TestHopy_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteYID, params=params))
+                    # TestHam_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteID, params=params))
+                    # TestHopx_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteXID, params=params))
+                    # TestHopy_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteYID, params=params))
+                    # result = 1e-9 * (0 - self.W / 2) * self.a / self.GridFactor
+                    # AA = np.sqrt(self.hbar**2/(2*self.m*self.e/self.deltaNormalitionFactor))
+                    # ParaDict = {
+                    #     'Ez' : self.deltaNormalitionFactor*self.gn_muB * self.B / (2*self.t),
+                    #     'Angle':(np.round(np.sin(self.B_theta),13) * np.round(np.cos(self.B_phi),13) * np.kron(self.I, self.taux) +
+                    #              np.round(np.sin(self.B_theta),13) * np.round(np.sin(self.B_phi),13) * np.kron(self.I, self.tauy) +
+                    #              np.round(np.cos(self.B_theta),13)* np.kron(self.I, self.tauz)),
+                    #
+                    #     'alpha' : self.alpha /self.t,
+                    #     'alphaHamTerm': self.m**2*self.alpha**2/(self.hbar**2),
+                    #     'mu_N': self.mu_N/self.t,
+                    #     'mu_Sc': self.mu_SC/self.t,
+                    #     'Delta': self.delta/self.t,
+                    #     'dletaMatrix1': np.kron(self.taux+1j*self.tauy,self.taux)+np.kron(self.taux-1j*self.tauy,self.taux),
+                    #     'dletaMatrix2': np.kron(self.taux + 1j * self.tauy, self.tauy)+np.kron(self.taux - 1j * self.tauy, self.tauy),
+                    #     'dletaMatrix3': np.kron(self.taux + 1j * self.tauy, self.tauz)+np.kron(self.taux - 1j * self.tauy, self.tauz),
+                    #     'dletaMatrix4': np.kron(self.taux + 1j * self.tauy, 1j*self.taux)-np.kron(self.taux - 1j * self.tauy, 1j*self.taux),
+                    #     'dletaMatrix5': np.kron(self.taux + 1j * self.tauy, 1j * self.tauy)-np.kron(self.taux - 1j * self.tauy, 1j * self.tauy),
+                    #     'Orbital1': (result**2) * (self.deltaNormalitionFactor*self.e * ((np.round(np.cos(self.B_theta),13)*self.B)**2)/(2*self.m))*np.kron(self.tauz,self.I),
+                    #     'Orbital2': result * ((self.deltaNormalitionFactor*np.round(np.cos(self.B_theta),13) * self.B)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor)))) *np.kron(self.I,self.I),
+                    #     'Orbital3': result * ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) * (np.round(np.cos(self.B_theta),13) * self.B)) *np.kron(self.I,self.tauy),
+                    # }
 
                     if self.CloseSystem:
                         TimeBeforeEverySwp = time.time()
@@ -1966,7 +1978,7 @@ class Kwant_SSeS():
                             evals, evecs = eigh(ham_mat.toarray())
                         # round the eigenvector
                         ham_mat = None
-                        evecs = np.round(evecs.real,4)+np.round(evecs.imag,4)*1j
+                        # evecs = np.round(evecs.real,4)+np.round(evecs.imag,4)*1j
                         LDOS = np.abs(evecs)**2
 
 

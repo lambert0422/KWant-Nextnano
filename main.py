@@ -58,7 +58,7 @@ alphaList = [1]
 #
 # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
 # syst.stdout.flush()
-BTest_list = [1]
+BTest_list = [np.sqrt(2)]
 
 # W_r_list = [41]
 # WSC_list = [161]
@@ -85,11 +85,10 @@ for DELTA in delta_list:
 
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=81, WSC=161,
                               DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
-                              alpha=alphaTest, beta=0,
-                              V_A=[0], TStrength=[0], TeV_Normal=True,
+                              alpha=alphaTest, beta=0,V_A=[0], TStrength=[0], TeV_Normal=True,
                               AddOrbitEffect=True, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                              E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi / 2], B_phi=[0],
+                              E_excited=E_excited_list, SNjunc=SNjunc_list, B_theta=[np.pi / 4], B_phi=[0],
                               ProOn=[0], constantDelta=True, BField=BTest, a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
