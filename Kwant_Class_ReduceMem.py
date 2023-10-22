@@ -226,7 +226,7 @@ class Kwant_SSeS():
     a_B = epsilon_r * epsilon_0 * hbar ** 2 / (m * e ** 2)
     kF = (4 * np.pi * n_2DEG) ** 0.5
     lambdaF = 1e9*2*np.pi/kF # make it nm
-    vF = hbar * kF / m
+    vF = hbar * kF / (m)
 
 
     ##########################################################################################################################
@@ -429,7 +429,7 @@ class Kwant_SSeS():
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
         self.W_r = W_r
         self.L_r = L_r
-        self.X1 = (self.L_r / 10000) * 1e-9 * (np.linspace(0, 10000, 10001) - 5000)
+        self.WSC_r = WSC
         self.W = int(W_r * GridFactor / self.a)  # (int) width of the junction (y direction)
         self.L = int(L_r * GridFactor / self.a)  # (int) length of the junction (x direction)
         self.L_extract_half = int((L_r - L_s) * GridFactor / (2*self.a))
@@ -1497,36 +1497,32 @@ class Kwant_SSeS():
             self.Vbias_Map = np.zeros((self.L, 2 * self.WSC + self.W))
             self.Tunnel_Map = np.zeros((self.L, 2 * self.WSC + self.W))
 
-    def orderDelta(self, X, Y, Bz, lambdaIn, leadN, PHI0, Bx=0, alphaangle=0):
+    def orderDelta(self, X, Y, Bz, lambdaIn, leadN, PHI0, Bx=0, alphaangle=np.pi):
         # Theory based on <Controlled finite momentum pairing and spatially
         # varying order parameter in proximitized HgTe
         # quantum wells>
+        # Theory based on <Controlled finite momentum pairing and spatially
+        # varying order parameter in proximitized HgTe
+        # quantum wells>
+        X1 = (self.L_r / 10000) * (np.linspace(-10000, 10000, 40001))
+        X_m = (X - self.L / 2) * self.a / self.GridFactor
+        Y_m = Y * self.a / self.GridFactor
+        PHIJ = PHI0 + ((-1) ** leadN * X1 * Bz * (self.W_r) * 1e-18) / (
+                2 * self.hbar / (2 * self.e))
+        lambda_sp = np.abs(lambdaIn) * ExpRounded(PHIJ)
+        Dk = self.e * self.gn_muB * Bx / (self.hbar * self.vF)
 
-        X_m = 1e-9 * (X - (self.L - 1) / 2) * self.a / self.GridFactor
-        Y_m = 1e-9 * Y * self.a / self.GridFactor
-         # in m
-        # W = 1e-9 * self.W_r / 4
-        PHIJ = PHI0 / (2 * np.pi) + ((-1) ** leadN * self.X1 * Bz * (self.W_r + self.L_r) * 1e-9) / (
-                4 * np.pi * self.hbar / (2 * self.e))
-        lambda_sp = lambdaIn * ExpRounded(2 * np.pi * PHIJ)
+        gamma = Dk * np.sqrt((X_m - X1) ** 2 + Y_m ** 2) * 1e-9
+        # gamma = Dk * (np.round(np.sin(alphaangle), 15)  * Y_m * 1e-9 + np.round(np.cos(alphaangle), 15) * (X_m - X1) * 1e-9)
 
-
-        # kF = (2 * np.pi * 1e10) ** 0.5
-
-
-        Dk = self.gn_muB * Bx / (self.hbar * self.vF)
-        # if Dk != 0:
-        #     A = 1/Dk
-        #     print(1)
-        # Dk = np.pi/(2*W)
-        gamma = Dk * (np.sin(alphaangle) * Y_m + np.cos(alphaangle) * (X_m - self.X1))
-
-        F = (ExpRounded(gamma) + ExpRounded(-gamma)) / (
-                8 * (np.pi ** 2) * self.hbar * self.m * ((X_m - self.X1) ** 2 + Y_m ** 2))
-
-        ORDER = np.trapz(lambda_sp * F, self.X1) / (self.Factor)
-
-        # A = abs(ORDER)/lambdaIn
+        F = (self.m / (8 * np.pi ** 2 * self.hbar)) * (np.round(np.cos(gamma), 15)) / (((X_m - X1) ** 2 + (Y_m) ** 2))
+        ORDER = np.trapz(lambda_sp * F, X1)/ (self.Factor)
+        A = abs(ORDER)
+        X1 = None
+        gamma = None
+        F = None
+        PHIJ = None
+        lambda_sp = None
 
         return ORDER
     def TempDefineHc(self):
@@ -1890,42 +1886,45 @@ class Kwant_SSeS():
                             else:
                                 self.Factor = 1  # correct the proximity effect of order parameter
                                 if self.SN == 'SN':
-                                    self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
-                                                                         self.By,
+                                    self.Factor = np.abs(self.orderDelta((self.L) / 2, -1,
+                                                                         self.Bz,
                                                                          self.delta, 0,
                                                                          -self.phi,
-                                                                         Bx=self.Bx,
-                                                                         alphaangle=0) / self.delta)
+                                                                         Bx=self.Bx) / self.delta)
                                 else:
-                                    self.Factor = np.abs(self.orderDelta((self.L - 1) / 2, 1,
-                                                                         self.By,
+                                    self.Factor = np.abs(self.orderDelta((self.L) / 2, -1,
+                                                                         self.Bz,
                                                                          self.delta, 0,
                                                                          -self.phi / 2,
-                                                                         Bx=self.Bx,
-                                                                         alphaangle=0) + \
-                                                         self.orderDelta((self.L - 1) / 2, self.W - 1, self.By,
-                                                                         self.delta, 1, self.phi / 2, Bx=0,
-                                                                         alphaangle=0)) / self.delta
+                                                                         Bx=self.Bx) + \
+                                                         self.orderDelta((self.L) / 2, self.W+1,
+                                                                         self.Bz,
+                                                                         self.delta, 1,
+                                                                         self.phi / 2,
+                                                                         Bx=self.Bx)) / self.delta
                                 for i in range(len(self.XX)):
                                     for j in range(len(self.YY)):
                                         if self.SN == 'SN':
 
-                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.By,
+                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j],
+                                                                                         self.Bz,
                                                                                          self.delta, 0,
-                                                                                         self.phi, Bx=self.Bx,
-                                                                                         alphaangle=0)
+                                                                                         self.phi,
+                                                                                         Bx=self.Bx)
 
                                         else:
 
-                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j] + 1, self.By,
+                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j]+1,
+                                                                                         self.Bz,
                                                                                          self.delta, 0,
-                                                                                         -self.phi / 2, Bx=self.Bx,
-                                                                                         alphaangle=0) + \
+                                                                                         -self.phi / 2,
+                                                                                         Bx=self.Bx) + \
                                                                          self.orderDelta(self.XX[i],
-                                                                                         self.W - self.YY[j] + 1,
-                                                                                         self.By,
-                                                                                         self.delta, 1, self.phi / 2, Bx=self.Bx,
-                                                                                         alphaangle=0)
+                                                                                         self.W - self.YY[j],
+                                                                                         self.Bz,
+                                                                                         self.delta, 1,
+                                                                                         self.phi / 2,
+                                                                                         Bx=self.Bx)
                                 # A = np.abs(self.SpatialDeltaMap).T
 
                         if self.BlockWarnings:
@@ -1961,10 +1960,13 @@ class Kwant_SSeS():
                                   Orbital2 = ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor)))),
                                   Orbital3 =  ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) *self.Bz),
                                   )
+# ======================================================================================================================
+# ======================================================================================================================
 
-
-                    monitorX = int(self.L / 3)
-                    monitorY_Semi = 0
+                    monitorX = int(self.L / 2)
+                    monitorY_Semi = int(self.W / 2)
+                    # monitorY_Semi = 0
+                    # monitorY_Semi = self.W
                     monitorY_SC_dn = int(-self.WSC / 2)
                     lat = kwant.lattice.square(norbs=4)
                     self.SemiSiteID = sys.id_by_site[lat(monitorX, monitorY_Semi)]
@@ -1999,10 +2001,13 @@ class Kwant_SSeS():
                         'Orbital2': result * ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor)))) *np.kron(self.I,self.I),
                         'Orbital3': result * ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) * (self.Bz)) *np.kron(self.I,self.tauy),
                     }
-
+# ======================================================================================================================
+# ======================================================================================================================
                     if self.CloseSystem:
                         TimeBeforeEverySwp = time.time()
                         ham_mat = sys_close.hamiltonian_submatrix(sparse=True, params=params)
+                        A = self.Delta_abs_Map
+                        A2 = self.Delta_phase_Map
                         if self.PB:
                             sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                             # coords = kwant.plotter.sys_leads_pos(sys, sites)
@@ -2156,7 +2161,8 @@ class Kwant_SSeS():
                             warnings.filterwarnings("ignore")
                         self.Delta_induced = np.min(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
 
-                        if RunCount%self.PlotbeforeFigures_Ana == 0 and not self.CloseSystem:
+                        # if RunCount%self.PlotbeforeFigures_Ana == 0 and not self.CloseSystem:
+                        if RunCount % self.PlotbeforeFigures_Ana == 0:
                             # try:
                             if self.showBands:
                                 fig = kwant.plotter.bands(self.lead_test.finalized(), show=False, params=params)
