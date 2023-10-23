@@ -1507,7 +1507,7 @@ class Kwant_SSeS():
         X1 = (self.L_r / 10000) * (np.linspace(-10000, 10000, 40001))
         X_m = (X - self.L / 2) * self.a / self.GridFactor
         Y_m = Y * self.a / self.GridFactor
-        PHIJ = PHI0 + ((-1) ** leadN * X1 * Bz * (self.W_r) * 1e-18) / (
+        PHIJ = PHI0 + ((-1) ** leadN * X1 *0 * (self.W_r) * 1e-18) / (
                 2 * self.hbar / (2 * self.e))
         lambda_sp = np.abs(lambdaIn) * ExpRounded(PHIJ)
         Dk = self.e * self.gn_muB * Bx / (self.hbar * self.vF)
