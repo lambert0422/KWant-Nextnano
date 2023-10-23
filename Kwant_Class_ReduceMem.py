@@ -1175,9 +1175,9 @@ class Kwant_SSeS():
         ax4 = plt.subplot(3, 3, 4)
         # pcolor = ax4.pcolormesh(Potential_Map.T, shading='auto')
         # pcolor = ax5.pcolormesh(Delta_Map.T, shading='auto')
-        pcolor = ax4.imshow(self.Delta_abs_Map.T)
+        pcolor = ax4.imshow((2e3*self.Delta_abs_Map/self.deltaNormalitionFactor).T)
         cbar = self.fig.colorbar(pcolor)
-        plt.title('Delta')
+        plt.title('Delta(meV)')
 
         ax5 = plt.subplot(3, 3, 5)
         ax5_2 = ax5.twinx()
@@ -1199,9 +1199,9 @@ class Kwant_SSeS():
         plt.title('Potential[eV/t]')
 
         ax7 = plt.subplot(3, 3, 7)
-        ax7.plot(self.Delta_abs_Map.T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
+        ax7.plot((2e3*self.Delta_abs_Map/self.deltaNormalitionFactor).T[:, int(np.shape(self.Delta_abs_Map.T)[1] / 2)])
         ax7.axhline(y=self.Delta_induced, color='r')
-        ax7.text(x=0, y=self.Delta_induced, s=str(np.round(1e6 * self.Delta_induced, 3)))
+        ax7.text(x=0, y=2e6*self.Delta_induced/self.deltaNormalitionFactor, s=str(np.round(2e6 * self.Delta_induced/self.deltaNormalitionFactor, 3)))
         plt.title('Delta up down cut')
 
         ax8 = plt.subplot(3, 3, 8)
@@ -1213,7 +1213,7 @@ class Kwant_SSeS():
         ax9.plot(self.Potential_Map.T[:, int(np.shape(self.Potential_Map.T)[1] / 2)])
         plt.title('Potential up down cut(no Gate)')
 
-        self.fig.tight_layout()
+        # self.fig.tight_layout()
 
     def Gen_Conduct_Plot(self, x, y, Xlabel,Ylabel,y2 = [], subloc=[],Y2label='',initfig = True,figsize = (14,11)):
         if self.BlockWarnings:
@@ -1683,7 +1683,7 @@ class Kwant_SSeS():
                 VGate = 0
             else:
                 VGate = VGate * Square
-            VGate = VGate/self.deltaNormalitionFactor
+            VGate = VGate * self.deltaNormalitionFactor
             self.Potential_Map[int(x), int(y) + self.WSC] = VGate
 
             return VGate
@@ -1906,7 +1906,7 @@ class Kwant_SSeS():
                                     for j in range(len(self.YY)):
                                         if self.SN == 'SN':
 
-                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j],
+                                            self.SpatialDeltaMap[i, j] = self.orderDelta(self.XX[i], self.YY[j]+1,
                                                                                          self.Bz,
                                                                                          self.delta, 0,
                                                                                          self.phi,
@@ -2006,8 +2006,7 @@ class Kwant_SSeS():
                     if self.CloseSystem:
                         TimeBeforeEverySwp = time.time()
                         ham_mat = sys_close.hamiltonian_submatrix(sparse=True, params=params)
-                        A = self.Delta_abs_Map
-                        A2 = self.Delta_phase_Map
+
                         if self.PB:
                             sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                             # coords = kwant.plotter.sys_leads_pos(sys, sites)
