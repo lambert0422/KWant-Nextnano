@@ -123,16 +123,16 @@ for DELTA in delta_list:
                               V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                              E_excited=[0], SNjunc=SNjunc_list,
+                              E_excited=[0.1,0.12,0.14,0.16,0.18,0.2,0.22,0.24,0.26], SNjunc=SNjunc_list,
                               ProOn=[1], constantDelta=False, BField=[(0,0,0)], a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=False, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
-                              Phase=[3*np.pi/4], CloseSystem=False, k_Num=50, mode_Num=2000,
+                              Phase=[np.pi/2], CloseSystem=False, k_Num=50, mode_Num=2000,
                               SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                               muN=[0.25], muLead=[0.25], DefectAmp=0, DefectNumPer=0, CombineMu=True,
                               CombineTev=False, showBands=False,
                               NumBands=1, Mapping=False, GetConductance=True,
                               muSC=[0.25], delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="Vg",
-                              PlotbeforeFigures=1, PlotbeforeFigures_Ana=1).Run_sweep()
+                              PlotbeforeFigures=1, PlotbeforeFigures_Ana=10).Run_sweep()
 
 
