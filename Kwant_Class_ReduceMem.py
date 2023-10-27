@@ -2011,7 +2011,7 @@ class Kwant_SSeS():
                             sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                             # coords = kwant.plotter.sys_leads_pos(sys, sites)
 
-                            ham_mat = self.MakeClosePB(ham_mat,'xy')
+                            ham_mat = self.MakeClosePB(ham_mat,'y')
                             evals, evecs = eigh(ham_mat)
                         else:
                             evals, evecs = eigh(ham_mat.toarray())
