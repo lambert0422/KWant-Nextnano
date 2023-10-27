@@ -1507,7 +1507,7 @@ class Kwant_SSeS():
         X1 = (self.L_r / 10000) * (np.linspace(-10000, 10000, 40001))
         X_m = (X - self.L / 2) * self.a / self.GridFactor
         Y_m = Y * self.a / self.GridFactor
-        PHIJ = PHI0 + ((-1) ** leadN * X1 * Bz * (self.W_r) * 1e-18) / (
+        PHIJ = PHI0 + ((-1) ** leadN * X1 *0 * (self.W_r) * 1e-18) / (
                 2 * self.hbar / (2 * self.e))
         lambda_sp = np.abs(lambdaIn) * ExpRounded(PHIJ)
         Dk = self.e * self.gn_muB * Bx / (self.hbar * self.vF)
@@ -1829,6 +1829,7 @@ class Kwant_SSeS():
                         self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
                         # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
                         self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
+
                 now = datetime.now()
                 DateLocal = now.strftime("%YY%mM%dD")
                 TimeLocal = now.strftime("%Hh%Mm%Ss")
@@ -1857,9 +1858,10 @@ class Kwant_SSeS():
                         else:
                             Index = self.VgList.index(self.V_Applied)
                             self.u_sl = self.Dict[Index]
-                            self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
-                            # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
-                            self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
+                            if self.GlobalVswpCount == 0:
+                                self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
+                                # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
+                                self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
                     elif self.SwpID == "B":
 
                         self.Bx, self.By, self.Bz = VSwp
