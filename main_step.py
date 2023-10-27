@@ -124,7 +124,7 @@ for DELTA in delta_list:
                               V_A=np.round(np.arange(0.5, -1.2, -0.02), 3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                              E_excited=[0.008,0.012], SNjunc=SNjunc_list,
+                              E_excited=[0.006], SNjunc=SNjunc_list,
                               ProOn=[1], constantDelta=False, BField=[(0, 0, 0)], a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=False, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
