@@ -821,7 +821,7 @@ class Kwant_SSeS():
             return (self.L_extract_half < x < self.L-self.L_extract_half-1)
 
         lead_up = kwant.Builder(sym1)
-        if self.PB == 1 :
+        if self.PB == 1 and not self.CloseSystem:
             def lead_shape_PB(site):
                 (x, y) = site.pos
                 if self.SN == 'SN':
@@ -897,7 +897,7 @@ class Kwant_SSeS():
 
         sys.attach_lead(lead_up)
         sys.attach_lead(lead_dn)
-        if self.PB == 1:
+        if self.PB == 1 and not self.CloseSystem:
             sys.attach_lead(lead_left)
             sys.attach_lead(lead_right)
             if  self.L_extract_half>0:
@@ -1936,9 +1936,9 @@ class Kwant_SSeS():
 
                     params = dict(a=1e-9, e=self.e, m=self.m, mu_S=self.mu_SC, mu_N=self.mu_N,mu_Lead = self.mu_Lead,hbar=self.hbar,
                                   mu=mu_dis,
-                                  EZx=EZ_x_dis,                         EZ_fix_x=np.round(self.deltaNormalitionFactor*self.gn_muB * self.Bx /2,15),
-                                  EZy=EZ_y_dis,                         EZ_fix_y=np.round(self.deltaNormalitionFactor * self.gn_muB * self.By / 2, 15),
-                                  EZz=EZ_z_dis,                         EZ_fix_z=np.round(self.deltaNormalitionFactor * self.gn_muB * self.Bz / 2, 15),
+                                  EZx=EZ_x_dis,                         EZ_x_fix=np.round(self.deltaNormalitionFactor*self.gn_muB * self.Bx /2,15),
+                                  EZy=EZ_y_dis,                         EZ_y_fix=np.round(self.deltaNormalitionFactor * self.gn_muB * self.By / 2, 15),
+                                  EZz=EZ_z_dis,                         EZ_z_fix=np.round(self.deltaNormalitionFactor * self.gn_muB * self.Bz / 2, 15),
 
                                   alpha_dis=alpha_dis,                  alpha_fix = self.alpha,
                                   beta_dis=beta_dis,                    beta_fix = self.beta,
