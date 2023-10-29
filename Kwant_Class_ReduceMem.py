@@ -489,7 +489,7 @@ class Kwant_SSeS():
             self.Combine_Still(muSC, muN,muLead, E_excited,V_A, TStrength, Vbias_List, BField)
             self.VarSwp = Phase
             self.TotalNrun = len(self.comb_change) * len(self.comb_still) * len(Phase)
-        if self.CombineMu:
+        if self.CombineMu or not self.SwpID == 'B':
             self.comb_still = list(map(self.Upzip, self.comb_still))
         self.TempDefineHc()
         # self.Run_sweep()
@@ -504,13 +504,23 @@ class Kwant_SSeS():
 
     def Combine_Still(self,V1,V2,V3,V4,V5,V6,V7,V8,V9 = [],V10 = []):
         if self.CombineMu:
-            self.comb_still = list(
-                itertools.product(zip(V1, V2), V3, V4,
-                                  V5, V6, V7, V8,V9,V10))
+            if self.SwpID == 'B':
+                self.comb_still = list(
+                    itertools.product(zip(V1, V2), V3, V4,
+                                      V5, V6, V7, V8,V9,V10))
+            else:
+                self.comb_still = list(
+                    itertools.product(zip(V1, V2), V3, V4,
+                                      V5, V6, V7, V8))
         else:
-            self.comb_still = list(
-                itertools.product(V1, V2, V3,V4,
-                                  V5, V6, V7,V8,V9,V10))
+            if self.SwpID == 'B':
+                self.comb_still = list(
+                    itertools.product(V1, V2, V3,V4,
+                                      V5, V6, V7,V8,V9,V10))
+            else:
+                self.comb_still = list(
+                    itertools.product(V1, V2, V3, V4,
+                                      V5, V6, V7, V8))
 
     def GetReferenceData(self, Path):
         self.referdata = pd.read_excel(Path)
