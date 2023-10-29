@@ -504,24 +504,14 @@ class Kwant_SSeS():
 
     def Combine_Still(self,V1,V2,V3,V4,V5,V6,V7,V8,V9 = [],V10 = []):
         if self.CombineMu:
-            if self.SwpID == 'B':
-                self.comb_still = list(
-                    itertools.product(zip(V1, V2), V3, V4,
-                                      V5, V6, V7, V8,V9,V10))
-            else:
-                self.comb_still = list(
-                    itertools.product(zip(V1, V2), V3, V4,
-                                      V5, V6, V7,V8))
-
+            self.comb_still = list(
+                itertools.product(zip(V1, V2), V3, V4,
+                                  V5, V6, V7, V8,V9,V10))
         else:
-            if self.SwpID == 'B':
-                self.comb_still = list(
-                    itertools.product(V1, V2, V3,V4,
-                                      V5, V6, V7,V8,V9,V10))
-            else:
-                self.comb_still = list(
-                    itertools.product(V1, V2, V3, V4,
-                                      V5, V6, V7, V8))
+            self.comb_still = list(
+                itertools.product(V1, V2, V3,V4,
+                                  V5, V6, V7,V8,V9,V10))
+
     def GetReferenceData(self, Path):
         self.referdata = pd.read_excel(Path)
 
@@ -1107,9 +1097,9 @@ class Kwant_SSeS():
         plt.axis('off')
 
         Ax7 = plt.subplot(3,4, 8)
-        pcolor = Ax7.imshow(self.Vbias_Map.T)
+        pcolor = Ax7.imshow(self.Potential_Map.T)
         # cbar = fig0.colorbar(pcolor)
-        plt.title('Vbias')
+        plt.title('VGate')
         plt.axis('off')
 
         Ax8 = plt.subplot(3,4, 9)
@@ -1727,6 +1717,8 @@ class Kwant_SSeS():
 
             Index0 = self.VgList.index(0.0)
             u_sl_0 = self.Dict[Index0]
+            diffmidLen = (np.max(u_sl_0.points[:, 0]) - np.min(u_sl_0.points[:, 0])) / 2 - self.L_r / 2
+            u_sl_0.points[:, 0] = u_sl_0.points[:, 0] - diffmidLen
             self.u_sl_ref_2DEG = u_sl_0(self.L_r / 2, self.W_r - self.W_reduced_r)
             # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
             self.u_sl_ref = u_sl_0(self.L_r / 2, 2)
@@ -1825,7 +1817,9 @@ class Kwant_SSeS():
                     else:
                         Index = self.VgList.index(self.V_Applied)
                         self.u_sl = self.Dict[Index]
-
+                        diffmidLen = (np.max(self.u_sl.points[:, 0]) - np.min(
+                            self.u_sl.points[:, 0])) / 2 - self.L_r / 2
+                        self.u_sl.points[:, 0] = self.u_sl.points[:, 0] - diffmidLen
                         self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
                         # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
                         self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
@@ -1858,10 +1852,12 @@ class Kwant_SSeS():
                         else:
                             Index = self.VgList.index(self.V_Applied)
                             self.u_sl = self.Dict[Index]
-                            if self.GlobalVswpCount == 0:
-                                self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
-                                # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
-                                self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
+                            diffmidLen = (np.max(self.u_sl.points[:,0]) - np.min(self.u_sl.points[:,0]))/2 - self.L_r / 2
+                            self.u_sl.points[:,0] = self.u_sl.points[:,0] - diffmidLen
+                            # if self.GlobalRunCount == 0:
+                            self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
+                            # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
+                            self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
                     elif self.SwpID == "B":
 
                         self.Bx, self.By, self.Bz = VSwp
