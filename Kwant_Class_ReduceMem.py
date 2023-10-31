@@ -2340,17 +2340,21 @@ class Kwant_SSeS():
             plotlen = len(datapathlist)
         else:
             plotlen = int(np.size(zdata,1)/len(ydata))
-
+        x0_Index = np.argmin(np.abs(xdata))
         subplotarrayY = int(np.ceil(np.sqrt(plotlen)))
         subplotarrayX = int(np.floor(np.sqrt(plotlen)))
         if subplotarrayY*subplotarrayX<len(datapathlist):
             subplotarrayX = int(subplotarrayX+1)
 
         if len(datapathlist) == 1:
-                fig = plt.figure(figsize=(12*subplotarrayY, 11*subplotarrayX))
+                # fig = plt.figure(figsize=(12*subplotarrayY, 11*subplotarrayX))
+                fig, ax = plt.subplots(subplotarrayY, subplotarrayX,figsize=(6*subplotarrayY, 6*subplotarrayX))
         for i in range(int(np.size(zdata,1)/len(ydata))):
             if len(datapathlist) > 1:
-                fig = plt.figure(figsize=(12*subplotarrayY, 11*subplotarrayX))
+                # fig = plt.figure(figsize=(12*subplotarrayY, 11*subplotarrayX))
+                fig, ax = plt.subplots(subplotarrayY, subplotarrayX,figsize=(6*subplotarrayY, 6*subplotarrayX))
+                # fig2 = plt.figure(figsize=(24, 11))
+                fig2,ax2 = plt.subplots(1,2,figsize=(12, 6))
 
             for j in range(len(datapathlist)):
                 data_frame = pd.read_csv(datapathlist[j], delimiter='\t')
@@ -2358,17 +2362,40 @@ class Kwant_SSeS():
                 zdata = data_frame[zdata_columns]
                 zdata = zdata[2:].astype(float)
                 zdata = zdata.to_numpy()
+                # if len(datapathlist) > 1:
+                #     ax = plt.subplot(subplotarrayX, subplotarrayY, j + 1)
+                # else:
+                #     ax = plt.subplot(subplotarrayX, subplotarrayY, i + 1)
                 if len(datapathlist) > 1:
-                    ax = plt.subplot(subplotarrayX, subplotarrayY, j + 1)
-                else:
-                    ax = plt.subplot(subplotarrayX, subplotarrayY, i + 1)
-                ax.pcolormesh(ydata, xdata, zdata[:, i * len(ydata):(i + 1) * len(ydata)])
-                ax.title.set_text(title[j] + ' ' + str(i + 1))
 
-                ax.set_xlabel(ylabel, fontsize=15)
-                ax.set_ylabel(xlabel, fontsize=15)
-                ax.tick_params(axis='x', labelsize=12)
-                ax.tick_params(axis='y', labelsize=12)
+                    ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].pcolormesh(ydata, xdata, zdata[:, i * len(ydata):(i + 1) * len(ydata)])
+                    ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].title.set_text(title[j] + ' ' + str(i + 1))
+
+                    ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].set_xlabel(ylabel, fontsize=15)
+                    ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].set_ylabel(xlabel, fontsize=15)
+                    ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].tick_params(axis='x', labelsize=12)
+                    ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].tick_params(axis='y', labelsize=12)
+                else:
+                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].pcolormesh(ydata, xdata, zdata[:, i * len(ydata):(i + 1) * len(ydata)])
+                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].title.set_text(title[j] + ' ' + str(i + 1))
+
+                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].set_xlabel(ylabel, fontsize=15)
+                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].set_ylabel(xlabel, fontsize=15)
+                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='x', labelsize=12)
+                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='y', labelsize=12)
+
+                if datapathlist[j].split("/")[-1] == 'LDOS_B.txt' or datapathlist[j].split("/")[-1] == 'LDOS_E.txt':
+
+                    if datapathlist[j].split("/")[-1] == 'LDOS_B.txt':
+                        ax2[0] = plt.subplot(1, 2, 1)
+                        ax2[0].plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
+                        ax2[0].set_xlabel(ylabel, fontsize=15)
+                        ax2[0].set_ylabel('LDOS_B', fontsize=15)
+                    if datapathlist[j].split("/")[-1] == 'LDOS_E.txt':
+                        ax2[1] = plt.subplot(1, 2, 2)
+                        ax2[1].plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
+                        ax2[1].set_xlabel(ylabel, fontsize=15)
+                        ax2[1].set_ylabel('LDOS_E', fontsize=15)
             if len(datapathlist) > 1:
                 fig.subplots_adjust(left=0.05,
                                     bottom=0.05,
@@ -2378,6 +2405,13 @@ class Kwant_SSeS():
                                     hspace=0.2)
                 fig.savefig(savefilename+str(i)+'.png')
                 fig.show()
+
+
+
+            fig2.savefig(savefilename + str(i) +'_cut.png')
+            fig2.show()
+
+
         if len(datapathlist) == 1:
             fig.subplots_adjust(left=0.05,
                     bottom=0.05,
@@ -2387,6 +2421,8 @@ class Kwant_SSeS():
                     hspace=0.2)
             fig.savefig(savefilename + str(i) + '.png')
             fig.show()
+
+
     def SaveDatatoOrigin(self, TitleTxtX, Plot=0):
 
 
