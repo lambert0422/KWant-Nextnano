@@ -84,10 +84,10 @@ for DELTA in delta_list:
         BTest_list = [(np.round(x, 13), 0, 1) for x in np.linspace(0, 5, 51)]
 
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=3001, L_s=3001,
+                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
                           alpha=alphaTest, beta=0,V_A=[0], TStrength=[0], TeV_Normal=True,Surface2DEG = True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=[1], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+                          PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
                           ProOn=[1], constantDelta=False, BField=BTest_list, a=15,
                           ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
@@ -104,10 +104,10 @@ for DELTA in delta_list:
         BTest_list = [(0, np.round(x, 13), 0) for x in np.linspace(0, 5, 51)]
 
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=3001, L_s=3001,
+                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
                           alpha=alphaTest, beta=0, V_A=[0], TStrength=[0], TeV_Normal=True, Surface2DEG=True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=[1], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+                          PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
                           ProOn=[1], constantDelta=False, BField=BTest_list, a=15,
                           ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
@@ -124,10 +124,10 @@ for DELTA in delta_list:
         BTest_list = [(0, 0, np.round(x, 13)) for x in np.linspace(0, 5, 51)]
 
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=3001, L_s=3001,
+                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
                           alpha=alphaTest, beta=0, V_A=[0], TStrength=[0], TeV_Normal=True, Surface2DEG=True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=[1], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+                          PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
                           ProOn=[1], constantDelta=False, BField=BTest_list, a=15,
                           ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
