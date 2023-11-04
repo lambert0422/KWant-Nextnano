@@ -3,7 +3,7 @@ import numpy as np
 import sys as syst
 import Kwant_Class_ReduceMem as KC
 from datetime import datetime
-
+# import matplotlib.pyplot as plt
 W_g_list = [100, 200, 300, 400, 500, 600]
 S_g_list = [200, 300, 400, 500, 600]
 combWG = list(itertools.product(W_g_list, S_g_list))
@@ -81,28 +81,31 @@ for DELTA in delta_list:
         mu_SC_list = [0.25]# in the unit of t
         mu_Lead_list = [0.25]
         GetConductance = False
-        BTest_list = [(np.round(x, 13), 0, 1) for x in np.linspace(0, 5, 51)]
 
+        theta_list = np.round(np.arange(0,51)/100,5)*np.pi
+        PhiAngle = 0
+        Bmag = 1
+        BTest_list = [(Bmag*np.sin(angle)*np.cos(PhiAngle), Bmag*np.sin(angle)*np.sin(PhiAngle), Bmag*np.cos(angle)) for angle in theta_list]
+        # plt.plot([t[0] for t in BTest_list],[t[2] for t in BTest_list])
+        # plt.show()
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
                           alpha=alphaTest, beta=0,V_A=[0], TStrength=[0], TeV_Normal=True,Surface2DEG = True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                           PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
-                          ProOn=[1], constantDelta=False, BField=BTest_list, a=15,
+                          ProOn=[0], constantDelta=False, BField=BTest_list, a=15,
                           ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
                           FieldDependentGap=True, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
                           Phase=[np.pi],
                           CloseSystem=True,
                           SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
-                          CombineTev=False, showBands=False,
+                          CombineTev=False, showBands=False, LockFieldAngle= True,
                           NumBands=1, Mapping=True, GetConductance=GetConductance,
                           muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
                           PlotbeforeFigures=5,
                           PlotbeforeFigures_Ana=20).Run_sweep()
-        BTest_list = [(0, np.round(x, 13), 0) for x in np.linspace(0, 5, 51)]
-
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
                           alpha=alphaTest, beta=0, V_A=[0], TStrength=[0], TeV_Normal=True, Surface2DEG=True,
@@ -116,30 +119,50 @@ for DELTA in delta_list:
                           CloseSystem=True,
                           SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
-                          CombineTev=False, showBands=False,
+                          CombineTev=False, showBands=False, LockFieldAngle=True,
                           NumBands=1, Mapping=True, GetConductance=GetConductance,
                           muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
                           PlotbeforeFigures=5,
                           PlotbeforeFigures_Ana=20).Run_sweep()
-        BTest_list = [(0, 0, np.round(x, 13)) for x in np.linspace(0, 5, 51)]
-
-        B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
-                          alpha=alphaTest, beta=0, V_A=[0], TStrength=[0], TeV_Normal=True, Surface2DEG=True,
-                          AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                          E_excited=E_excited_list, SNjunc=SNjunc_list,
-                          ProOn=[1], constantDelta=False, BField=BTest_list, a=15,
-                          ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
-                          FieldDependentGap=True, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
-                          Phase=[np.pi],
-                          CloseSystem=True,
-                          SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
-                          muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
-                          CombineTev=False, showBands=False,
-                          NumBands=1, Mapping=True, GetConductance=GetConductance,
-                          muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
-                          PlotbeforeFigures=5,
-                          PlotbeforeFigures_Ana=20).Run_sweep()
-
-
+        # BTest_list = [(0, np.round(x, 13), 0) for x in np.linspace(0, 5, 51)]
+        #
+        # B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
+        #                   DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
+        #                   alpha=alphaTest, beta=0, V_A=[0], TStrength=[0], TeV_Normal=True, Surface2DEG=True,
+        #                   AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
+        #                   PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+        #                   E_excited=E_excited_list, SNjunc=SNjunc_list,
+        #                   ProOn=[1], constantDelta=False, BField=BTest_list, a=15,
+        #                   ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
+        #                   FieldDependentGap=True, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
+        #                   Phase=[np.pi],
+        #                   CloseSystem=True,
+        #                   SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
+        #                   muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
+        #                   CombineTev=False, showBands=False,
+        #                   NumBands=1, Mapping=True, GetConductance=GetConductance,
+        #                   muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
+        #                   PlotbeforeFigures=5,
+        #                   PlotbeforeFigures_Ana=20).Run_sweep()
+        # BTest_list = [(0, 0, np.round(x, 13)) for x in np.linspace(0, 5, 51)]
+        #
+        # B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=300, WSC=100,
+        #                   DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1001, L_s=1001,
+        #                   alpha=alphaTest, beta=0, V_A=[0], TStrength=[0], TeV_Normal=True, Surface2DEG=True,
+        #                   AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
+        #                   PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
+        #                   E_excited=E_excited_list, SNjunc=SNjunc_list,
+        #                   ProOn=[1], constantDelta=False, BField=BTest_list, a=15,
+        #                   ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
+        #                   FieldDependentGap=True, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
+        #                   Phase=[np.pi],
+        #                   CloseSystem=True,
+        #                   SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
+        #                   muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
+        #                   CombineTev=False, showBands=False,
+        #                   NumBands=1, Mapping=True, GetConductance=GetConductance,
+        #                   muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
+        #                   PlotbeforeFigures=5,
+        #                   PlotbeforeFigures_Ana=20).Run_sweep()
+        #
+        #

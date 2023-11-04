@@ -305,7 +305,7 @@ class Kwant_SSeS():
                  ShowDensity=False, ShowCurrent = False, GetLDOS = False, GetConductance = True, Swave=False, TeV_Normal=True,
                  CombineTev=True, CombineMu=False, ACFix = False, AC = 0, Mapping = False,constantDelta = False,
                  MasterMultiRun=False, BlockWarnings=True, showBands=False,NumBands = 1,CloseSystem = False,mode_Num = 5, k_Num = 10,
-                 AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True,
+                 AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True, LockFieldAngle = False,
                  PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
         self.DavidPot = DavidPot
         self.alpha = alpha
@@ -381,13 +381,30 @@ class Kwant_SSeS():
                     changing_element_index = None
 
                     # Iterate through the list to detect the changing element
-                    for i in range(len(BField[0])):
-                        if BField[0][i] != BField[1][i]:
-                            changing_element_index = i
-                            break
 
-                    self.VarMap = [t[changing_element_index] for t in BField]
-                    self.VarMaptxt = 'B (T)'
+                    if LockFieldAngle:
+                        ThetaAngleList = np.round(np.arccos([t[2]/(np.sqrt(t[0]**2+t[1]**2+t[2]**2)) for t in BField])/np.pi,5)
+                        PhiAngleList = np.round(np.arcsin([t[1] / (np.sin(a)*np.sqrt(t[0] ** 2 + t[1] ** 2 + t[2] ** 2)) for t,a in zip(BField,ThetaAngleList)])/np.pi,5)
+                        PhiAngleList[np.isnan(PhiAngleList)] = 0
+                        ThetaAngleList[np.isnan(ThetaAngleList)] = 0
+
+                        for i in range(len(ThetaAngleList)-1):
+                            if ThetaAngleList[i] != ThetaAngleList[i+1]:
+                                self.VarMaptxt = 'Theta_B (pi)'
+                                self.VarMap = ThetaAngleList
+                                break
+                            elif PhiAngleList[i] != PhiAngleList[i+1]:
+                                self.VarMaptxt = 'Phi_B (pi)'
+                                self.VarMap = PhiAngleList
+                                break
+
+                    else:
+                        for i in range(len(BField[0])):
+                            if BField[0][i] != BField[1][i]:
+                                changing_element_index = i
+                                break
+                        self.VarMap = [t[changing_element_index] for t in BField]
+                        self.VarMaptxt = 'B (T)'
                 elif len(Phase)>len(BField):
                     self.VarMap = Phase
                     self.VarMaptxt = 'Phase (rad)'
