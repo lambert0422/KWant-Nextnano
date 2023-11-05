@@ -81,15 +81,15 @@ for DELTA in delta_list:
         mu_SC_list = [0.25]# in the unit of t
         mu_Lead_list = [0.25]
         GetConductance = False
-
-        theta_list = np.round(np.arange(0,51)/100,5)*np.pi
+        numTheta = 50
+        theta_list = np.round(np.arange(0,numTheta+1)/(2*numTheta),13)*np.pi
         PhiAngle = 0
         Bmag = 1
         BTest_list =np.round( [(Bmag*np.sin(angle)*np.cos(PhiAngle), Bmag*np.sin(angle)*np.sin(PhiAngle), Bmag*np.cos(angle)) for angle in theta_list],13)
         # plt.plot([t[0] for t in BTest_list],[t[2] for t in BTest_list])
         # plt.show()
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=61, WSC=121,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=2001, L_s=2001,
+                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=3001, L_s=3001,
                           alpha=alphaTest, beta=0,V_A=[0], TStrength=[0], TeV_Normal=True,Surface2DEG = True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                           PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
@@ -107,7 +107,7 @@ for DELTA in delta_list:
                           PlotbeforeFigures=5,
                           PlotbeforeFigures_Ana=20).Run_sweep()
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=61, WSC=121,
-                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=2001, L_s=2001,
+                          DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=3001, L_s=3001,
                           alpha=alphaTest, beta=0, V_A=[0], TStrength=[0], TeV_Normal=True, Surface2DEG=True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                           PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
