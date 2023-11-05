@@ -383,8 +383,13 @@ class Kwant_SSeS():
                     # Iterate through the list to detect the changing element
 
                     if LockFieldAngle:
+                        if self.BlockWarnings:
+                            warnings.filterwarnings("ignore")
+
                         ThetaAngleList = np.round(np.arccos([t[2]/(np.sqrt(t[0]**2+t[1]**2+t[2]**2)) for t in BField])/np.pi,5)
                         PhiAngleList = np.round(np.arcsin([t[1] / (np.sin(a)*np.sqrt(t[0] ** 2 + t[1] ** 2 + t[2] ** 2)) for t,a in zip(BField,ThetaAngleList)])/np.pi,5)
+                        if self.BlockWarnings:
+                            warnings.filterwarnings("always")
                         PhiAngleList[np.isnan(PhiAngleList)] = 0
                         ThetaAngleList[np.isnan(ThetaAngleList)] = 0
 
@@ -984,31 +989,43 @@ class Kwant_SSeS():
         if self.SwpID == "Vg":
             self.SAVEFILENAME = 'VgSwp'
 
-            self.SAVENOTE_buff = [np.round(1000*self.E*self.t/self.deltaNormalitionFactor,5), self.Bx,self.By,self.Bz, "X", self.Vbias, np.round(self.phi / np.pi,5)]
-
+            self.SAVENOTE_buff = [1000*self.E*self.t/self.deltaNormalitionFactor, self.Bx,self.By,self.Bz, "X", self.Vbias,self.phi / np.pi]
+            SAVENOTE_rounded = [np.round(1000*self.E*self.t/self.deltaNormalitionFactor,5),
+                                np.round(self.Bx,5),np.round(self.By,5),np.round(self.Bz,5),
+                                "X", np.round(self.Vbias,5), np.round(self.phi / np.pi,5)]
 
 
         elif self.SwpID == "E":
             self.SAVEFILENAME = 'Eswp'
 
-            self.SAVENOTE_buff = ["X", self.Bx,self.By,self.Bz, self.V_Applied, self.Vbias, np.round(self.phi / np.pi,5)]
-
+            self.SAVENOTE_buff = ["X", self.Bx,self.By,self.Bz, self.V_Applied, self.Vbias, self.phi / np.pi]
+            SAVENOTE_rounded = ["X", np.round(self.Bx,5), np.round(self.By,5), np.round(self.Bz,5),
+                                np.round(self.V_Applied,5), np.round(self.Vbias,5), np.round(self.phi / np.pi, 5)]
 
 
         elif self.SwpID == "B":
             self.SAVEFILENAME = 'BSwp'
-            self.SAVENOTE_buff = [np.round(1000*self.E*self.t/self.deltaNormalitionFactor,5), "X","X","X", self.V_Applied, self.Vbias, np.round(self.phi / np.pi,5)]
-
+            self.SAVENOTE_buff = [1000*self.E*self.t/self.deltaNormalitionFactor, "X","X","X",
+                                  self.V_Applied, self.Vbias, self.phi / np.pi]
+            SAVENOTE_rounded = [np.round(1000 * self.E * self.t / self.deltaNormalitionFactor, 5), "X", "X", "X",
+                         np.round(self.V_Applied,5), np.round(self.Vbias,5), np.round(self.phi / np.pi, 5)]
 
 
         elif self.SwpID == "Vbias":
             self.SAVEFILENAME = 'VbSwp'
-            self.SAVENOTE_buff = [np.round(1000*self.E*self.t/self.deltaNormalitionFactor,5), self.Bx,self.By,self.Bz, self.V_Applied, "X", np.round(self.phi / np.pi,5)]
+            self.SAVENOTE_buff = [1000*self.E*self.t/self.deltaNormalitionFactor,
+                                  self.Bx,self.By,self.Bz, self.V_Applied, "X", self.phi / np.pi]
+
+            SAVENOTE_rounded = [np.round(1000 * self.E * self.t / self.deltaNormalitionFactor, 5),
+                             np.round(self.Bx,5), np.round(self.By,5),np.round(self.Bz,5),
+                             np.round(self.V_Applied,5), "X", np.round(self.phi / np.pi, 5)]
 
 
         elif self.SwpID == "Phase":
             self.SAVEFILENAME = 'PhaseSwp'
-            self.SAVENOTE_buff = [np.round(1000*self.E*self.t/self.deltaNormalitionFactor,5), self.Bx,self.By,self.Bz, self.V_Applied, self.Vbias, "X"]
+            self.SAVENOTE_buff = [1000*self.E*self.t/self.deltaNormalitionFactor, self.Bx,self.By,self.Bz, self.V_Applied, self.Vbias, "X"]
+            SAVENOTE_rounded = [np.round(1000 * self.E * self.t / self.deltaNormalitionFactor, 5), np.round(self.Bx,5), np.round(self.By,5),
+                             np.round(self.Bz,5), np.round(self.V_Applied,5), np.round(self.Vbias,5), "X"]
 
         self.SAVEFILENAME = self.NextNanoName + self.fileEnd + '/' + self.SaveTime + '/' + self.SN + '-' + self.PBtxt + '-' + \
                             self.Proximitytxt + '-muN' + str(np.round(self.mu_N * 1e3, 3)) + 'meV-muS' + \
@@ -1044,7 +1061,7 @@ class Kwant_SSeS():
                                                                                       self.SaveNameNote]))
 
 
-        table2 = list(map(str, self.SAVENOTE_buff + [self.SN, self.PBtxt, self.Proximitytxt,
+        table2 = list(map(str,SAVENOTE_rounded + [self.SN, self.PBtxt, self.Proximitytxt,
                                                      np.round(self.mu_N * 1e3/self.deltaNormalitionFactor, 3), \
                                                      np.round(self.mu_SC * 1e3/self.deltaNormalitionFactor, 3),
                                                      np.round(self.mu_Lead * 1e3 / self.deltaNormalitionFactor, 3),
