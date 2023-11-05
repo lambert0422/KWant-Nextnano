@@ -383,8 +383,13 @@ class Kwant_SSeS():
                     # Iterate through the list to detect the changing element
 
                     if LockFieldAngle:
+                        if self.BlockWarnings:
+                            warnings.filterwarnings("ignore")
+
                         ThetaAngleList = np.round(np.arccos([t[2]/(np.sqrt(t[0]**2+t[1]**2+t[2]**2)) for t in BField])/np.pi,5)
                         PhiAngleList = np.round(np.arcsin([t[1] / (np.sin(a)*np.sqrt(t[0] ** 2 + t[1] ** 2 + t[2] ** 2)) for t,a in zip(BField,ThetaAngleList)])/np.pi,5)
+                        if self.BlockWarnings:
+                            warnings.filterwarnings("always")
                         PhiAngleList[np.isnan(PhiAngleList)] = 0
                         ThetaAngleList[np.isnan(ThetaAngleList)] = 0
 
