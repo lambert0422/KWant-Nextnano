@@ -2106,12 +2106,7 @@ class Kwant_SSeS():
 
                             # if len(evals) == 0:
                             #     raise('Energy range not valid!')
-                    A = self.Tunnel_Map
-                    ax1 = plt.subplot(1,2,1)
-                    ax1.imshow(self.Tunnel_Map.T)
-                    ax2 = plt.subplot(1, 2, 2)
-                    ax2.imshow(self.Tunnel_Map[int(np.shape(self.Tunnel_Map)[0]/2),:])
-                    plt.show()
+
 
                     for E_ID in range(len(VarSwp_buff2)):
                         if self.SwpID == 'E' and not self.CloseSystem:

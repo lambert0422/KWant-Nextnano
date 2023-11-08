@@ -39,7 +39,7 @@ TeV_T_list = [1]
 
 PeriBC_list = [1]
 # TStrength_list = np.round(np.arange(0,2,0.04),5)
-TStrength_list = [1]
+TStrength_list = [0]
 SNjunc_list = ['SNS']
 ProximityOn_list = [1]
 
@@ -86,19 +86,19 @@ for DELTA in delta_list:
         PhiAngle = 0
         Bmag = 1
         # BTest_list =np.round( [(Bmag*np.sin(angle)*np.cos(PhiAngle), Bmag*np.sin(angle)*np.sin(PhiAngle), Bmag*np.cos(angle)) for angle in theta_list],13)
-        BTest_list = [(0, 0, np.round(x, 13)) for x in np.linspace(0, 5, 11)]
+        BTest_list = [(0, 0, np.round(x, 13)) for x in np.linspace(0, 5, 21)]
         # plt.plot([t[0] for t in BTest_list],[t[2] for t in BTest_list])
         # plt.show()
         B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=61, WSC=121,
                           DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=1501, L_s=1501,
                           alpha=alphaTest, beta=0,V_A=[0], TStrength=TStrength_list, TeV_Normal=True,Surface2DEG = True,
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
-                          PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,TunnelLength = 3,
+                          PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,TunnelLength = 1,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
-                          ProOn=[0], constantDelta=False, BField=BTest_list, a=15,
+                          ProOn=[0,1], constantDelta=False, BField=BTest_list, a=15,
                           ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
                           FieldDependentGap=True, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
-                          Phase=[np.pi],
+                          Phase=[np.pi/2],
                           CloseSystem=True,
                           SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
