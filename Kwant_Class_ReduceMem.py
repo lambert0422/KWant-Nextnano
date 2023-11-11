@@ -313,7 +313,8 @@ class Kwant_SSeS():
         self.delta_raw = delta
         self.deltaNormalitionFactor = delta / delta_real
         # self.gn = gn  # g-factor
-        self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
+        # self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
+        self.gn_muB = 2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
         self.Surface2DEG = Surface2DEG
         self.Temp = Temp
         self.deltaPairingMatrix=deltaPairingMatrix
