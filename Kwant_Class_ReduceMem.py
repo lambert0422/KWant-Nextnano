@@ -299,7 +299,7 @@ class Kwant_SSeS():
                  Temp=0.1,delta=0.125, delta_real = 0.58e-3,muN=0.25, muSC=0.25,muLead=0.25, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  W_g=300, S_g=400, Nb_d=100, D_2DEG=120, W_r=1400, L_r=5000, L_s=4000, WSC=200, a=30, GridFactor=1,
                  BField=[0], V_A=np.arange(0, -1.49, -0.01), Vbias_List=[0],Tev=[1e-3], Tev_Tunnel=[2e-3],
-                 E_excited=[5e-3],TStrength=[0], TunnelLength=3, Phase=[np.pi / 4],  PeriBC=[0],SNjunc=['SNS'], ProOn=[1],
+                 E_excited=[5e-3],TStrength=[0], TunnelLength=2, Phase=[np.pi / 4],  PeriBC=[0],SNjunc=['SNS'], ProOn=[1],
                  DateT = '',TimeT = '',SwpID="Vg", deltaPairingMatrix = "sigma_y",deltaPairingMatrix_sign = "+",
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,FieldDependentGap = True,Surface2DEG = False,
                  ShowDensity=False, ShowCurrent = False, GetLDOS = False, GetConductance = True, Swave=False, TeV_Normal=True,
@@ -313,7 +313,8 @@ class Kwant_SSeS():
         self.delta_raw = delta
         self.deltaNormalitionFactor = delta / delta_real
         # self.gn = gn  # g-factor
-        self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
+        # self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
+        self.gn_muB = 2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
         self.Surface2DEG = Surface2DEG
         self.Temp = Temp
         self.deltaPairingMatrix=deltaPairingMatrix
@@ -1730,14 +1731,14 @@ class Kwant_SSeS():
 
         def TunnelBarrier_dis(x, y):
             TunnelBarrier = 0
-            if abs(y) <= self.TunnelLength / 2 or abs(y - self.W) <= self.TunnelLength:
+            if -np.ceil(self.TunnelLength / 2) <= (y) < np.floor(self.TunnelLength/2) or -np.floor(self.TunnelLength / 2) <=(y - self.W) < np.ceil(self.TunnelLength/2):
                 TunnelBarrier = self.GammaTunnel
             self.Tunnel_Map[int(x), int(y) + self.WSC] = np.real(TunnelBarrier)
             return TunnelBarrier
 
         def t_dis(x, y):
             t = self.t
-            if abs(y) <= self.TunnelLength / 2 or abs(y - self.W) <= self.TunnelLength:
+            if -np.ceil(self.TunnelLength / 2) <= (y) < np.floor(self.TunnelLength/2) or -np.floor(self.TunnelLength / 2) <=(y - self.W)  < np.ceil(self.TunnelLength/2):
                 t = self.t_Tunnel
             return t
 
@@ -2106,9 +2107,6 @@ class Kwant_SSeS():
 
                             # if len(evals) == 0:
                             #     raise('Energy range not valid!')
-
-
-
 
 
                     for E_ID in range(len(VarSwp_buff2)):
