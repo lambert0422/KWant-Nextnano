@@ -17,7 +17,8 @@ mainmenu () {
 		    read -p "Type in file name:" Filename
 		    git add "$Filename"
 	    elif [ "$Addinput" = "3" ]; then
-		    git add Kwant_Class_latest_ROG.py Kwant_Class_ReduceMem.py Git.sh main.py main_step.py main_Alien.py main_Dell.py startup.sh
+		    git add Kwant_Class_latest_ROG.py Kwant_Class_ReduceMem.py Git.sh main.py main_step.py main_Alien.py main_Dell.py startup.sh main_2QPCs.py
+		   
 
     	    fi
 	    read -p "Type in Commit message: " Message
