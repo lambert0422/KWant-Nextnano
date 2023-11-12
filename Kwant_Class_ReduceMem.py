@@ -293,6 +293,7 @@ class Kwant_SSeS():
     # PlotbeforeFigures: how many figures between two displayed plots
     # showBands: whether to plot the bands of the Hamiltonian
     # NumBands: number of points to how bands, it equals the nunber of modes in the bands
+    # Two_QPC: modify the model to have 2 QPC at both ends of the junction
     # ACFix and AC: fix the AC signal as the E excitation is in the unit of t and t is in unit of eV, so fix AC means fix product of E and t
     # CloseSystem: whether to perform a extra calculation on a closed system of the scattering region, get k_Num lowest eigenvector and output the mode_Num waverfucntion density
     def __init__(self, DavidPot=False,alpha = 2.25e-3 ,beta = 2.25e-3,gn = -3.4,
@@ -305,8 +306,9 @@ class Kwant_SSeS():
                  ShowDensity=False, ShowCurrent = False, GetLDOS = False, GetConductance = True, Swave=False, TeV_Normal=True,
                  CombineTev=True, CombineMu=False, ACFix = False, AC = 0, Mapping = False,constantDelta = False,
                  MasterMultiRun=False, BlockWarnings=True, showBands=False,NumBands = 1,CloseSystem = False,mode_Num = 5, k_Num = 10,
-                 AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True, LockFieldAngle = False,
+                 AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True, LockFieldAngle = False, Two_QPC = False,
                  PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
+        self.Two_QPC = Two_QPC
         self.DavidPot = DavidPot
         self.alpha = alpha
         self.beta = beta
@@ -358,7 +360,7 @@ class Kwant_SSeS():
         if self.CombineTev == 1:
             Tev_Tunnel = Tev
         if self.CombineMu == 1:
-            muN = muSC
+            muN = muSCself.Two_QPC
 
         self.PlotbeforeFigures = PlotbeforeFigures
         self.PlotbeforeFigures_Ana = PlotbeforeFigures_Ana
@@ -626,14 +628,31 @@ class Kwant_SSeS():
         def central_region(site):
             x, y = site.pos
             if self.SN == 'SN':
+
                 # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L-self.L_extract_half and -self.WSC <= y < 0) or (
                 #         self.L_extract_half <= x <= self.L-self.L_extract_half and self.W <= y <=(self.W - int(self.W_reduced_r / self.a)) )
-                return 0 <= x < self.L and -self.WSC <= y < (self.W - int(self.W_reduced_r / self.a))
-            else:
+                return -self.L_extract_half <= x < self.L-self.L_extract_half and -self.WSC <= y < (self.W - int(self.W_reduced_r / self.a))
+            elif self.SN == 'SNS':
+                if self.Two_QPC:
+                    DQPC1 = int(50 / self.a)
+                    DQPC2 = int(50 / self.a)
+                    WQPC1 = int(50 / self.a)
+                    WQPC2 = int(50 / self.a)
+                    GQPC1 = int(200 / self.a)
+                    GQPC2 = int(200 / self.a)
+
+                    AirGap = ((-DQPC1 - WQPC1 <= x <= -DQPC1 and -self.WSC <= y <= self.W / 2 - GQPC1 / 2) and
+                              (-DQPC1 - WQPC1 <= x <= -DQPC1 and self.W / 2 + GQPC1 / 2 <= y < self.W - int(self.W_reduced_r / self.a)) and
+                              (self.L + DQPC2 <= x <= self.L + DQPC2 + WQPC2 and -self.WSC <= y <= self.W / 2 - GQPC2 / 2) and
+                              (self.L + DQPC2 <= x <= self.L + DQPC2 + WQPC2 and self.W / 2 + GQPC2 / 2 <= y < self.W - int(self.W_reduced_r / self.a)))
+                else:
+                    AirGap = True
+
                 # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L - self.L_extract_half and -self.WSC <= y < 0) or (
                  #             self.L_extract_half <= x <= self.L - self.L_extract_half and self.W <= y <= (self.W + self.WSC))
+                return -self.L_extract_half <= x < self.L-self.L_extract_half and -self.WSC <= y < (self.W + self.WSC) and AirGap
 
-                return 0 <= x < self.L and -self.WSC <= y < (self.W + self.WSC)
+
 
         lat = kwant.lattice.square(norbs=4)
         # if self.SN == 'SN':
@@ -851,7 +870,7 @@ class Kwant_SSeS():
 
         def lead_shape(site):
             (x, y) = site.pos
-            return (self.L_extract_half < x < self.L-self.L_extract_half-1)
+            return (0 < x < self.L-2*self.L_extract_half-1)
 
         lead_up = kwant.Builder(sym1)
         if self.PB == 1 and not self.CloseSystem:
@@ -864,12 +883,12 @@ class Kwant_SSeS():
             def lead_shape_PB_2(site):
                 (x, y) = site.pos
 
-                return (0 < x < self.L_extract_half)
+                return (self.L_extract_half < x < 9)
 
             def lead_shape_PB_3(site):
                 (x, y) = site.pos
 
-                return ((self.L - self.L_extract_half) < x < self.L-1)
+                return ((self.L - 2*self.L_extract_half) < x < self.L-self.L_extract_half-1)
 
             sym3 = kwant.TranslationalSymmetry((-1, 0))
             sym4 = kwant.TranslationalSymmetry((1, 0))
