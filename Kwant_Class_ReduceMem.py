@@ -298,7 +298,7 @@ class Kwant_SSeS():
     # CloseSystem: whether to perform a extra calculation on a closed system of the scattering region, get k_Num lowest eigenvector and output the mode_Num waverfucntion density
     def __init__(self, DavidPot=False,alpha = 2.25e-3 ,beta = 2.25e-3,gn = -3.4,
                  Temp=0.1,delta=0.125, delta_real = 0.58e-3,muN=0.25, muSC=0.25,muLead=0.25, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
-                 W_g=300, S_g=400, Nb_d=100, D_2DEG=120, W_r=1400, L_r=5000, L_s=4000, WSC=200, a=30, GridFactor=1,
+                 W_g=300, S_g=400, Nb_d=100, D_2DEG=120, W_r=1400, L_r=5000, L_s=4000, WSC=200,DAir = 50, a=30, GridFactor=1,
                  BField=[0], V_A=np.arange(0, -1.49, -0.01), Vbias_List=[0],Tev=[1e-3], Tev_Tunnel=[2e-3],
                  E_excited=[5e-3],TStrength=[0], TunnelLength=2, Phase=[np.pi / 4],  PeriBC=[0],SNjunc=['SNS'], ProOn=[1],
                  DateT = '',TimeT = '',SwpID="Vg", deltaPairingMatrix = "sigma_y",deltaPairingMatrix_sign = "+",
@@ -454,10 +454,13 @@ class Kwant_SSeS():
         self.W_reduced_r = 180  # (nm) the width that the 2DEG reduced to get NN interface
         self.W_r = W_r
         self.L_r = L_r
+        self.L_s = L_s
         self.WSC_r = WSC
         self.W = int(W_r * GridFactor / self.a)  # (int) width of the junction (y direction)
         self.L = int(L_r * GridFactor / self.a)  # (int) length of the junction (x direction)
-        self.L_extract_half = int((L_r - L_s) * GridFactor / (2*self.a))
+        self.L_Side= int((L_r - L_s) * GridFactor / (2*self.a))
+        self.L_SC = int(L_s * GridFactor / (self.a))
+        self.DAir = int(DAir * GridFactor / (self.a))
         self.WSC = int(WSC * GridFactor / self.a)  # (nm)
         now = datetime.now()
         self.Date = now.strftime("%YY%mM%dD")
@@ -623,34 +626,31 @@ class Kwant_SSeS():
         # Fv = interp2d(x, y, PHIS, kind='cubic', copy=True, bounds_error=False, fill_value=None)
         self.u_sl = -PHIS.T * self.t  # in eV
 
+    def Whole(self,x, y):
+        if self.SN == 'SN':
+            return -self.L_Side <= x < self.L - self.L_Side and -self.WSC <= y < (
+                        self.W - int(self.W_reduced_r / self.a))
+        elif self.SN == 'SNS':
+            return -self.L_Side <= x < self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC)
+
+    def AirGap(self,x, y):
+        return ((-self.DAir <= x < 0 and (-self.WSC <= y < 0 or self.W < y < (self.W + self.WSC))) or
+                (self.L_SC < x <= self.L_SC + self.DAir and (-self.WSC <= y < 0 or self.W < y < (self.W + self.WSC))))
+
+    def SC_region(self,x, y):
+        return (0 <= x <= self.L_SC) and (-self.WSC <= y < 0 or self.W < y < (self.W + self.WSC))
+
+    def Semi_region(self,x, y):
+        return Whole(x, y) and not AirGap(x, y) and not SC_region(x, y)
+    def Tunnel_region(self,x,y):
+
+        return -np.ceil(self.TunnelLength / 2) <= (y) < np.floor(self.TunnelLength / 2) or -np.floor(
+            self.TunnelLength / 2) <= (y - self.W) < np.ceil(self.TunnelLength / 2)
     def make_system(self):
 
         def central_region(site):
             x, y = site.pos
-            if self.SN == 'SN':
-
-                # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L-self.L_extract_half and -self.WSC <= y < 0) or (
-                #         self.L_extract_half <= x <= self.L-self.L_extract_half and self.W <= y <=(self.W - int(self.W_reduced_r / self.a)) )
-                return -self.L_extract_half <= x < self.L-self.L_extract_half and -self.WSC <= y < (self.W - int(self.W_reduced_r / self.a))
-            elif self.SN == 'SNS':
-                if self.Two_QPC:
-                    DQPC1 = int(50 / self.a)
-                    DQPC2 = int(50 / self.a)
-                    WQPC1 = int(50 / self.a)
-                    WQPC2 = int(50 / self.a)
-                    GQPC1 = int(200 / self.a)
-                    GQPC2 = int(200 / self.a)
-
-                    AirGap = ((-DQPC1 - WQPC1 <= x <= -DQPC1 and -self.WSC <= y <= self.W / 2 - GQPC1 / 2) and
-                              (-DQPC1 - WQPC1 <= x <= -DQPC1 and self.W / 2 + GQPC1 / 2 <= y < self.W - int(self.W_reduced_r / self.a)) and
-                              (self.L + DQPC2 <= x <= self.L + DQPC2 + WQPC2 and -self.WSC <= y <= self.W / 2 - GQPC2 / 2) and
-                              (self.L + DQPC2 <= x <= self.L + DQPC2 + WQPC2 and self.W / 2 + GQPC2 / 2 <= y < self.W - int(self.W_reduced_r / self.a)))
-                else:
-                    AirGap = True
-
-                # return (0 <= x <= self.L and 0 <= y < self.W) or (self.L_extract_half <= x <= self.L - self.L_extract_half and -self.WSC <= y < 0) or (
-                 #             self.L_extract_half <= x <= self.L - self.L_extract_half and self.W <= y <= (self.W + self.WSC))
-                return -self.L_extract_half <= x < self.L-self.L_extract_half and -self.WSC <= y < (self.W + self.WSC) and AirGap
+            return self.Whole(x, y) and not self.AirGap(x, y)
 
 
 
@@ -870,7 +870,7 @@ class Kwant_SSeS():
 
         def lead_shape(site):
             (x, y) = site.pos
-            return (0 < x < self.L-2*self.L_extract_half-1)
+            return (0 < x < self.L_SC-1)
 
         lead_up = kwant.Builder(sym1)
         if self.PB == 1 and not self.CloseSystem:
@@ -883,36 +883,36 @@ class Kwant_SSeS():
             def lead_shape_PB_2(site):
                 (x, y) = site.pos
 
-                return (self.L_extract_half < x < 9)
+                return (-self.L_Side < x < 0)
 
             def lead_shape_PB_3(site):
                 (x, y) = site.pos
 
-                return ((self.L - 2*self.L_extract_half) < x < self.L-self.L_extract_half-1)
+                return ((self.L_SC) < x < self.L_SC+self.L_Side-1)
 
             sym3 = kwant.TranslationalSymmetry((-1, 0))
             sym4 = kwant.TranslationalSymmetry((1, 0))
             template_l_Se = kwant.continuum.discretize(self.Ham_l_Se)
             lead_left = kwant.Builder(sym3)
             lead_right = kwant.Builder(sym4)
-            if self.L_extract_half > 0:
+            if self.L_Side > 0:
                 lead_up_PB1 = kwant.Builder(sym1)
                 lead_dn_PB1= kwant.Builder(sym2)
                 lead_up_PB2 = kwant.Builder(sym1)
                 lead_dn_PB2 = kwant.Builder(sym2)
-                lead_up_PB1.fill(template_l_Se, lead_shape_PB_2, (0, -self.WSC))
-                lead_up_PB2.fill(template_l_Se, lead_shape_PB_3, ((self.L - self.L_extract_half+1), -self.WSC))
+                lead_up_PB1.fill(template_l_Se, lead_shape_PB_2, (-self.L_Side , -self.WSC))
+                lead_up_PB2.fill(template_l_Se, lead_shape_PB_3, ((self.L_SC+self.L_Side-1), -self.WSC))
                 if self.SN == 'SN':
                     lead_dn_PB1.fill(template_l_Se, lead_shape_PB_2, (0, self.W - int(self.W_reduced_r / self.a)))
                     lead_dn_PB2.fill(template_l_Se, lead_shape_PB_3,
-                                     ((self.L - self.L_extract_half+1), self.W - int(self.W_reduced_r / self.a)))
+                                     ((self.L - self.L_Side+1), self.W - int(self.W_reduced_r / self.a)))
                 else:
                     lead_dn_PB1.fill(template_l_Se, lead_shape_PB_2, (0, self.W + self.WSC))
                     lead_dn_PB2.fill(template_l_Se, lead_shape_PB_3,
-                                     ((self.L - self.L_extract_half+1), self.W + self.WSC))
+                                     ((self.L - self.L_Side+1), self.W + self.WSC))
 
-            lead_left.fill(template_l_Se, lead_shape_PB, (0, int(self.W/2)))
-            lead_right.fill(template_l_Se, lead_shape_PB, (int(self.L), int(self.W/2)))
+            lead_left.fill(template_l_Se, lead_shape_PB, (-self.L_Side, int(self.W/2)))
+            lead_right.fill(template_l_Se, lead_shape_PB, (int(self.L_SC+self.L_Side), int(self.W/2)))
 
 
 
@@ -931,18 +931,18 @@ class Kwant_SSeS():
             self.lead_test_Ham.fill(Test_Ham, lead_shape_test, (1, 1))
             self.lead_test_Metal.fill(Test_Metal, lead_shape_test, (1, 1))
 
-        lead_up.fill(template_l_up_S, lead_shape, (int(self.L / 2), -self.WSC)) # this is attached at y = negative value
+        lead_up.fill(template_l_up_S, lead_shape, (int(self.L_SC / 2), -self.WSC)) # this is attached at y = negative value
         if self.SN == 'SN':
 
             lead_dn = kwant.Builder(sym2, conservation_law=-np.kron(self.s_z, self.s_0),
                                     particle_hole=np.kron(self.s_x, self.s_0))
             # lead_dn = kwant.Builder(sym2, conservation_law=-self.s_z, particle_hole=self.s_y)
             # lead_dn = kwant.Builder(sym2)
-            lead_dn.fill(template_l_dn_N, lead_shape, (int(self.L / 2), self.W - int(self.W_reduced_r / self.a)))
+            lead_dn.fill(template_l_dn_N, lead_shape, (int(self.L_SC / 2), self.W - int(self.W_reduced_r / self.a)))
 
         else:
             lead_dn = kwant.Builder(sym2)
-            lead_dn.fill(template_l_dn_S, lead_shape, (int(self.L / 2), self.W + self.WSC))
+            lead_dn.fill(template_l_dn_S, lead_shape, (int(self.L_SC / 2), self.W + self.WSC))
 
         # self.LeadTest = lead_dn
 
@@ -952,7 +952,7 @@ class Kwant_SSeS():
         if self.PB == 1 and not self.CloseSystem:
             sys.attach_lead(lead_left)
             sys.attach_lead(lead_right)
-            if  self.L_extract_half>0:
+            if  self.L_Side>0:
                 sys.attach_lead(lead_up_PB1)
                 sys.attach_lead(lead_dn_PB1)
                 sys.attach_lead(lead_up_PB2)
@@ -1240,8 +1240,8 @@ class Kwant_SSeS():
         ax5.tick_params(axis="y", labelcolor='#0000FF')
         ax5_2.tick_params(axis="y", labelcolor='#FF0000')
 
-        ax5.axvline(x=3*self.L_extract_half, linestyle='--')
-        ax5.axvline(x=3*(self.L-self.L_extract_half), linestyle='--')
+        ax5.axvline(x=3*self.L_Side, linestyle='--')
+        ax5.axvline(x=3*(self.L-self.L_Side), linestyle='--')
         plt.title('Wf/LDOS left right cut(Gate)')
 
         ax6 = plt.subplot(3, 3, 6)
@@ -1558,8 +1558,8 @@ class Kwant_SSeS():
         # Theory based on <Controlled finite momentum pairing and spatially
         # varying order parameter in proximitized HgTe
         # quantum wells>
-        X1 = (self.L_r / 10000) * (np.linspace(-10000, 10000, 40001))
-        X_m = (X - self.L / 2) * self.a / self.GridFactor
+        X1 = (self.L_r / 20000) * (np.linspace(-10000, 10000, 40001))
+        X_m = (X - self.L_SC / 2) * self.a / self.GridFactor
         Y_m = Y * self.a / self.GridFactor
         PHIJ = PHI0 + ((-1) ** leadN * X1 *0 * (self.W_r) * 1e-18) / (
                 2 * self.hbar / (2 * self.e))
@@ -1617,7 +1617,8 @@ class Kwant_SSeS():
 
         def Delta_0_dis(x, y):
 
-            Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            Square = self.Semi_region(x,y)
             Delta_Spatial = self.delta * (1 - np.heaviside(y, 1)) + \
                             self.delta * np.heaviside(y - self.W, 1)
 
@@ -1633,7 +1634,7 @@ class Kwant_SSeS():
                     else:
                         DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
 
-            if (x < self.L_extract_half or x > self.L-self.L_extract_half):
+            if (x < self.L_Side or x > self.L-self.L_Side):
                 DELTA = 0
             self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.abs(DELTA)
             # self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
@@ -1643,7 +1644,8 @@ class Kwant_SSeS():
             return DELTA
 
         def Delta_0_prime_dis(x, y):
-            Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            Square = self.Semi_region(x, y)
             Delta_Spatial = self.delta * (1 - np.heaviside(y, 1)) + \
                             self.delta * np.heaviside(y - self.W, 1)
 
@@ -1662,7 +1664,7 @@ class Kwant_SSeS():
 
                     else:
                         DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] *Square
-            if (x < self.L_extract_half or x > self.L-self.L_extract_half):
+            if (x < self.L_Side or x > self.L-self.L_Side):
                 DELTA = 0
 
             return np.conjugate(DELTA)
@@ -1671,7 +1673,8 @@ class Kwant_SSeS():
             if self.Surface2DEG:
                 Square = 1
             else:
-                Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                Square = self.Semi_region(x, y)
             #g = Square*self.gn
             g_muB = Square*self.gn_muB
             self.gn_Map[int(x), int(y) + self.WSC] = np.real(g_muB)
@@ -1680,7 +1683,8 @@ class Kwant_SSeS():
             if self.Surface2DEG:
                 Square = 1
             else:
-                Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                Square = self.Semi_region(x, y)
             #g = Square*self.gn
             g_muB = Square*self.gn_muB
             return np.round(self.deltaNormalitionFactor * g_muB * self.By / 2,15)
@@ -1688,7 +1692,8 @@ class Kwant_SSeS():
             if self.Surface2DEG:
                 Square = 1
             else:
-                Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                Square = self.Semi_region(x, y)
             #g = Square*self.gn
             g_muB = Square*self.gn_muB
             return np.round(self.deltaNormalitionFactor * g_muB * self.Bz / 2,15)
@@ -1696,7 +1701,8 @@ class Kwant_SSeS():
             if self.Surface2DEG:
                 Square = 1
             else:
-                Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                Square = self.Semi_region(x, y)
             alpha =Square* self.alpha
             # alpha = self.alpha
             self.alpha_Map[int(x), int(y) + self.WSC] = abs(alpha)
@@ -1706,7 +1712,8 @@ class Kwant_SSeS():
             if self.Surface2DEG:
                 Square = 1
             else:
-                Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                Square = self.Semi_region(x, y)
             beta =  Square*self.beta
             # beta =  self.beta
             self.beta_Map[int(x), int(y) + self.WSC] = beta
@@ -1715,14 +1722,15 @@ class Kwant_SSeS():
             if self.Surface2DEG:
                 Square = 1
             else:
-                Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
-
+                # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                Square = self.Semi_region(x, y)
             AntiSquare = 1 - Square
             MU = Square * (self.mu_N + self.Defect_Map[int(x), int(y)]) + AntiSquare * self.mu_SC
             return MU
 
         def VGate_dis(x, y):
-            Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+            Square = self.Semi_region(x, y)
             if self.DavidPot:
                 try:
                     VGate = self.u_sl[int(x), int(y)]
@@ -1749,23 +1757,21 @@ class Kwant_SSeS():
             return V
 
         def TunnelBarrier_dis(x, y):
-            TunnelBarrier = 0
-            if -np.ceil(self.TunnelLength / 2) <= (y) < np.floor(self.TunnelLength/2) or -np.floor(self.TunnelLength / 2) <=(y - self.W) < np.ceil(self.TunnelLength/2):
-                TunnelBarrier = self.GammaTunnel
+
+            TunnelBarrier = self.GammaTunnel * self.Tunnel_region(x,y)
             self.Tunnel_Map[int(x), int(y) + self.WSC] = np.real(TunnelBarrier)
             return TunnelBarrier
 
         def t_dis(x, y):
-            t = self.t
-            if -np.ceil(self.TunnelLength / 2) <= (y) < np.floor(self.TunnelLength/2) or -np.floor(self.TunnelLength / 2) <=(y - self.W)  < np.ceil(self.TunnelLength/2):
-                t = self.t_Tunnel
+            t = self.t_Tunnel* self.Tunnel_region(x,y) + self.t*(1- self.Tunnel_region(x,y) )
             return t
 
         def Y_rl_dis(x, y):
             if self.Surface2DEG:
                 Square = 1
             else:
-                Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
+                Square = self.Semi_region(x, y)
 
             result = Square * 1e-9 * (y - self.W / 2) * self.a / self.GridFactor
 
@@ -1781,13 +1787,13 @@ class Kwant_SSeS():
 
             Index0 = self.VgList.index(0.0)
             u_sl_0 = self.Dict[Index0]
-            diffmidLen = (np.max(u_sl_0.points[:, 0]) - np.min(u_sl_0.points[:, 0])) / 2 - self.L_r / 2
+            diffmidLen = (np.max(u_sl_0.points[:, 0]) - np.min(u_sl_0.points[:, 0])) / 2 - self.L_s / 2
             u_sl_0.points[:, 0] = u_sl_0.points[:, 0] - diffmidLen
-            self.u_sl_ref_2DEG = u_sl_0(self.L_r / 2, self.W_r - self.W_reduced_r)
-            # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
-            self.u_sl_ref = u_sl_0(self.L_r / 2, 2)
-            # TestMap = np.zeros((self.L_r+1,self.W_r+1))
-            # for x in range(self.L_r+1):
+            self.u_sl_ref_2DEG = u_sl_0(self.L_s / 2, self.W_r - self.W_reduced_r)
+            # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
+            self.u_sl_ref = u_sl_0(self.L_s / 2, 2)
+            # TestMap = np.zeros((self.L_s+1,self.W_r+1))
+            # for x in range(self.L_s+1):
             #     for y in range(self.W_r+1):
             #         TestMap[x,y] = u_sl_0(x, y)
             # self.fig = plt.figure(figsize=(14, 11))
@@ -1882,11 +1888,11 @@ class Kwant_SSeS():
                         Index = self.VgList.index(self.V_Applied)
                         self.u_sl = self.Dict[Index]
                         diffmidLen = (np.max(self.u_sl.points[:, 0]) - np.min(
-                            self.u_sl.points[:, 0])) / 2 - self.L_r / 2
+                            self.u_sl.points[:, 0])) / 2 - self.L_s / 2
                         self.u_sl.points[:, 0] = self.u_sl.points[:, 0] - diffmidLen
-                        self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
-                        # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
-                        self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
+                        self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - self.W_reduced_r)
+                        # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
+                        self.u_sl_ref = self.u_sl(self.L_s / 2, 2)
 
                 now = datetime.now()
                 DateLocal = now.strftime("%YY%mM%dD")
@@ -1916,12 +1922,12 @@ class Kwant_SSeS():
                         else:
                             Index = self.VgList.index(self.V_Applied)
                             self.u_sl = self.Dict[Index]
-                            diffmidLen = (np.max(self.u_sl.points[:,0]) - np.min(self.u_sl.points[:,0]))/2 - self.L_r / 2
+                            diffmidLen = (np.max(self.u_sl.points[:,0]) - np.min(self.u_sl.points[:,0]))/2 - self.L_s / 2
                             self.u_sl.points[:,0] = self.u_sl.points[:,0] - diffmidLen
                             # if self.GlobalRunCount == 0:
-                            self.u_sl_ref_2DEG = self.u_sl(self.L_r / 2, self.W_r - self.W_reduced_r)
-                            # self.u_sl_ref = u_sl_0(self.L_r / 2, self.W_reduced_r)
-                            self.u_sl_ref = self.u_sl(self.L_r / 2, 2)
+                            self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - self.W_reduced_r)
+                            # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
+                            self.u_sl_ref = self.u_sl(self.L_s / 2, 2)
                     elif self.SwpID == "B":
 
                         self.Bx, self.By, self.Bz = VSwp
@@ -2185,7 +2191,7 @@ class Kwant_SSeS():
                                 return common_row_indices
 
 
-                            target_X_edge = [self.L_extract_half, self.L_extract_half + 9]
+                            target_X_edge = [self.L_Side, self.L_Side + 9]
                             target_Y_edge = [0, self.W - 1]
                             target_X_bulk = [int(self.L / 2)-5, int(self.L / 2)+4]
                             target_Y_bulk = [0, self.W - 1]
