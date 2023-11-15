@@ -304,14 +304,15 @@ class Kwant_SSeS():
                  DateT = '',TimeT = '',SwpID="Vg", deltaPairingMatrix = "sigma_y",deltaPairingMatrix_sign = "+",
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,FieldDependentGap = True,Surface2DEG = False,
                  ShowDensity=False, ShowCurrent = False, GetLDOS = False, GetConductance = True, Swave=False, TeV_Normal=True,
-                 CombineTev=True, CombineMu=False, ACFix = False, AC = 0, Mapping = False,constantDelta = False,
+                 CombineTev=True, CombineMu=False, ACFix = False, AC = 0, Mapping = False,constantDelta = False, OhmicContact = False,
                  MasterMultiRun=False, BlockWarnings=True, showBands=False,NumBands = 1,CloseSystem = False,mode_Num = 5, k_Num = 10,
                  AddOrbitEffect=True, AddZeemanField = True, AddRashbaSOI = True, AddDresselhausSOI = True, LockFieldAngle = False, Two_QPC = False,
                  PlotbeforeFigures=5,PlotbeforeFigures_Ana = 20):
         self.Two_QPC = Two_QPC
         self.DavidPot = DavidPot
         self.alpha = alpha
-        self.beta = beta
+        self.beta = beta#
+        self.OhmicContact = OhmicContact
         self.delta_raw = delta
         self.deltaNormalitionFactor = delta / delta_real
         # self.gn = gn  # g-factor
@@ -441,7 +442,7 @@ class Kwant_SSeS():
         else:
             if not NextNanoName == None:
                 self.NextNanoName = NextNanoName
-                self.Dict, self.VgList = SearchFolder(self.NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',Vg_target=V_A, ylim=(-1600, 2400))
+                self.Dict, self.VgList = SearchFolder(self.NextNanoName, 'bandedges_2d_2DEG_NoBoundary.fld', 'Gamma',Vg_target=V_A)
 
         self.OriginFilePath = self.NextNanoName + self.fileEnd + '/OriginFile/'
         if not MasterMultiRun:
@@ -628,20 +629,21 @@ class Kwant_SSeS():
 
     def Whole(self,x, y):
         if self.SN == 'SN':
-            return -self.L_Side <= x < self.L - self.L_Side and -self.WSC <= y < (
+            return -self.L_Side < x < self.L - self.L_Side and -self.WSC <= y < (
                         self.W - int(self.W_reduced_r / self.a))
         elif self.SN == 'SNS':
-            return -self.L_Side <= x < self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC)
+            return -self.L_Side < x < self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC-1)
 
     def AirGap(self,x, y):
-        return ((-self.DAir <= x < 0 and (-self.WSC <= y < 0 or self.W < y < (self.W + self.WSC))) or
-                (self.L_SC < x <= self.L_SC + self.DAir and (-self.WSC <= y < 0 or self.W < y < (self.W + self.WSC))))
+        return ((-self.DAir <= x <= 0 and (-self.WSC <= y < 0 or self.W-1 <= y < (self.W + self.WSC))) or
+                (self.L_SC < (x+1) <= (self.L_SC + self.DAir+1) and (-self.WSC <= y < 0 or self.W-1 <= y < (self.W + self.WSC))))
 
-    def SC_region(self,x, y):
-        return (0 <= x <= self.L_SC) and (-self.WSC <= y < 0 or self.W < y < (self.W + self.WSC))
-
+    def SC_region_Up(self,x, y):
+        return (0 <= x <= self.L_SC) and (self.W-1 <= y < (self.W + self.WSC))
+    def SC_region_Dn(self,x, y):
+        return (0 <= x <= self.L_SC) and (-self.WSC <= y < 0)
     def Semi_region(self,x, y):
-        return Whole(x, y) and not AirGap(x, y) and not SC_region(x, y)
+        return ((self.Whole(x, y) and not self.AirGap(x, y)) and not self.SC_region_Up(x, y)) and not self.SC_region_Dn(x, y)
     def Tunnel_region(self,x,y):
 
         return -np.ceil(self.TunnelLength / 2) <= (y) < np.floor(self.TunnelLength / 2) or -np.floor(
@@ -836,7 +838,13 @@ class Kwant_SSeS():
             # to the next unit cell
 
             return lead
-
+        def lead_shape_PB(site):
+            (x, y) = site.pos
+            if self.SN == 'SN':
+                return  -self.WSC <= y < (
+                    self.W - int(self.W_reduced_r / self.a))
+            else:
+                return -self.WSC <= y < (self.W + self.WSC-1)
 
 
 
@@ -854,10 +862,10 @@ class Kwant_SSeS():
 
 
         sys = kwant.Builder()
-        sys.fill(template, central_region, (0, 0));
+        sys.fill(template, central_region, (1, 0));
         if self.CloseSystem:
             sys_close = kwant.Builder()
-            sys_close.fill(template, central_region, (0, 0));
+            sys_close.fill(template, central_region, (1, 0));
         ########################################################################################
 
         ########################################################################################
@@ -870,16 +878,11 @@ class Kwant_SSeS():
 
         def lead_shape(site):
             (x, y) = site.pos
-            return (0 < x < self.L_SC-1)
+            return (0 <= x <= self.L_SC)
 
         lead_up = kwant.Builder(sym1)
         if self.PB == 1 and not self.CloseSystem:
-            def lead_shape_PB(site):
-                (x, y) = site.pos
-                if self.SN == 'SN':
-                    return (-self.WSC < y < (self.W - int(self.W_reduced_r / self.a)))
-                else:
-                    return (-self.WSC < y < (self.W + self.WSC-1))
+
             def lead_shape_PB_2(site):
                 (x, y) = site.pos
 
@@ -914,7 +917,16 @@ class Kwant_SSeS():
             lead_left.fill(template_l_Se, lead_shape_PB, (-self.L_Side, int(self.W/2)))
             lead_right.fill(template_l_Se, lead_shape_PB, (int(self.L_SC+self.L_Side), int(self.W/2)))
 
-
+        if self.OhmicContact:
+            sym3 = kwant.TranslationalSymmetry((-1, 0))
+            sym4 = kwant.TranslationalSymmetry((1, 0))
+            # template_l_Se = kwant.continuum.discretize(self.Ham_l_Se)
+            lead_left =kwant.Builder(sym3, conservation_law=-np.kron(self.s_z, self.s_0),
+                          particle_hole=np.kron(self.s_x, self.s_0))
+            lead_right = kwant.Builder(sym4, conservation_law=-np.kron(self.s_z, self.s_0),
+                          particle_hole=np.kron(self.s_x, self.s_0))
+            lead_left.fill(template_l_dn_N, lead_shape_PB, (-self.L_Side, int(self.W / 2)))
+            lead_right.fill(template_l_dn_N, lead_shape_PB, (int(self.L_SC + self.L_Side), int(self.W / 2)))
 
         if self.showBands:
             def lead_shape_test(site):
@@ -931,28 +943,28 @@ class Kwant_SSeS():
             self.lead_test_Ham.fill(Test_Ham, lead_shape_test, (1, 1))
             self.lead_test_Metal.fill(Test_Metal, lead_shape_test, (1, 1))
 
-        lead_up.fill(template_l_up_S, lead_shape, (int(self.L_SC / 2), -self.WSC)) # this is attached at y = negative value
+        lead_up.fill(template_l_up_S, lead_shape, (2, -self.WSC)) # this is attached at y = negative value
         if self.SN == 'SN':
 
             lead_dn = kwant.Builder(sym2, conservation_law=-np.kron(self.s_z, self.s_0),
                                     particle_hole=np.kron(self.s_x, self.s_0))
             # lead_dn = kwant.Builder(sym2, conservation_law=-self.s_z, particle_hole=self.s_y)
             # lead_dn = kwant.Builder(sym2)
-            lead_dn.fill(template_l_dn_N, lead_shape, (int(self.L_SC / 2), self.W - int(self.W_reduced_r / self.a)))
+            lead_dn.fill(template_l_dn_N, lead_shape, (2, self.W - int(self.W_reduced_r / self.a)))
 
         else:
             lead_dn = kwant.Builder(sym2)
-            lead_dn.fill(template_l_dn_S, lead_shape, (int(self.L_SC / 2), self.W + self.WSC))
+            lead_dn.fill(template_l_dn_S, lead_shape, (2, self.W + self.WSC))
 
         # self.LeadTest = lead_dn
 
 
         sys.attach_lead(lead_up)
         sys.attach_lead(lead_dn)
-        if self.PB == 1 and not self.CloseSystem:
+        if (self.PB == 1 and not self.CloseSystem) or self.OhmicContact:
             sys.attach_lead(lead_left)
             sys.attach_lead(lead_right)
-            if  self.L_Side>0:
+            if  self.L_Side>0 and not self.OhmicContact:
                 sys.attach_lead(lead_up_PB1)
                 sys.attach_lead(lead_dn_PB1)
                 sys.attach_lead(lead_up_PB2)
@@ -963,7 +975,7 @@ class Kwant_SSeS():
             syst_close = sys_close.finalized()
         else:
             syst_close = []
-        # # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
+        # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
 
         return syst, syst_close
         #
@@ -1184,6 +1196,11 @@ class Kwant_SSeS():
         plt.title('Dresselhaus SOI')
         plt.axis('off')
 
+        Ax8 = plt.subplot(3, 4, 12)
+        pcolor = Ax8.imshow(self.MU_Map.T)
+        # cbar = fig0.colorbar(pcolor)
+        plt.title('Mu')
+        plt.axis('off')
 
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
@@ -1535,21 +1552,23 @@ class Kwant_SSeS():
             self.Delta_phase_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a) ))
             self.Onsite_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
             self.gn_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.MU_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
             self.alpha_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
             self.beta_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
             self.Vbias_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
             self.Tunnel_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
         else:
-            self.Defect_Map = np.zeros((self.L , 2 * self.WSC + self.W ))
-            self.Potential_Map = np.zeros((self.L , 2 * self.WSC + self.W))
-            self.Delta_abs_Map = np.zeros((self.L , 2 * self.WSC + self.W))
-            self.Delta_phase_Map = np.zeros((self.L , 2 * self.WSC + self.W))
-            self.Onsite_Map = np.zeros((self.L, 2 * self.WSC + self.W))
-            self.gn_Map = np.zeros((self.L, 2 * self.WSC + self.W))
-            self.alpha_Map = np.zeros((self.L, 2 * self.WSC + self.W))
-            self.beta_Map = np.zeros((self.L, 2 * self.WSC + self.W))
-            self.Vbias_Map = np.zeros((self.L, 2 * self.WSC + self.W))
-            self.Tunnel_Map = np.zeros((self.L, 2 * self.WSC + self.W))
+            self.Defect_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
+            self.Potential_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
+            self.Delta_abs_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
+            self.Delta_phase_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
+            self.Onsite_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
+            self.gn_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
+            self.MU_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
+            self.alpha_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
+            self.beta_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
+            self.Vbias_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
+            self.Tunnel_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
 
     def orderDelta(self, X, Y, Bz, lambdaIn, leadN, PHI0, Bx=0, alphaangle=np.pi):
         # Theory based on <Controlled finite momentum pairing and spatially
@@ -1618,39 +1637,35 @@ class Kwant_SSeS():
         def Delta_0_dis(x, y):
 
             # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
-            Square = self.Semi_region(x,y)
-            Delta_Spatial = self.delta * (1 - np.heaviside(y, 1)) + \
-                            self.delta * np.heaviside(y - self.W, 1)
+            Square = self.SC_region_Up(x, y) or self.SC_region_Dn(x, y)
+            Delta_Spatial = self.delta * Square
 
-            Phase_Spatial = -self.phi * (1 - np.heaviside(y, 1)) + self.phi * np.heaviside(
-                y - self.W, 1)
+            Phase_Spatial = -self.phi * self.SC_region_Dn(x, y) + self.phi *self.SC_region_Up(x, y)
+
             DELTA = Delta_Spatial * ExpRounded(Phase_Spatial / 2)
             if self.ProximityOn == 1:
 
                 if (0 <= x < self.L) and (0 <= y < self.W):
                     if self.constantDelta:
 
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2)* Square
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)] * ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2)* Square
                     else:
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * Square
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)] * Square
 
-            if (x < self.L_Side or x > self.L-self.L_Side):
-                DELTA = 0
-            self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.abs(DELTA)
+
+            self.Delta_abs_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.abs(DELTA)
             # self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
 
-            self.Delta_phase_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
+            self.Delta_phase_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.angle(DELTA)
             # self.Delta_induced = np.min(self.Delta_abs_Map)
             return DELTA
 
         def Delta_0_prime_dis(x, y):
             # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
-            Square = self.Semi_region(x, y)
-            Delta_Spatial = self.delta * (1 - np.heaviside(y, 1)) + \
-                            self.delta * np.heaviside(y - self.W, 1)
+            Square = self.SC_region_Up(x, y) or self.SC_region_Dn(x, y)
+            Delta_Spatial = self.delta * Square
 
-            Phase_Spatial = -self.phi * (1 - np.heaviside(y, 1)) + self.phi * np.heaviside(
-                y - self.W, 1)
+            Phase_Spatial = -self.phi * self.SC_region_Dn(x, y) + self.phi * self.SC_region_Up(x, y)
 
 
 
@@ -1660,12 +1675,11 @@ class Kwant_SSeS():
 
                     if self.constantDelta:
 
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)]* ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2)* Square
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)]* ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2)* Square
 
                     else:
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] *Square
-            if (x < self.L_Side or x > self.L-self.L_Side):
-                DELTA = 0
+                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)] *Square
+
 
             return np.conjugate(DELTA)
 
@@ -1677,7 +1691,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             #g = Square*self.gn
             g_muB = Square*self.gn_muB
-            self.gn_Map[int(x), int(y) + self.WSC] = np.real(g_muB)
+            self.gn_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.real(g_muB)
             return np.round(self.deltaNormalitionFactor * g_muB * self.Bx / 2,15)
         def EZ_y_dis(x, y):
             if self.Surface2DEG:
@@ -1705,7 +1719,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             alpha =Square* self.alpha
             # alpha = self.alpha
-            self.alpha_Map[int(x), int(y) + self.WSC] = abs(alpha)
+            self.alpha_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = abs(alpha)
             return alpha
 
         def beta_dis(x, y):
@@ -1716,7 +1730,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             beta =  Square*self.beta
             # beta =  self.beta
-            self.beta_Map[int(x), int(y) + self.WSC] = beta
+            self.beta_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = beta
             return beta
         def mu_dis(x, y):
             if self.Surface2DEG:
@@ -1726,6 +1740,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             AntiSquare = 1 - Square
             MU = Square * (self.mu_N + self.Defect_Map[int(x), int(y)]) + AntiSquare * self.mu_SC
+            self.MU_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = MU
             return MU
 
         def VGate_dis(x, y):
@@ -1739,27 +1754,30 @@ class Kwant_SSeS():
                 except:
                     VGate = 0
             else:
-                VGate = (self.u_sl(x * self.L_r / self.L,
-                                   y * self.W_r / self.W) - self.u_sl_ref)
+                X = (x) * self.L_r / self.L
+                Y = (y+1) * self.W_r / self.W
+                VGate = (self.u_sl(X,Y) - self.u_sl_ref)
+
             if np.isnan(VGate):
                 VGate = 0
             else:
                 VGate = VGate * Square
-            VGate = VGate * self.deltaNormalitionFactor
-            self.Potential_Map[int(x), int(y) + self.WSC] = VGate
+            # VGate = VGate * self.deltaNormalitionFactor
+
+            self.Potential_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = VGate
 
             return VGate
 
         def V_dis(x, y):
 
             V = (1 - np.heaviside(y, 1)) * self.Vbias
-            self.Vbias_Map[int(x), int(y) + self.WSC] = np.real(V)
+            self.Vbias_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.real(V)
             return V
 
         def TunnelBarrier_dis(x, y):
 
             TunnelBarrier = self.GammaTunnel * self.Tunnel_region(x,y)
-            self.Tunnel_Map[int(x), int(y) + self.WSC] = np.real(TunnelBarrier)
+            self.Tunnel_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.real(TunnelBarrier)
             return TunnelBarrier
 
         def t_dis(x, y):
@@ -1787,8 +1805,8 @@ class Kwant_SSeS():
 
             Index0 = self.VgList.index(0.0)
             u_sl_0 = self.Dict[Index0]
-            diffmidLen = (np.max(u_sl_0.points[:, 0]) - np.min(u_sl_0.points[:, 0])) / 2 - self.L_s / 2
-            u_sl_0.points[:, 0] = u_sl_0.points[:, 0] - diffmidLen
+            # diffmidLen = (np.max(u_sl_0.points[:, 0]) - np.min(u_sl_0.points[:, 0])) / 2 - self.L_s / 2
+            # u_sl_0.points[:, 0] = u_sl_0.points[:, 0] - diffmidLen
             self.u_sl_ref_2DEG = u_sl_0(self.L_s / 2, self.W_r - self.W_reduced_r)
             # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
             self.u_sl_ref = u_sl_0(self.L_s / 2, 2)
@@ -1863,6 +1881,7 @@ class Kwant_SSeS():
 
                 self.conductances = []
                 self.conductances2 = []
+                self.conductances3 = []
                 if self.GetLDOS:
                     self.LDOS_edge_e_Dn = []
                     self.LDOS_bulk_e_Dn = []
@@ -1887,9 +1906,9 @@ class Kwant_SSeS():
                     else:
                         Index = self.VgList.index(self.V_Applied)
                         self.u_sl = self.Dict[Index]
-                        diffmidLen = (np.max(self.u_sl.points[:, 0]) - np.min(
-                            self.u_sl.points[:, 0])) / 2 - self.L_s / 2
-                        self.u_sl.points[:, 0] = self.u_sl.points[:, 0] - diffmidLen
+                        # diffmidLen = (np.max(self.u_sl.points[:, 0]) - np.min(
+                        #     self.u_sl.points[:, 0])) / 2 - self.L_s / 2
+                        # self.u_sl.points[:, 0] = self.u_sl.points[:, 0] - diffmidLen
                         self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - self.W_reduced_r)
                         # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
                         self.u_sl_ref = self.u_sl(self.L_s / 2, 2)
@@ -1922,8 +1941,10 @@ class Kwant_SSeS():
                         else:
                             Index = self.VgList.index(self.V_Applied)
                             self.u_sl = self.Dict[Index]
-                            diffmidLen = (np.max(self.u_sl.points[:,0]) - np.min(self.u_sl.points[:,0]))/2 - self.L_s / 2
-                            self.u_sl.points[:,0] = self.u_sl.points[:,0] - diffmidLen
+                            A1 = self.u_sl(4100,50)
+                            # diffmidLen = (np.max(self.u_sl.points[:,0]) - np.min(self.u_sl.points[:,0]))/2 - self.L_s / 2
+                            # self.u_sl.points[:,0] = self.u_sl.points[:,0] - diffmidLen
+                            A2 = self.u_sl(4100, 50)
                             # if self.GlobalRunCount == 0:
                             self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - self.W_reduced_r)
                             # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
@@ -2134,6 +2155,7 @@ class Kwant_SSeS():
                             #     raise('Energy range not valid!')
 
 
+
                     for E_ID in range(len(VarSwp_buff2)):
                         if self.SwpID == 'E' and not self.CloseSystem:
                             TimeBeforeEverySwp = time.time()
@@ -2143,8 +2165,12 @@ class Kwant_SSeS():
                         self.E = VarSwp_buff2[E_ID]
 
                         if self.GetConductance:
-                            SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
+                            if self.OhmicContact:
+                                SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params)
+                            else:
+                                SMatrix = kwant.solvers.default.smatrix(sys, self.E, params=params, out_leads=[0, 1],
                                                                     in_leads=[0, 1])
+
                         if self.GetLDOS:
 
                             if self.CloseSystem:
@@ -2294,8 +2320,19 @@ class Kwant_SSeS():
                                 self.conductances2.append(C2)
                             else:
                                 # A = SMatrix.submatrix((1, 0), (1, 0))
+
                                 C1 = SMatrix.transmission(1, 0) / 2
-                                self.conductances2.append('nan')
+
+                                if self.OhmicContact:
+
+                                    C2 = SMatrix.transmission(2, 0) / 2
+                                    C3 = (SMatrix.submatrix((2, 0), (2, 0)).shape[0] - SMatrix.transmission((2, 0), (
+                                        2, 0)) + SMatrix.transmission((2, 1), (2, 0))) / 2
+
+                                    self.conductances2.append(C2)
+                                    self.conductances3.append(C3)
+                                else:
+                                    self.conductances2.append('nan')
                             self.conductances.append(C1)
 
 
@@ -2320,6 +2357,7 @@ class Kwant_SSeS():
                                 syst.stdout.write("\r{0}".format(self.MeseValue))
                                 syst.stdout.write("\n")
                         self.ProgressBar(TimeTXT)
+                        A = self.Potential_Map
 
 
 
@@ -2494,8 +2532,9 @@ class Kwant_SSeS():
         # else:
         #     Xdata = self.VarSwp
         if self.GetConductance:
-            TitleTxtY1 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_Conductance']
-            Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
+            self.saveTxtPngConductnce(Xdata, TitleTxtX, '', self.conductances, Plot)
+            # TitleTxtY1 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_Conductance']
+            # Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
         if self.GetLDOS:
             TitleTxtY_LDOS_e = ["LDOS", " ", self.SAVEFILENAME_origin + '_Edge']
             TitleTxtY_LDOS_b = ["LDOS", " ", self.SAVEFILENAME_origin + '_Bulk']
@@ -2529,19 +2568,19 @@ class Kwant_SSeS():
                                                          self.LDOS_bulk_h_Dn)+np.array(self.LDOS_bulk_e_Up) + np.array(
                                                          self.LDOS_bulk_e_Dn)))]
 
-        if self.SeriesR != 0 and self.GetConductance:
-            if self.BlockWarnings:
-                warnings.filterwarnings("ignore")
-            D_R = (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5
-            if self.BlockWarnings:
-                warnings.filterwarnings("always")
-            Data_R = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(D_R))]
+        # if self.SeriesR != 0 and self.GetConductance:
+        #     if self.BlockWarnings:
+        #         warnings.filterwarnings("ignore")
+        #     D_R = (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances)))) / 7.74809173e-5
+        #     if self.BlockWarnings:
+        #         warnings.filterwarnings("always")
+        #     Data_R = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(D_R))]
 
 
         if self.GlobalVswpCount == 1:
-            if self.GetConductance:
-                savedata(self.OriginFilePath + self.SaveTime + '.txt',
-                     init=True, initdata=Data)
+            # if self.GetConductance:
+            #     savedata(self.OriginFilePath + self.SaveTime + '.txt',
+            #          init=True, initdata=Data)
             if self.GetLDOS:
 
 
@@ -2576,13 +2615,13 @@ class Kwant_SSeS():
                 savedata(self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B.txt',
                          init=True, initdata=Data_LDOS_bulk)
 
-            if self.SeriesR != 0 and self.GetConductance:
-                savedata(self.OriginFilePath + self.SaveTime + '-' + str(
-                    round(self.SeriesR, 3)) + '.txt', init=True, initdata=Data_R)
+            # if self.SeriesR != 0 and self.GetConductance:
+            #     savedata(self.OriginFilePath + self.SaveTime + '-' + str(
+            #         round(self.SeriesR, 3)) + '.txt', init=True, initdata=Data_R)
         else:
-            if self.GetConductance:
-                savedata(self.OriginFilePath + self.SaveTime + '.txt',
-                     init=False, newcol=Data)
+            # if self.GetConductance:
+            #     savedata(self.OriginFilePath + self.SaveTime + '.txt',
+            #          init=False, newcol=Data)
             if self.GetLDOS:
                 savedata(self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_e_Up.txt',
                          init=False, newcol=Data_LDOS_edge_e_Up)
@@ -2613,14 +2652,14 @@ class Kwant_SSeS():
                          init=False, newcol=Data_LDOS_edge)
                 savedata(self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B.txt',
                          init=False, newcol=Data_LDOS_bulk)
-            if self.SeriesR != 0 and self.GetConductance:
-                savedata(self.OriginFilePath + self.SaveTime + '-' + str(
-                    round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
-        if self.GetConductance:
-            self.Gen_Conduct_Plot(Xdata, self.conductances, self.SwpID+self.SwpUnit,"G/G0[/(2e^2/h)]")
-            self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ "-Conductance.png")
-            if Plot == 1:
-                self.fig.show()
+            # if self.SeriesR != 0 and self.GetConductance:
+            #     savedata(self.OriginFilePath + self.SaveTime + '-' + str(
+            #         round(self.SeriesR, 3)) + '.txt', init=False, newcol=Data_R)
+        # if self.GetConductance:
+        #     self.Gen_Conduct_Plot(Xdata, self.conductances, self.SwpID+self.SwpUnit,"G/G0[/(2e^2/h)]")
+        #     self.fig.savefig(self.SAVEFILENAME +self.LocalSave+ "-Conductance.png")
+        #     if Plot == 1:
+        #         self.fig.show()
         if self.GetLDOS:
             self.Gen_Conduct_Plot(Xdata, self.LDOS_edge_e_Up, self.SwpID + self.SwpUnit,"LDOS_E_e_Up",
                                   y2 = self.LDOS_bulk_e_Up,Y2label="LDOS_B_e_Up",subloc=[2,4,1],figsize = (25,11))
@@ -2665,48 +2704,54 @@ class Kwant_SSeS():
                 self.fig.show()
 
 
-        if self.SN == 'SN' and self.GetConductance:
+        if (self.SN == 'SN' or self.OhmicContact) and self.GetConductance:
 
-            TitleTxtY2 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_N-Ree+Reh']
 
-            Data_2 = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY2 + list(self.conductances2))]
+            if self.SN == 'SN':
+                self.saveTxtPngConductnce( Xdata, TitleTxtX, '_N-Ree+Reh', self.conductances2, Plot)
+            elif self.OhmicContact:
+                self.saveTxtPngConductnce(Xdata, TitleTxtX, '_Ohmic', self.conductances2, Plot)
+                self.saveTxtPngConductnce(Xdata, TitleTxtX, '_Ohmic_N-Ree+Reh', self.conductances3, Plot)
 
+
+
+    def saveTxtPngConductnce(self,Xdata, TitleTxtX,TxtY2,conductances, Plot):
+        TitleTxtY2 = ["G", "2e^2/h", self.SAVEFILENAME_origin + TxtY2]
+        Data_2 = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY2 + list(conductances))]
+
+        if self.SeriesR != 0:
+            if self.BlockWarnings:
+                warnings.filterwarnings("ignore")
+
+            D_R2 = (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(conductances)))) / 7.74809173e-5
+            if self.BlockWarnings:
+                warnings.filterwarnings("always")
+
+            Data_R_2 = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY2 + list(D_R2))]
+
+        if self.GlobalVswpCount == 1:
+
+            savedata(self.OriginFilePath + self.SaveTime + TxtY2+'.txt',
+                     init=True, initdata=Data_2)
             if self.SeriesR != 0:
-                if self.BlockWarnings:
-                    warnings.filterwarnings("ignore")
+                savedata(self.OriginFilePath + self.SaveTime + '-' + str(
+                    round(self.SeriesR, 3)) + TxtY2+'.txt', init=True, initdata=Data_R_2)
+        else:
 
-                D_R2 = (1 / (self.SeriesR + 1 / (7.74809173e-5 * np.array(self.conductances2)))) / 7.74809173e-5
-                if self.BlockWarnings:
-                    warnings.filterwarnings("always")
+            savedata(self.OriginFilePath + self.SaveTime + TxtY2+'.txt',
+                     init=False, newcol=Data_2)
+            if self.SeriesR != 0:
+                savedata(self.OriginFilePath + self.SaveTime + '-' + str(
+                    round(self.SeriesR, 3)) + TxtY2+'.txt', init=False, newcol=Data_R_2)
 
-                Data_R_2 = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY2 + list(D_R2))]
-
-
-            if self.GlobalVswpCount == 1:
-
-                savedata(self.OriginFilePath + self.SaveTime + '_N-Ree+Reh.txt',
-                         init=True, initdata=Data_2)
-                if self.SeriesR != 0:
-                    savedata(self.OriginFilePath + self.SaveTime + '-' + str(
-                            round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=True, initdata=Data_R_2)
-            else:
-
-                savedata(self.OriginFilePath + self.SaveTime + '_N-Ree+Reh.txt',
-                         init=False, newcol=Data_2)
-                if self.SeriesR != 0:
-                    savedata(self.OriginFilePath + self.SaveTime + '-' + str(
-                        round(self.SeriesR, 3)) + '_N-Ree+Reh.txt', init=False, newcol=Data_R_2)
-
-            if self.SwpID == 'E':
-                self.Gen_Conduct_Plot(1000*self.VarSwp*self.t, self.conductances2, self.SwpID+self.SwpUnit,"G/G0[/(2e^2/h)]")
-            else:
-                self.Gen_Conduct_Plot(self.VarSwp, self.conductances2, self.SwpID+self.SwpUnit,"G/G0[/(2e^2/h)]")
-            self.fig.savefig(self.SAVEFILENAME+self.LocalSave + "-N-Ree+Reh.png")
-            if Plot == 1:
-                self.fig.show()
-
-
-
+        if self.SwpID == 'E':
+            self.Gen_Conduct_Plot(1000 * self.VarSwp * self.t, conductances, self.SwpID + self.SwpUnit,
+                                  "G/G0[/(2e^2/h)]")
+        else:
+            self.Gen_Conduct_Plot(self.VarSwp, conductances, self.SwpID + self.SwpUnit, "G/G0[/(2e^2/h)]")
+        self.fig.savefig(self.SAVEFILENAME + self.LocalSave + TxtY2+".png")
+        if Plot == 1:
+            self.fig.show()
 
     def clear_line(self, n=1):
         LINE_UP = '\033[1A'
