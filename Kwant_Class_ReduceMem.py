@@ -380,7 +380,7 @@ class Kwant_SSeS():
             self.SwpUnit = ' (V)'
         elif self.SwpID == 'E':
             if self.Mapping:
-                if len(BField)>len(Phase):
+                if len(BField)>len(Phase) and len(BField)>len(V_A) :
                     # Initialize the index of the changing element
                     changing_element_index = None
 
@@ -414,9 +414,14 @@ class Kwant_SSeS():
                                 break
                         self.VarMap = [t[changing_element_index] for t in BField]
                         self.VarMaptxt = 'B (T)'
-                elif len(Phase)>len(BField):
+
+
+                elif len(Phase)>len(BField) and len(Phase)>len(V_A):
                     self.VarMap = Phase
                     self.VarMaptxt = 'Phase (rad)'
+                elif len(V_A)>len(BField) and len(V_A)>len(Phase):
+                    self.VarMap = V_A
+                    self.VarMaptxt = 'V_g (V)'
             self.SwpUnit = ' (meV)'
         elif self.SwpID == 'B':
             self.SwpUnit = ' (T)'
@@ -474,9 +479,9 @@ class Kwant_SSeS():
         else:
             self.SaveTime = DateT+'-'+TimeT+'/'+self.Date+'-'+self.Time
             new_file_path = self.NextNanoName + self.fileEnd + '/' + DateT + '-' + TimeT + '/'
-
-        if not os.path.exists(self.OriginFilePath +self.SaveTime+'-LDOS'):
-            os.makedirs(self.OriginFilePath +self.SaveTime+'-LDOS')
+        if self.GetLDOS:
+            if not os.path.exists(self.OriginFilePath +self.SaveTime+'-LDOS'):
+                os.makedirs(self.OriginFilePath +self.SaveTime+'-LDOS')
         if not os.path.exists(new_file_path):
             os.makedirs(new_file_path)
 
@@ -2383,34 +2388,52 @@ class Kwant_SSeS():
                     self.SaveDatatoOrigin(TitleTxt1, Plot=1)
                 else:
                     self.SaveDatatoOrigin(TitleTxt1)
-            if self.Mapping and self.SwpID == "E" and self.GetLDOS:
+            if self.Mapping and self.SwpID == "E":
                 if self.GetConductance:
-                    self.LoadDatatoPlot([self.OriginFilePath + self.SaveTime + '.txt'],self.VarSwp,self.VarMap,'G',
-                                        ['Conductance'],'V (meV)',self.VarMaptxt,self.SAVEFILENAME + self.LocalSave + "-GMap")
 
-                MapPlotList = [self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_e_Up.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_e_Up.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_e_Dn.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_e_Dn.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_h_Dn.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_h_Dn.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_h_Up.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_h_Up.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_h.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_h.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_e.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_e.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B.txt',
-                               self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E.txt']
-                MapPlotTitleList = ['Bulk LDOS e Up','Edge LDOS e Up','Bulk LDOS e Dn','Edge LDOS e Dn',
-                                    'Bulk LDOS h Dn','Edge LDOS h Dn','Bulk LDOS h Up','Edge LDOS h Up',
-                                    'Bulk LDOS h','Edge LDOS h','Bulk LDOS e','Edge LDOS e','Bulk LDOS','Edge LDOS']
 
-                self.LoadDatatoPlot(MapPlotList,
-                                    self.VarSwp,self.VarMap,'LDOS',MapPlotTitleList
-                                    ,'V (meV)', self.VarMaptxt,savefilename=
-                                    self.SAVEFILENAME + self.LocalSave + "-LDOS_Map",
-                           )
+                    # self.LoadDatatoPlot([self.OriginFilePath + self.SaveTime + '.txt'],self.VarSwp,self.VarMap,'G(2e^2/h)',
+                    #                     ['Conductance'],'V (meV)',self.VarMaptxt,self.SAVEFILENAME + self.LocalSave + "-GMap")
+                    if self.SN == 'SN':
+                        MapPlotList = [self.OriginFilePath + self.SaveTime + '_cond.txt',
+                                       self.OriginFilePath + self.SaveTime + '_N-Ree+Reh.txt']
+                        MapPlotTitleList = ['S-D Conductance', 'S-D Conductance(Andreev)']
+
+
+                    elif self.SN == 'SNS' and self.OhmicContact:
+                        MapPlotList = [self.OriginFilePath + self.SaveTime + '_cond.txt',
+                                       self.OriginFilePath + self.SaveTime + '_Ohmic.txt',
+                                       self.OriginFilePath + self.SaveTime + '_Ohmic-N-Ree+Reh.txt']
+                        MapPlotTitleList = ['S-D Conductance',  'Ohmic Conductance',  'Ohmic Conductance(Andreev)']
+                    self.LoadDatatoPlot(MapPlotList,
+                                        self.VarSwp, self.VarMap, 'G', MapPlotTitleList
+                                        , 'V (meV)', self.VarMaptxt, savefilename=
+                                        self.SAVEFILENAME + self.LocalSave + "-GMap",
+                                        )
+                if self.GetLDOS:
+                    MapPlotList = [self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_e_Up.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_e_Up.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_e_Dn.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_e_Dn.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_h_Dn.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_h_Dn.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_h_Up.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_h_Up.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_h.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_h.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B_e.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E_e.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_B.txt',
+                                   self.OriginFilePath + self.SaveTime + '-LDOS/' + 'LDOS_E.txt']
+                    MapPlotTitleList = ['Bulk LDOS e Up','Edge LDOS e Up','Bulk LDOS e Dn','Edge LDOS e Dn',
+                                        'Bulk LDOS h Dn','Edge LDOS h Dn','Bulk LDOS h Up','Edge LDOS h Up',
+                                        'Bulk LDOS h','Edge LDOS h','Bulk LDOS e','Edge LDOS e','Bulk LDOS','Edge LDOS']
+
+                    self.LoadDatatoPlot(MapPlotList,
+                                        self.VarSwp,self.VarMap,'LDOS',MapPlotTitleList
+                                        ,'V (meV)', self.VarMaptxt,savefilename=
+                                        self.SAVEFILENAME + self.LocalSave + "-LDOS_Map",
+                               )
 
 
 
@@ -2435,6 +2458,7 @@ class Kwant_SSeS():
             plotlen = len(datapathlist)
         else:
             plotlen = int(np.size(zdata,1)/len(ydata))
+
         x0_Index = np.argmin(np.abs(xdata))
         subplotarrayY = int(np.ceil(np.sqrt(plotlen)))
         subplotarrayX = int(np.floor(np.sqrt(plotlen)))
@@ -2479,7 +2503,7 @@ class Kwant_SSeS():
                     ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='x', labelsize=12)
                     ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='y', labelsize=12)
 
-                if datapathlist[j].split("/")[-1] == 'LDOS_B.txt' or datapathlist[j].split("/")[-1] == 'LDOS_E.txt':
+                if self.GetLDOS and (datapathlist[j].split("/")[-1] == 'LDOS_B.txt' or datapathlist[j].split("/")[-1] == 'LDOS_E.txt'):
 
                     if datapathlist[j].split("/")[-1] == 'LDOS_B.txt':
                         ax2[0] = plt.subplot(1, 2, 1)
@@ -2491,6 +2515,18 @@ class Kwant_SSeS():
                         ax2[1].plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
                         ax2[1].set_xlabel(ylabel, fontsize=15)
                         ax2[1].set_ylabel('LDOS_E', fontsize=15)
+                elif self.GetConductance and (datapathlist[j].split("_")[-1] == 'cond.txt' or datapathlist[j].split("_")[-1] == 'Ohmic-N-Ree+Reh.txt'):
+
+                    if datapathlist[j].split("_")[-1] == 'cond.txt':
+                        ax2[0] = plt.subplot(1, 2, 1)
+                        ax2[0].plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
+                        ax2[0].set_xlabel(ylabel, fontsize=15)
+                        ax2[0].set_ylabel('SD cond', fontsize=15)
+                    if datapathlist[j].split("_")[-1] == 'Ohmic-N-Ree+Reh.txt':
+                        ax2[1] = plt.subplot(1, 2, 2)
+                        ax2[1].plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
+                        ax2[1].set_xlabel(ylabel, fontsize=15)
+                        ax2[1].set_ylabel('Ohmic cond', fontsize=15)
             if len(datapathlist) > 1:
                 fig.subplots_adjust(left=0.05,
                                     bottom=0.05,
@@ -2532,7 +2568,12 @@ class Kwant_SSeS():
         # else:
         #     Xdata = self.VarSwp
         if self.GetConductance:
-            self.saveTxtPngConductnce(Xdata, TitleTxtX, '', self.conductances, Plot)
+            self.saveTxtPngConductnce(Xdata, TitleTxtX, '_cond', self.conductances, Plot)
+            if self.OhmicContact:
+                self.saveTxtPngConductnce(Xdata, TitleTxtX, '_Ohmic', self.conductances2, Plot)
+                self.saveTxtPngConductnce(Xdata, TitleTxtX, '_Ohmic-N-Ree+Reh', self.conductances3, Plot)
+
+
             # TitleTxtY1 = ["G", "2e^2/h", self.SAVEFILENAME_origin + '_Conductance']
             # Data = [list(a) for a in zip(TitleTxtX + list(Xdata), TitleTxtY1 + list(self.conductances))]
         if self.GetLDOS:
@@ -2704,14 +2745,12 @@ class Kwant_SSeS():
                 self.fig.show()
 
 
-        if (self.SN == 'SN' or self.OhmicContact) and self.GetConductance:
+        if (self.SN == 'SN') and self.GetConductance:
 
 
-            if self.SN == 'SN':
-                self.saveTxtPngConductnce( Xdata, TitleTxtX, '_N-Ree+Reh', self.conductances2, Plot)
-            elif self.OhmicContact:
-                self.saveTxtPngConductnce(Xdata, TitleTxtX, '_Ohmic', self.conductances2, Plot)
-                self.saveTxtPngConductnce(Xdata, TitleTxtX, '_Ohmic_N-Ree+Reh', self.conductances3, Plot)
+
+            self.saveTxtPngConductnce( Xdata, TitleTxtX, '_N-Ree+Reh', self.conductances2, Plot)
+
 
 
 
@@ -2745,7 +2784,7 @@ class Kwant_SSeS():
                     round(self.SeriesR, 3)) + TxtY2+'.txt', init=False, newcol=Data_R_2)
 
         if self.SwpID == 'E':
-            self.Gen_Conduct_Plot(1000 * self.VarSwp * self.t, conductances, self.SwpID + self.SwpUnit,
+            self.Gen_Conduct_Plot(1000 * np.array(self.VarSwp) * self.t, conductances, self.SwpID + self.SwpUnit,
                                   "G/G0[/(2e^2/h)]")
         else:
             self.Gen_Conduct_Plot(self.VarSwp, conductances, self.SwpID + self.SwpUnit, "G/G0[/(2e^2/h)]")
