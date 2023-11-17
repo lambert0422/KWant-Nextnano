@@ -634,14 +634,16 @@ class Kwant_SSeS():
 
     def Whole(self,x, y):
         if self.SN == 'SN':
-            return -self.L_Side < x < self.L - self.L_Side and -self.WSC <= y < (
+            return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (
                         self.W - int(self.W_reduced_r / self.a))
         elif self.SN == 'SNS':
-            return -self.L_Side < x < self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC-1)
+            return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC-1)
 
     def AirGap(self,x, y):
-        return ((-self.DAir <= x <= 0 and (-self.WSC <= y < 0 or self.W-1 <= y < (self.W + self.WSC))) or
-                (self.L_SC < (x+1) <= (self.L_SC + self.DAir+1) and (-self.WSC <= y < 0 or self.W-1 <= y < (self.W + self.WSC))))
+
+        return ((-self.DAir <= x < 0 and (-self.WSC <= y < 0 or self.W - 1 <= y < (self.W + self.WSC))) or
+                (self.L_SC < (x) <= (self.L_SC + self.DAir) and (
+                            -self.WSC <= y < 0 or self.W - 1 <= y < (self.W + self.WSC))))
 
     def SC_region_Up(self,x, y):
         return (0 <= x <= self.L_SC) and (self.W-1 <= y < (self.W + self.WSC))
@@ -1279,11 +1281,15 @@ class Kwant_SSeS():
         ax7.axhline(y=self.Delta_induced, color='r')
         ax7.text(x=0, y=2e6*self.Delta_induced/self.deltaNormalitionFactor, s=str(np.round(2e6 * self.Delta_induced/self.deltaNormalitionFactor, 3)))
         plt.title('Delta up down cut')
-
-        ax8 = plt.subplot(3, 3, 8)
-        ax8.plot(self.Potential_Map.T[:, int(np.shape(self.Potential_Map.T)[1] / 4)])
-        ax8.plot(self.Potential_Map.T[:, int(3 * np.shape(self.Potential_Map.T)[1] / 4)])
-        plt.title('Potential up down cut(Gate)')
+        if self.OhmicContact:
+            ax8 = plt.subplot(3, 3, 8)
+            ax8.plot(self.Potential_Map.T[int(np.shape(self.Potential_Map.T)[0] / 2), :])
+            plt.title('Potential left right cut(Gate)')
+        else:
+            ax8 = plt.subplot(3, 3, 8)
+            ax8.plot(self.Potential_Map.T[:, int(np.shape(self.Potential_Map.T)[1] / 4)])
+            ax8.plot(self.Potential_Map.T[:, int(3 * np.shape(self.Potential_Map.T)[1] / 4)])
+            plt.title('Potential up down cut(Gate)')
 
         ax9 = plt.subplot(3, 3, 9)
         ax9.plot(self.Potential_Map.T[:, int(np.shape(self.Potential_Map.T)[1] / 2)])
@@ -1551,29 +1557,29 @@ class Kwant_SSeS():
     def DefOutputMap(self):
         self.SpatialDeltaMap = np.zeros((len(self.XX), len(self.YY)), dtype=complex)
         if self.SN == 'SN':
-            self.Defect_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a) ))
-            self.Potential_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Delta_abs_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Delta_phase_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a) ))
-            self.Onsite_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.gn_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.MU_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.alpha_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.beta_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Vbias_Map = np.zeros((self.L, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Tunnel_Map = np.zeros((self.L , self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.Defect_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a) ))
+            self.Potential_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.Delta_abs_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.Delta_phase_Map = np.zeros((self.L++1, self.WSC + self.W - int(self.W_reduced_r / self.a) ))
+            self.Onsite_Map = np.zeros((self.L+1 , self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.gn_Map = np.zeros((self.L+1 , self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.MU_Map = np.zeros((self.L+1 , self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.alpha_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.beta_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.Vbias_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.Tunnel_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
         else:
-            self.Defect_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
-            self.Potential_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
-            self.Delta_abs_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
-            self.Delta_phase_Map = np.zeros((self.L-1 , 2 * self.WSC + self.W-1))
-            self.Onsite_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
-            self.gn_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
-            self.MU_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
-            self.alpha_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
-            self.beta_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
-            self.Vbias_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
-            self.Tunnel_Map = np.zeros((self.L-1, 2 * self.WSC + self.W-1))
+            self.Defect_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Potential_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Delta_abs_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Delta_phase_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Onsite_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.gn_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.MU_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.alpha_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.beta_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.Vbias_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.Tunnel_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
 
     def orderDelta(self, X, Y, Bz, lambdaIn, leadN, PHI0, Bx=0, alphaangle=np.pi):
         # Theory based on <Controlled finite momentum pairing and spatially
@@ -1767,7 +1773,7 @@ class Kwant_SSeS():
                 VGate = 0
             else:
                 VGate = VGate * Square
-            # VGate = VGate * self.deltaNormalitionFactor
+            VGate = VGate * self.deltaNormalitionFactor
 
             self.Potential_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = VGate
 

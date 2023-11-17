@@ -121,8 +121,8 @@ for DELTA in delta_list:
 
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1400,
                               WSC=200, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4000, L_s = 4000,
-                              alpha=1, beta=0,
-                              V_A=np.round(np.arange(0.5, -1.2, -0.02), 3), TStrength=TStrength_list, TeV_Normal=True,
+                              alpha=1, beta=0,Dair = 0,
+                              V_A=np.round(np.arange(0.5, -1.2, -0.1), 3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                               E_excited=[0], SNjunc=SNjunc_list,

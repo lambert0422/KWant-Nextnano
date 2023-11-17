@@ -55,7 +55,7 @@ delta_list = [0.125] # in eV
 # delta_list = [0.1] # in eV
 Vg_s = [0]
 alphaList = [1]
-alphaList = [0.5,2]
+alphaList = [1,2]
 #
 # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
 # syst.stdout.flush()
@@ -71,10 +71,10 @@ else:
 for DELTA in delta_list:
     for alphaTest in alphaList:
 
-        Estep = 0.005
+        Estep = 0.001
         # Estep = 0.03
-        Emin = -0.25
-        Emax = 0.25
+        Emin = -0.1
+        Emax = 0.1
         E_excited_list = np.round(np.arange(Emin*100, Emax*100+Estep*100,Estep*100)/100,14) # the unit is in t(normalised)
         # alphaTest = 1# in the unit of t
         # BTest = [1]
