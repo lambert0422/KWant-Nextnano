@@ -56,38 +56,27 @@ VGate_shift_list = [0]
 # syst.stdout.flush()
 NName_list = []
 if DavidPot:
-    NName = ''
+    NName_list = ['']
 else:
     NName_list.append(onedrivepath + 'Desktop2/iCloud_Desktop/NN_backup/NN_2QPCs/2023Y11M09D-01h10m57s')  # with 1.8 / 3 surface charge(Best)
-# for DELTA in delta_list:
-#     for Vg_s in VGate_shift_list:
-#         for NName in NName_list:
-#             B = KC.Kwant_SSeS(NextNanoName=NName,Masterfilepath = master_file_path,ReferenceData = RefName, W_r = 1500, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250,
-#                            V_A=np.round(np.arange(0.5,-1.2,-0.01),3), TStrength=TStrength_list,
-#                            PeriBC=PeriBC_list, Tev=TeV_list,Tev_Tunnel=TeV_T_list,beta=0,
-#                            E_excited=E_excited_list, SNjunc=SNjunc_list,
-#                            ProOn=ProximityOn_list,BField=[0],a = 15,
-#                            ShowDensity=ShowDensity,Phase=[0],
-#                            SaveNameNote=NName,SeriesR = 500,DateT=Date,TimeT = Time,MasterMultiRun=MMR,
-#                            muN=mu_N_list, DefectAmp=0,DefectNumPer=0,CombineMu=True,CombineTev=True,
-#                            muSC=mu_SC_list, delta=DELTA, VGate_shift=Vg_s,SwpID = "Vg",PlotbeforeFigures=1,PlotbeforeFigures_Ana=20)
+
 
 for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         for NName in NName_list:
-            Estep = 0.005
+            Estep = 0.05
             # Estep = 0.03
             Emin = -0.25
             Emax = 0.25
             E_excited_list = np.round(np.arange(Emin * 100, Emax * 100 + Estep * 100, Estep * 100) / 100, 14)
-            B = KC.Kwant_SSeS(NextNanoName=None, Masterfilepath=master_file_path, W_r=400,
+            B = KC.Kwant_SSeS( Masterfilepath=master_file_path, W_r=400,
                               WSC=200, DavidPot=DavidPot, W_g=50, S_g=300, D_2DEG=250, gn=30, L_r=5000, L_s=4000,
                               alpha=1, beta=0,
-                              V_A=np.round(np.arange(0.5, -2, -0.01), 3), TStrength=TStrength_list, TeV_Normal=True,
+                              V_A=np.round(np.arange(0.5, -2, -0.1), 3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
                               E_excited=[0.4], SNjunc=SNjunc_list, Surface2DEG=False,
-                              ProOn=[0], constantDelta=False, BField=[(0, 0, 0)], a=10,
+                              ProOn=[0], constantDelta=False, BField=[(0, 0, 0)], a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=False, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
                               Phase=[np.pi], CloseSystem=False,
