@@ -635,7 +635,7 @@ class Kwant_SSeS():
     def Whole(self,x, y):
         if self.SN == 'SN':
             return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (
-                        self.W - int(self.W_reduced_r / self.a))
+                        self.W - 1)
         elif self.SN == 'SNS':
             return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC-1)
 
@@ -849,7 +849,7 @@ class Kwant_SSeS():
             (x, y) = site.pos
             if self.SN == 'SN':
                 return  -self.WSC <= y < (
-                    self.W - int(self.W_reduced_r / self.a))
+                    self.W - 1)
             else:
                 return -self.WSC <= y < (self.W + self.WSC-1)
 
@@ -913,9 +913,9 @@ class Kwant_SSeS():
                 lead_up_PB1.fill(template_l_Se, lead_shape_PB_2, (-self.L_Side , -self.WSC))
                 lead_up_PB2.fill(template_l_Se, lead_shape_PB_3, ((self.L_SC+self.L_Side-1), -self.WSC))
                 if self.SN == 'SN':
-                    lead_dn_PB1.fill(template_l_Se, lead_shape_PB_2, (0, self.W - int(self.W_reduced_r / self.a)))
+                    lead_dn_PB1.fill(template_l_Se, lead_shape_PB_2, (0, self.W - 1))
                     lead_dn_PB2.fill(template_l_Se, lead_shape_PB_3,
-                                     ((self.L - self.L_Side+1), self.W - int(self.W_reduced_r / self.a)))
+                                     ((self.L - self.L_Side+1), self.W - 1))
                 else:
                     lead_dn_PB1.fill(template_l_Se, lead_shape_PB_2, (0, self.W + self.WSC))
                     lead_dn_PB2.fill(template_l_Se, lead_shape_PB_3,
@@ -957,7 +957,7 @@ class Kwant_SSeS():
                                     particle_hole=np.kron(self.s_x, self.s_0))
             # lead_dn = kwant.Builder(sym2, conservation_law=-self.s_z, particle_hole=self.s_y)
             # lead_dn = kwant.Builder(sym2)
-            lead_dn.fill(template_l_dn_N, lead_shape, (2, self.W - int(self.W_reduced_r / self.a)))
+            lead_dn.fill(template_l_dn_N, lead_shape, (2, self.W - 1))
 
         else:
             lead_dn = kwant.Builder(sym2)
@@ -1557,17 +1557,17 @@ class Kwant_SSeS():
     def DefOutputMap(self):
         self.SpatialDeltaMap = np.zeros((len(self.XX), len(self.YY)), dtype=complex)
         if self.SN == 'SN':
-            self.Defect_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a) ))
-            self.Potential_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Delta_abs_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Delta_phase_Map = np.zeros((self.L++1, self.WSC + self.W - int(self.W_reduced_r / self.a) ))
-            self.Onsite_Map = np.zeros((self.L+1 , self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.gn_Map = np.zeros((self.L+1 , self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.MU_Map = np.zeros((self.L+1 , self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.alpha_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.beta_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Vbias_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
-            self.Tunnel_Map = np.zeros((self.L+1, self.WSC + self.W - int(self.W_reduced_r / self.a)))
+            self.Defect_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
+            self.Potential_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
+            self.Delta_abs_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
+            self.Delta_phase_Map = np.zeros((self.L++1, self.WSC + self.W - 1 ))
+            self.Onsite_Map = np.zeros((self.L+1 , self.WSC + self.W - 1))
+            self.gn_Map = np.zeros((self.L+1 , self.WSC + self.W - 1))
+            self.MU_Map = np.zeros((self.L+1 , self.WSC + self.W - 1))
+            self.alpha_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
+            self.beta_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
+            self.Vbias_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
+            self.Tunnel_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
         else:
             self.Defect_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
             self.Potential_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
@@ -1818,7 +1818,7 @@ class Kwant_SSeS():
             u_sl_0 = self.Dict[Index0]
             # diffmidLen = (np.max(u_sl_0.points[:, 0]) - np.min(u_sl_0.points[:, 0])) / 2 - self.L_s / 2
             # u_sl_0.points[:, 0] = u_sl_0.points[:, 0] - diffmidLen
-            self.u_sl_ref_2DEG = u_sl_0(self.L_s / 2, self.W_r - self.W_reduced_r)
+            self.u_sl_ref_2DEG = u_sl_0(self.L_s / 2, self.W_r-2)
             # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
             self.u_sl_ref = u_sl_0(self.L_s / 2, 2)
             # TestMap = np.zeros((self.L_s+1,self.W_r+1))
@@ -1920,7 +1920,7 @@ class Kwant_SSeS():
                         # diffmidLen = (np.max(self.u_sl.points[:, 0]) - np.min(
                         #     self.u_sl.points[:, 0])) / 2 - self.L_s / 2
                         # self.u_sl.points[:, 0] = self.u_sl.points[:, 0] - diffmidLen
-                        self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - self.W_reduced_r)
+                        self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - 2)
                         # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
                         self.u_sl_ref = self.u_sl(self.L_s / 2, 2)
 
@@ -1957,7 +1957,7 @@ class Kwant_SSeS():
                             # self.u_sl.points[:,0] = self.u_sl.points[:,0] - diffmidLen
                             A2 = self.u_sl(4100, 50)
                             # if self.GlobalRunCount == 0:
-                            self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - self.W_reduced_r)
+                            self.u_sl_ref_2DEG = self.u_sl(self.L_s / 2, self.W_r - 2)
                             # self.u_sl_ref = u_sl_0(self.L_s / 2, self.W_reduced_r)
                             self.u_sl_ref = self.u_sl(self.L_s / 2, 2)
                     elif self.SwpID == "B":

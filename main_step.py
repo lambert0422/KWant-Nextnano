@@ -120,8 +120,8 @@ for DELTA in delta_list:
 
 
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1400,
-                              WSC=200, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4000, L_s = 4000,
-                              alpha=1, beta=0,Dair = 0,
+                              WSC=200, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=5000, L_s = 5000,
+                              alpha=1, beta=0,DAir=0,
                               V_A=np.round(np.arange(0.5, -1.2, -0.1), 3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
@@ -135,4 +135,4 @@ for DELTA in delta_list:
                               CombineTev=False, showBands=False,
                               NumBands=1, Mapping=False, GetConductance=True,
                               muSC=[0.35], delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="Vg",
-                              PlotbeforeFigures=1, PlotbeforeFigures_Ana=10).Run_sweep()
+                              PlotbeforeFigures=1, PlotbeforeFigures_Ana=1).Run_sweep()
