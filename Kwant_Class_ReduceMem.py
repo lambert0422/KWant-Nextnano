@@ -361,7 +361,7 @@ class Kwant_SSeS():
         if self.CombineTev == 1:
             Tev_Tunnel = Tev
         if self.CombineMu == 1:
-            muN = muSCself.Two_QPC
+            muN = muSC
 
         self.PlotbeforeFigures = PlotbeforeFigures
         self.PlotbeforeFigures_Ana = PlotbeforeFigures_Ana
@@ -442,6 +442,7 @@ class Kwant_SSeS():
         if self.DavidPot:
             self.GateSplit = int(GridFactor * S_g / self.a)
             self.GateWidth = int(GridFactor * W_g / self.a)
+            self.GQPC2Air = int(GridFactor * 50 / self.a)
             self.Depth2DEG = int(GridFactor * D_2DEG / self.a)
             self.NextNanoName = 'DavidMethod'
         else:
@@ -614,23 +615,31 @@ class Kwant_SSeS():
         return c
 
     def DavidPotential(self):
-        x = np.arange(0, self.L + 1)
-        y = np.arange(0, self.W)
+        # Based on the paper: Eqn 3.8 & 3.12 in Modeling the patterned two-dimensional electron gas: Electrostatics by John H. Davies and Ivan A. Larkin
+        # The idea is that 3.8 define a long stirp and 3.12 extract a square potential in the middle to form a split-gate potential
+        x = np.arange(-self.L_Side, self.L + self.L_Side+1)
+        y = np.arange(-self.WSC, self.W+self.WSC+1)
 
         def G(u, v):
             return np.arctan2(u * v, (self.Depth2DEG * np.sqrt(u ** 2 + v ** 2 + self.Depth2DEG ** 2))) / (2 * np.pi)
+        def LongStripPot(Var, Width):
+            return (np.arctan2(Width/2 + Var, self.Depth2DEG) + np.arctan2(Width/2 - Var, self.Depth2DEG)) / np.pi
+        def SquarePot(Width_x,Width_y,X,Y):
+            return (G(Width_x / 2 + X, Width_y / 2 + Y) - G(Width_x/ 2 + X,Width_y / 2 - Y) -
+                    G(Width_x / 2 - X, Width_y / 2 + Y) - G(Width_x / 2 - X,Width_y / 2 - Y))
 
         X, Y = np.meshgrid(x - max(x) / 2, y - max(y) / 2)
-        PHIS = self.V_Applied * (
-                    (np.arctan2(self.GateWidth / 2 + Y, self.Depth2DEG) + np.arctan2(self.GateWidth / 2 - Y,
-                                                                                     self.Depth2DEG)) / np.pi -
-                    G(self.GateSplit / 2 + X, self.GateWidth / 2 + Y) - G(self.GateSplit / 2 + X,
-                                                                          self.GateWidth / 2 - Y) -
-                    G(self.GateSplit / 2 - X, self.GateWidth / 2 + Y) - G(self.GateSplit / 2 - X,
-                                                                          self.GateWidth / 2 - Y))
+        if self.OhmicContact:
+            PHIS = (LongStripPot((X + self.GQPC2Air + self.GateWidth / 2), self.GateWidth) -
+                    SquarePot(self.GateWidth, self.GateSplit, (X + self.GQPC2Air + self.GateWidth / 2),Y)
+                    + LongStripPot((X - self.L_SC - self.GQPC2Air - self.GateWidth / 2), self.GateWidth) -
+                    SquarePot(self.GateWidth, self.GateSplit, (X - self.L_SC - self.GQPC2Air - self.GateWidth / 2),Y))
+        else:
+            PHIS = LongStripPot(Y,self.GateWidth) - SquarePot(self.GateSplit,self.GateWidth,X,Y)
+
 
         # Fv = interp2d(x, y, PHIS, kind='cubic', copy=True, bounds_error=False, fill_value=None)
-        self.u_sl = -PHIS.T * self.t  # in eV
+        self.u_sl = -self.V_Applied*PHIS.T * self.t  # in eV
 
     def Whole(self,x, y):
         if self.SN == 'SN':

@@ -96,7 +96,7 @@ for DELTA in delta_list:
                           AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                           PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,TunnelLength = 1,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
-                          ProOn=[0], constantDelta=False, BField=BTest_list, a=15,
+                          ProOn=[0], constantDelta=False, BField=BTest_list, a=20,
                           ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
                           FieldDependentGap=True, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
                           Phase=[np.pi/2],
