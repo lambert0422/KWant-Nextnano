@@ -16,10 +16,10 @@ ShowDensity = False
 
 master_file_path = __file__
 onedrivepath = '/mnt/c/Users/li244/OneDrive/'
-onedrivepath = '/mnt/d/OneDrive/'
+# onedrivepath = '/mnt/d/OneDrive/'
 # RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
-RefName = onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
-
+# RefName = onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
+RefName = None
 mu_N_list = [3.5e-3]
 mu_SC_list =   [3.5e-3]
 
@@ -121,7 +121,7 @@ for DELTA in delta_list:
 
             B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, ReferenceData=RefName, W_r=1400,
                               WSC=200, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=4000, L_s = 4000,
-                              alpha=1, beta=0,Dair = 0,
+                              alpha=1, beta=0,DAir = 0,
                               V_A=np.round(np.arange(0.5, -1.2, -0.1), 3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
