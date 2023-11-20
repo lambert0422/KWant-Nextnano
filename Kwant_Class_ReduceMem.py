@@ -631,9 +631,9 @@ class Kwant_SSeS():
         X, Y = np.meshgrid(x, y)
         if self.OhmicContact:
             PHIS = LongStripPot((X + self.GQPC2Air + self.GateWidth / 2), self.GateWidth)\
-                    - SquarePot(self.GateWidth, self.GateSplit, (X + self.GQPC2Air + self.GateWidth / 2),(Y - self.W/2))\
-                    + LongStripPot((X - self.L_SC - self.GQPC2Air - self.GateWidth / 2), self.GateWidth) \
-                    - SquarePot(self.GateWidth, self.GateSplit, (X - self.L_SC - self.GQPC2Air - self.GateWidth / 2),(Y - self.W/2))
+                    - SquarePot(self.GateWidth, self.GateSplit, (X + self.GQPC2Air + self.GateWidth / 2),(Y - self.W/2-1))\
+                    + LongStripPot((X - self.L_SC - self.GQPC2Air - self.GateWidth / 2 - 2), self.GateWidth) \
+                    - SquarePot(self.GateWidth, self.GateSplit, (X - self.L_SC - self.GQPC2Air - self.GateWidth /2 -2 ),(Y - self.W/2-1))
             # PHIS = LongStripPot((X + self.GQPC2Air + self.GateWidth / 2), self.GateWidth) \
             #        + LongStripPot((X - self.L_SC - self.GQPC2Air - self.GateWidth / 2), self.GateWidth)
         else:
@@ -646,9 +646,9 @@ class Kwant_SSeS():
     def Whole(self,x, y):
         if self.SN == 'SN':
             return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (
-                        self.W - 1)
+                        self.W)
         elif self.SN == 'SNS':
-            return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC-1)
+            return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC)
 
     def AirGap(self,x, y):
 
@@ -860,9 +860,9 @@ class Kwant_SSeS():
             (x, y) = site.pos
             if self.SN == 'SN':
                 return  -self.WSC <= y < (
-                    self.W - 1)
+                    self.W )
             else:
-                return -self.WSC <= y < (self.W + self.WSC-1)
+                return -self.WSC <= y < (self.W + self.WSC)
 
 
 
@@ -993,7 +993,7 @@ class Kwant_SSeS():
             syst_close = sys_close.finalized()
         else:
             syst_close = []
-        # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
+        kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
 
         return syst, syst_close
         #
@@ -1568,29 +1568,29 @@ class Kwant_SSeS():
     def DefOutputMap(self):
         self.SpatialDeltaMap = np.zeros((len(self.XX), len(self.YY)), dtype=complex)
         if self.SN == 'SN':
-            self.Defect_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
-            self.Potential_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
-            self.Delta_abs_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
-            self.Delta_phase_Map = np.zeros((self.L++1, self.WSC + self.W - 1 ))
-            self.Onsite_Map = np.zeros((self.L+1 , self.WSC + self.W - 1))
-            self.gn_Map = np.zeros((self.L+1 , self.WSC + self.W - 1))
-            self.MU_Map = np.zeros((self.L+1 , self.WSC + self.W - 1))
-            self.alpha_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
-            self.beta_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
-            self.Vbias_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
-            self.Tunnel_Map = np.zeros((self.L+1, self.WSC + self.W - 1))
+            self.Defect_Map = np.zeros((self.L+1, self.WSC + self.W ))
+            self.Potential_Map = np.zeros((self.L+1, self.WSC + self.W ))
+            self.Delta_abs_Map = np.zeros((self.L+1, self.WSC + self.W ))
+            self.Delta_phase_Map = np.zeros((self.L++1, self.WSC + self.W ))
+            self.Onsite_Map = np.zeros((self.L+1 , self.WSC + self.W ))
+            self.gn_Map = np.zeros((self.L+1 , self.WSC + self.W ))
+            self.MU_Map = np.zeros((self.L+1 , self.WSC + self.W))
+            self.alpha_Map = np.zeros((self.L+1, self.WSC + self.W ))
+            self.beta_Map = np.zeros((self.L+1, self.WSC + self.W ))
+            self.Vbias_Map = np.zeros((self.L+1, self.WSC + self.W ))
+            self.Tunnel_Map = np.zeros((self.L+1, self.WSC + self.W ))
         else:
-            self.Defect_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
-            self.Potential_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
-            self.Delta_abs_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
-            self.Delta_phase_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
-            self.Onsite_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
-            self.gn_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
-            self.MU_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
-            self.alpha_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
-            self.beta_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
-            self.Vbias_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
-            self.Tunnel_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.Defect_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
+            self.Potential_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
+            self.Delta_abs_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
+            self.Delta_phase_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
+            self.Onsite_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
+            self.gn_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
+            self.MU_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
+            self.alpha_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
+            self.beta_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
+            self.Vbias_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
+            self.Tunnel_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
 
     def orderDelta(self, X, Y, Bz, lambdaIn, leadN, PHI0, Bx=0, alphaangle=np.pi):
         # Theory based on <Controlled finite momentum pairing and spatially
@@ -1770,7 +1770,7 @@ class Kwant_SSeS():
             Square = self.Semi_region(x, y)
             if self.DavidPot:
                 try:
-                    VGate = self.u_sl[int(x)+self.L_Side-1, int(y)+self.WSC]
+                    VGate = self.u_sl[int(x)+self.L_Side+1, int(y)+self.WSC]
                     # if (abs(x - self.L / 2) > self.GateSplit / 2 and abs(y - self.W / 2) < self.GateWidth / 2):
                     #     VGate = VGate + self.VGate_shift
                 except:
