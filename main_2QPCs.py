@@ -85,7 +85,7 @@ for DELTA in delta_list:
                               CombineTev=False, showBands=False, OhmicContact=True,
                               NumBands=1, Mapping=False, GetConductance=True, Two_QPC=True,
                               muSC=[0.35], delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="Vg",
-                              PlotbeforeFigures=10, PlotbeforeFigures_Ana=20).Run_sweep()
+                              PlotbeforeFigures=1, PlotbeforeFigures_Ana=1).Run_sweep()
             # B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path,  W_r=400,
             #                   WSC=200, DavidPot=DavidPot, W_g=500, S_g=300, D_2DEG=250, gn=30, L_r=5000, L_s=4000,
             #                   alpha=1, beta=0,

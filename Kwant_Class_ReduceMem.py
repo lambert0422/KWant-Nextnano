@@ -442,7 +442,7 @@ class Kwant_SSeS():
         if self.DavidPot:
             self.GateSplit = int(GridFactor * S_g / self.a)
             self.GateWidth = int(GridFactor * W_g / self.a)
-            self.GQPC2Air = int(GridFactor * 50 / self.a)
+            self.GQPC2Air = int(GridFactor * 100 / self.a)
             self.Depth2DEG = int(GridFactor * D_2DEG / self.a)
             self.NextNanoName = 'DavidMethod'
         else:
@@ -617,7 +617,7 @@ class Kwant_SSeS():
     def DavidPotential(self):
         # Based on the paper: Eqn 3.8 & 3.12 in Modeling the patterned two-dimensional electron gas: Electrostatics by John H. Davies and Ivan A. Larkin
         # The idea is that 3.8 define a long stirp and 3.12 extract a square potential in the middle to form a split-gate potential
-        x = np.arange(-self.L_Side, self.L + self.L_Side+1)
+        x = np.arange(-self.L_Side, self.L_s + self.L_Side+1)
         y = np.arange(-self.WSC, self.W+self.WSC+1)
 
         def G(u, v):
@@ -625,15 +625,17 @@ class Kwant_SSeS():
         def LongStripPot(Var, Width):
             return (np.arctan2(Width/2 + Var, self.Depth2DEG) + np.arctan2(Width/2 - Var, self.Depth2DEG)) / np.pi
         def SquarePot(Width_x,Width_y,X,Y):
-            return (G(Width_x / 2 + X, Width_y / 2 + Y) - G(Width_x/ 2 + X,Width_y / 2 - Y) -
-                    G(Width_x / 2 - X, Width_y / 2 + Y) - G(Width_x / 2 - X,Width_y / 2 - Y))
+            return (G(Width_x / 2 + X, Width_y / 2 + Y) + G(Width_x/ 2 + X,Width_y / 2 - Y) +
+                    G(Width_x / 2 - X, Width_y / 2 + Y) + G(Width_x / 2 - X,Width_y / 2 - Y))
 
-        X, Y = np.meshgrid(x - max(x) / 2, y - max(y) / 2)
+        X, Y = np.meshgrid(x, y)
         if self.OhmicContact:
-            PHIS = (LongStripPot((X + self.GQPC2Air + self.GateWidth / 2), self.GateWidth) -
-                    SquarePot(self.GateWidth, self.GateSplit, (X + self.GQPC2Air + self.GateWidth / 2),Y)
-                    + LongStripPot((X - self.L_SC - self.GQPC2Air - self.GateWidth / 2), self.GateWidth) -
-                    SquarePot(self.GateWidth, self.GateSplit, (X - self.L_SC - self.GQPC2Air - self.GateWidth / 2),Y))
+            PHIS = LongStripPot((X + self.GQPC2Air + self.GateWidth / 2), self.GateWidth)\
+                    - SquarePot(self.GateWidth, self.GateSplit, (X + self.GQPC2Air + self.GateWidth / 2),(Y - self.W/2))\
+                    + LongStripPot((X - self.L_SC - self.GQPC2Air - self.GateWidth / 2), self.GateWidth) \
+                    - SquarePot(self.GateWidth, self.GateSplit, (X - self.L_SC - self.GQPC2Air - self.GateWidth / 2),(Y - self.W/2))
+            # PHIS = LongStripPot((X + self.GQPC2Air + self.GateWidth / 2), self.GateWidth) \
+            #        + LongStripPot((X - self.L_SC - self.GQPC2Air - self.GateWidth / 2), self.GateWidth)
         else:
             PHIS = LongStripPot(Y,self.GateWidth) - SquarePot(self.GateSplit,self.GateWidth,X,Y)
 
@@ -1768,9 +1770,9 @@ class Kwant_SSeS():
             Square = self.Semi_region(x, y)
             if self.DavidPot:
                 try:
-                    VGate = self.u_sl[int(x), int(y)]
-                    if (abs(x - self.L / 2) > self.GateSplit / 2 and abs(y - self.W / 2) < self.GateWidth / 2):
-                        VGate = VGate + self.VGate_shift
+                    VGate = self.u_sl[int(x)+self.L_Side-1, int(y)+self.WSC]
+                    # if (abs(x - self.L / 2) > self.GateSplit / 2 and abs(y - self.W / 2) < self.GateWidth / 2):
+                    #     VGate = VGate + self.VGate_shift
                 except:
                     VGate = 0
             else:
