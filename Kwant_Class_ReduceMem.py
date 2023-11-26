@@ -492,7 +492,7 @@ class Kwant_SSeS():
         new_file = new_file_path + 'main.py'
         os.system(f'cp {Masterfilepath} {new_file}')
 
-        self.XX = np.arange(0, self.L)
+        self.XX = np.arange(0, self.L_SC+1)
         self.YY = np.arange(0, self.W)
 
 
@@ -646,20 +646,21 @@ class Kwant_SSeS():
     def Whole(self,x, y):
         if self.SN == 'SN':
             return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (
-                        self.W)
+                        self.W-1)
         elif self.SN == 'SNS':
-            return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC)
+            return -self.L_Side <= x <= self.L - self.L_Side and -self.WSC <= y < (self.W + self.WSC-1)
 
     def AirGap(self,x, y):
 
-        return ((-self.DAir <= x < 0 and (-self.WSC <= y < 0 or self.W - 1 <= y < (self.W + self.WSC))) or
+        return ((-self.DAir <= x < 0 and (
+                        -self.WSC <= y <= 0 or self.W-1 <= y < (self.W + self.WSC-1))) or
                 (self.L_SC < (x) <= (self.L_SC + self.DAir) and (
-                            -self.WSC <= y < 0 or self.W - 1 <= y < (self.W + self.WSC))))
+                        -self.WSC <= y <= 0 or self.W-1<= y < (self.W + self.WSC-1))))
 
     def SC_region_Up(self,x, y):
-        return (0 <= x <= self.L_SC) and (self.W-1 <= y < (self.W + self.WSC))
+        return (0 <= x <= self.L_SC) and (self.W-1 <= y < (self.W + self.WSC-1))
     def SC_region_Dn(self,x, y):
-        return (0 <= x <= self.L_SC) and (-self.WSC <= y < 0)
+        return (0 <= x <= self.L_SC) and (-self.WSC <= y <= 0)
     def Semi_region(self,x, y):
         return ((self.Whole(x, y) and not self.AirGap(x, y)) and not self.SC_region_Up(x, y)) and not self.SC_region_Dn(x, y)
     def Tunnel_region(self,x,y):
@@ -860,9 +861,9 @@ class Kwant_SSeS():
             (x, y) = site.pos
             if self.SN == 'SN':
                 return  -self.WSC <= y < (
-                    self.W )
+                    self.W -1)
             else:
-                return -self.WSC <= y < (self.W + self.WSC)
+                return -self.WSC <= y < (self.W + self.WSC-1)
 
 
 
@@ -993,7 +994,7 @@ class Kwant_SSeS():
             syst_close = sys_close.finalized()
         else:
             syst_close = []
-        kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
+        # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
 
         return syst, syst_close
         #
@@ -1568,29 +1569,29 @@ class Kwant_SSeS():
     def DefOutputMap(self):
         self.SpatialDeltaMap = np.zeros((len(self.XX), len(self.YY)), dtype=complex)
         if self.SN == 'SN':
-            self.Defect_Map = np.zeros((self.L+1, self.WSC + self.W ))
-            self.Potential_Map = np.zeros((self.L+1, self.WSC + self.W ))
-            self.Delta_abs_Map = np.zeros((self.L+1, self.WSC + self.W ))
-            self.Delta_phase_Map = np.zeros((self.L++1, self.WSC + self.W ))
-            self.Onsite_Map = np.zeros((self.L+1 , self.WSC + self.W ))
-            self.gn_Map = np.zeros((self.L+1 , self.WSC + self.W ))
-            self.MU_Map = np.zeros((self.L+1 , self.WSC + self.W))
-            self.alpha_Map = np.zeros((self.L+1, self.WSC + self.W ))
-            self.beta_Map = np.zeros((self.L+1, self.WSC + self.W ))
-            self.Vbias_Map = np.zeros((self.L+1, self.WSC + self.W ))
-            self.Tunnel_Map = np.zeros((self.L+1, self.WSC + self.W ))
+            self.Defect_Map = np.zeros((self.L+1, self.WSC + self.W-1))
+            self.Potential_Map = np.zeros((self.L+1, self.WSC + self.W-1))
+            self.Delta_abs_Map = np.zeros((self.L+1, self.WSC + self.W-1))
+            self.Delta_phase_Map = np.zeros((self.L++1, self.WSC + self.W -1))
+            self.Onsite_Map = np.zeros((self.L+1 , self.WSC + self.W-1 ))
+            self.gn_Map = np.zeros((self.L+1 , self.WSC + self.W-1))
+            self.MU_Map = np.zeros((self.L+1 , self.WSC + self.W-1))
+            self.alpha_Map = np.zeros((self.L+1, self.WSC + self.W-1 ))
+            self.beta_Map = np.zeros((self.L+1, self.WSC + self.W-1))
+            self.Vbias_Map = np.zeros((self.L+1, self.WSC + self.W-1 ))
+            self.Tunnel_Map = np.zeros((self.L+1, self.WSC + self.W-1 ))
         else:
-            self.Defect_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
-            self.Potential_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
-            self.Delta_abs_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
-            self.Delta_phase_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W))
-            self.Onsite_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
-            self.gn_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
-            self.MU_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
-            self.alpha_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
-            self.beta_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
-            self.Vbias_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
-            self.Tunnel_Map = np.zeros((self.L+1, 2 * self.WSC + self.W))
+            self.Defect_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Potential_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Delta_abs_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Delta_phase_Map = np.zeros((self.L+1 , 2 * self.WSC + self.W-1))
+            self.Onsite_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.gn_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.MU_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.alpha_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.beta_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.Vbias_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
+            self.Tunnel_Map = np.zeros((self.L+1, 2 * self.WSC + self.W-1))
 
     def orderDelta(self, X, Y, Bz, lambdaIn, leadN, PHI0, Bx=0, alphaangle=np.pi):
         # Theory based on <Controlled finite momentum pairing and spatially
@@ -1667,18 +1668,20 @@ class Kwant_SSeS():
             DELTA = Delta_Spatial * ExpRounded(Phase_Spatial / 2)
             if self.ProximityOn == 1:
 
-                if (0 <= x < self.L) and (0 <= y < self.W):
-                    if self.constantDelta:
+                try:
+                    if int(x) >= 0 and int(y) >= 0:
+                        if self.constantDelta:
 
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)] * ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2)* Square
-                    else:
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)] * Square
+                            DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2) * self.Semi_region(x,y)
+                        else:
+                            DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * self.Semi_region(x,y)
+                except:
+                    None
 
-
-            self.Delta_abs_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.abs(DELTA)
+            self.Delta_abs_Map[int(x)+self.L_Side, int(y) + self.WSC] = np.abs(DELTA)
             # self.Delta_abs_Map[int(x), int(y) + self.WSC] = np.angle(DELTA)
 
-            self.Delta_phase_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.angle(DELTA)
+            self.Delta_phase_Map[int(x)+self.L_Side, int(y) + self.WSC] = np.angle(DELTA)
             # self.Delta_induced = np.min(self.Delta_abs_Map)
             return DELTA
 
@@ -1693,14 +1696,18 @@ class Kwant_SSeS():
 
             DELTA = Delta_Spatial * ExpRounded(Phase_Spatial / 2)
             if self.ProximityOn == 1:
-                if (0 <= x < self.L) and (0 <= y < self.W):
 
-                    if self.constantDelta:
+                try:
+                    if int(x) >= 0 and int(y) >= 0:
+                        if self.constantDelta:
 
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)]* ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2)* Square
+                            DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)]* ExpRounded((-self.phi * 2 * (0.5 - np.heaviside(y- self.W/2, 0))) / 2)* self.Semi_region(x,y)
 
-                    else:
-                        DELTA = DELTA + self.SpatialDeltaMap[int(x)+self.L_Side-1, int(y)] *Square
+                        else:
+                            DELTA = DELTA + self.SpatialDeltaMap[int(x), int(y)] * self.Semi_region(x,y)
+                except:
+                    None
+
 
 
             return np.conjugate(DELTA)
@@ -1713,7 +1720,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             #g = Square*self.gn
             g_muB = Square*self.gn_muB
-            self.gn_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.real(g_muB)
+            self.gn_Map[int(x)+self.L_Side, int(y) + self.WSC] = np.real(g_muB)
             return np.round(self.deltaNormalitionFactor * g_muB * self.Bx / 2,15)
         def EZ_y_dis(x, y):
             if self.Surface2DEG:
@@ -1741,7 +1748,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             alpha =Square* self.alpha
             # alpha = self.alpha
-            self.alpha_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = abs(alpha)
+            self.alpha_Map[int(x)+self.L_Side, int(y) + self.WSC] = abs(alpha)
             return alpha
 
         def beta_dis(x, y):
@@ -1752,7 +1759,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             beta =  Square*self.beta
             # beta =  self.beta
-            self.beta_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = beta
+            self.beta_Map[int(x)+self.L_Side, int(y) + self.WSC] = beta
             return beta
         def mu_dis(x, y):
             if self.Surface2DEG:
@@ -1762,7 +1769,7 @@ class Kwant_SSeS():
                 Square = self.Semi_region(x, y)
             AntiSquare = 1 - Square
             MU = Square * (self.mu_N + self.Defect_Map[int(x), int(y)]) + AntiSquare * self.mu_SC
-            self.MU_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = MU
+            self.MU_Map[int(x)+self.L_Side, int(y) + self.WSC] = MU
             return MU
 
         def VGate_dis(x, y):
@@ -1770,14 +1777,14 @@ class Kwant_SSeS():
             Square = self.Semi_region(x, y)
             if self.DavidPot:
                 try:
-                    VGate = self.u_sl[int(x)+self.L_Side+1, int(y)+self.WSC]
+                    VGate = self.u_sl[int(x)+self.L_Side, int(y)+self.WSC]
                     # if (abs(x - self.L / 2) > self.GateSplit / 2 and abs(y - self.W / 2) < self.GateWidth / 2):
                     #     VGate = VGate + self.VGate_shift
                 except:
                     VGate = 0
             else:
                 X = (x) * self.L_r / self.L
-                Y = (y+1) * self.W_r / self.W
+                Y = (y) * self.W_r / self.W
                 VGate = (self.u_sl(X,Y) - self.u_sl_ref)
 
             if np.isnan(VGate):
@@ -1786,20 +1793,20 @@ class Kwant_SSeS():
                 VGate = VGate * Square
             VGate = VGate * self.deltaNormalitionFactor
 
-            self.Potential_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = VGate
+            self.Potential_Map[int(x)+self.L_Side, int(y) + self.WSC] = VGate
 
             return VGate
 
         def V_dis(x, y):
 
             V = (1 - np.heaviside(y, 1)) * self.Vbias
-            self.Vbias_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.real(V)
+            self.Vbias_Map[int(x)+self.L_Side, int(y) + self.WSC] = np.real(V)
             return V
 
         def TunnelBarrier_dis(x, y):
 
             TunnelBarrier = self.GammaTunnel * self.Tunnel_region(x,y)
-            self.Tunnel_Map[int(x)+self.L_Side-1, int(y) + self.WSC] = np.real(TunnelBarrier)
+            self.Tunnel_Map[int(x)+self.L_Side, int(y) + self.WSC] = np.real(TunnelBarrier)
             return TunnelBarrier
 
         def t_dis(x, y):
@@ -2074,44 +2081,44 @@ class Kwant_SSeS():
 # ======================================================================================================================
 # ======================================================================================================================
 
-                    monitorX = int(self.L / 2)
-                    monitorY_Semi = int(self.W / 2)
-                    # monitorY_Semi = 0
-                    # monitorY_Semi = self.W
-                    monitorY_SC_dn = int(-self.WSC / 2)
-                    lat = kwant.lattice.square(norbs=4)
-                    self.SemiSiteID = sys.id_by_site[lat(monitorX, monitorY_Semi)]
-                    self.SemiSiteXID = sys.id_by_site[lat(monitorX + 1, monitorY_Semi)]
-                    self.SemiSiteYID = sys.id_by_site[lat(monitorX, monitorY_Semi + 1)]
-                    self.SCdnSiteID = sys.id_by_site[lat(monitorX, monitorY_SC_dn)]
-                    self.SCdnSiteXID = sys.id_by_site[lat(monitorX + 1, monitorY_SC_dn)]
-                    self.SCdnSiteYID = sys.id_by_site[lat(monitorX, monitorY_SC_dn + 1)]
-                    TestHam_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteID, params=params))
-                    TestHopx_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteXID, params=params))
-                    TestHopy_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteYID, params=params))
-                    TestHam_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteID, params=params))
-                    TestHopx_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteXID, params=params))
-                    TestHopy_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteYID, params=params))
-                    result = 1e-9 * (0 - self.W / 2) * self.a / self.GridFactor
-                    AA = np.sqrt(self.hbar**2/(2*self.m*self.e/self.deltaNormalitionFactor))
-                    ParaDict = {
-                        'EZx' : self.deltaNormalitionFactor*self.gn_muB * self.Bx / (2*self.t),
-                        'EZy': self.deltaNormalitionFactor * self.gn_muB * self.By / (2 * self.t),
-                        'EZz': self.deltaNormalitionFactor * self.gn_muB * self.Bz / (2 * self.t),
-                        'alpha' : self.alpha /self.t,
-                        'alphaHamTerm': self.m**2*self.alpha**2/(self.hbar**2),
-                        'mu_N': self.mu_N/self.t,
-                        'mu_Sc': self.mu_SC/self.t,
-                        'Delta': self.delta/self.t,
-                        'dletaMatrix1': np.kron(self.taux+1j*self.tauy,self.taux)+np.kron(self.taux-1j*self.tauy,self.taux),
-                        'dletaMatrix2': np.kron(self.taux + 1j * self.tauy, self.tauy)+np.kron(self.taux - 1j * self.tauy, self.tauy),
-                        'dletaMatrix3': np.kron(self.taux + 1j * self.tauy, self.tauz)+np.kron(self.taux - 1j * self.tauy, self.tauz),
-                        'dletaMatrix4': np.kron(self.taux + 1j * self.tauy, 1j*self.taux)-np.kron(self.taux - 1j * self.tauy, 1j*self.taux),
-                        'dletaMatrix5': np.kron(self.taux + 1j * self.tauy, 1j * self.tauy)-np.kron(self.taux - 1j * self.tauy, 1j * self.tauy),
-                        'Orbital1': (result**2) * (self.deltaNormalitionFactor*self.e * (self.Bz**2)/(2*self.m))*np.kron(self.tauz,self.I),
-                        'Orbital2': result * ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor)))) *np.kron(self.I,self.I),
-                        'Orbital3': result * ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) * (self.Bz)) *np.kron(self.I,self.tauy),
-                    }
+                    # monitorX = int(self.L / 2)
+                    # monitorY_Semi = int(self.W / 2)
+                    # # monitorY_Semi = 0
+                    # # monitorY_Semi = self.W
+                    # monitorY_SC_dn = int(-self.WSC / 2)
+                    # lat = kwant.lattice.square(norbs=4)
+                    # self.SemiSiteID = sys.id_by_site[lat(monitorX, monitorY_Semi)]
+                    # self.SemiSiteXID = sys.id_by_site[lat(monitorX + 1, monitorY_Semi)]
+                    # self.SemiSiteYID = sys.id_by_site[lat(monitorX, monitorY_Semi + 1)]
+                    # self.SCdnSiteID = sys.id_by_site[lat(monitorX, monitorY_SC_dn)]
+                    # self.SCdnSiteXID = sys.id_by_site[lat(monitorX + 1, monitorY_SC_dn)]
+                    # self.SCdnSiteYID = sys.id_by_site[lat(monitorX, monitorY_SC_dn + 1)]
+                    # TestHam_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteID, params=params))
+                    # TestHopx_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteXID, params=params))
+                    # TestHopy_Semi = np.array(sys.hamiltonian(self.SemiSiteID, self.SemiSiteYID, params=params))
+                    # TestHam_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteID, params=params))
+                    # TestHopx_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteXID, params=params))
+                    # TestHopy_SC_dn = np.array(sys.hamiltonian(self.SCdnSiteID, self.SCdnSiteYID, params=params))
+                    # result = 1e-9 * (0 - self.W / 2) * self.a / self.GridFactor
+                    # AA = np.sqrt(self.hbar**2/(2*self.m*self.e/self.deltaNormalitionFactor))
+                    # ParaDict = {
+                    #     'EZx' : self.deltaNormalitionFactor*self.gn_muB * self.Bx / (2*self.t),
+                    #     'EZy': self.deltaNormalitionFactor * self.gn_muB * self.By / (2 * self.t),
+                    #     'EZz': self.deltaNormalitionFactor * self.gn_muB * self.Bz / (2 * self.t),
+                    #     'alpha' : self.alpha /self.t,
+                    #     'alphaHamTerm': self.m**2*self.alpha**2/(self.hbar**2),
+                    #     'mu_N': self.mu_N/self.t,
+                    #     'mu_Sc': self.mu_SC/self.t,
+                    #     'Delta': self.delta/self.t,
+                    #     'dletaMatrix1': np.kron(self.taux+1j*self.tauy,self.taux)+np.kron(self.taux-1j*self.tauy,self.taux),
+                    #     'dletaMatrix2': np.kron(self.taux + 1j * self.tauy, self.tauy)+np.kron(self.taux - 1j * self.tauy, self.tauy),
+                    #     'dletaMatrix3': np.kron(self.taux + 1j * self.tauy, self.tauz)+np.kron(self.taux - 1j * self.tauy, self.tauz),
+                    #     'dletaMatrix4': np.kron(self.taux + 1j * self.tauy, 1j*self.taux)-np.kron(self.taux - 1j * self.tauy, 1j*self.taux),
+                    #     'dletaMatrix5': np.kron(self.taux + 1j * self.tauy, 1j * self.tauy)-np.kron(self.taux - 1j * self.tauy, 1j * self.tauy),
+                    #     'Orbital1': (result**2) * (self.deltaNormalitionFactor*self.e * (self.Bz**2)/(2*self.m))*np.kron(self.tauz,self.I),
+                    #     'Orbital2': result * ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor)))) *np.kron(self.I,self.I),
+                    #     'Orbital3': result * ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) * (self.Bz)) *np.kron(self.I,self.tauy),
+                    # }
 # ======================================================================================================================
 # ======================================================================================================================
                     if self.CloseSystem:
@@ -2239,9 +2246,9 @@ class Kwant_SSeS():
                                 return common_row_indices
 
 
-                            target_X_edge = [self.L_Side, self.L_Side + 9]
+                            target_X_edge = [0, 9]
                             target_Y_edge = [0, self.W - 1]
-                            target_X_bulk = [int(self.L / 2)-5, int(self.L / 2)+4]
+                            target_X_bulk = [int(self.L_SC / 2)-5, int(self.L_SC / 2)+4]
                             target_Y_bulk = [0, self.W - 1]
                             # target_Y_edge = [-self.WSC, self.W + self.WSC]
                             # target_Y_bulk = [-self.WSC, self.W + self.WSC]
