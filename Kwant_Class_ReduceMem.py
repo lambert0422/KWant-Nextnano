@@ -2429,6 +2429,9 @@ class Kwant_SSeS():
                                        self.OriginFilePath + self.SaveTime + '_Ohmic.txt',
                                        self.OriginFilePath + self.SaveTime + '_Ohmic-N-Ree+Reh.txt']
                         MapPlotTitleList = ['S-D Conductance',  'Ohmic Conductance',  'Ohmic Conductance(Andreev)']
+                    elif self.SN == 'SNS' and not self.OhmicContact:
+                        MapPlotList = [self.OriginFilePath + self.SaveTime + '_cond.txt']
+                        MapPlotTitleList = ['S-D Conductance']
                     self.LoadDatatoPlot(MapPlotList,
                                         self.VarSwp, self.VarMap, 'G', MapPlotTitleList
                                         , 'V (meV)', self.VarMaptxt, savefilename=
@@ -2492,6 +2495,7 @@ class Kwant_SSeS():
         if len(datapathlist) == 1:
                 # fig = plt.figure(figsize=(12*subplotarrayY, 11*subplotarrayX))
                 fig, ax = plt.subplots(subplotarrayY, subplotarrayX,figsize=(6*subplotarrayY, 6*subplotarrayX))
+                fig2, ax2 = plt.subplots(1, 1, figsize=(12, 6))
         for i in range(int(np.size(zdata,1)/len(ydata))):
             if len(datapathlist) > 1:
                 # fig = plt.figure(figsize=(12*subplotarrayY, 11*subplotarrayX))
@@ -2519,13 +2523,23 @@ class Kwant_SSeS():
                     ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].tick_params(axis='x', labelsize=12)
                     ax[int(np.floor(j/ax.shape[1])),int(j%ax.shape[1])].tick_params(axis='y', labelsize=12)
                 else:
-                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].pcolormesh(ydata, xdata, zdata[:, i * len(ydata):(i + 1) * len(ydata)])
-                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].title.set_text(title[j] + ' ' + str(i + 1))
+                    if subplotarrayY*subplotarrayX>1:
+                        ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].pcolormesh(ydata, xdata, zdata[:, i * len(ydata):(i + 1) * len(ydata)])
+                        ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].title.set_text(title[j] + ' ' + str(i + 1))
 
-                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].set_xlabel(ylabel, fontsize=15)
-                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].set_ylabel(xlabel, fontsize=15)
-                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='x', labelsize=12)
-                    ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='y', labelsize=12)
+                        ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].set_xlabel(ylabel, fontsize=15)
+                        ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].set_ylabel(xlabel, fontsize=15)
+                        ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='x', labelsize=12)
+                        ax[int(np.floor(i/ax.shape[1])),int(i%ax.shape[1])].tick_params(axis='y', labelsize=12)
+                    else:
+                        ax.pcolormesh(ydata, xdata, zdata[:,i * len(ydata):(i + 1) * len(ydata)])
+                        ax.title.set_text(
+                            title[j] + ' ' + str(i + 1))
+
+                        ax.set_xlabel(ylabel, fontsize=15)
+                        ax.set_ylabel(xlabel, fontsize=15)
+                        ax.tick_params(axis='x', labelsize=12)
+                        ax.tick_params(axis='y', labelsize=12)
 
                 if self.GetLDOS and (datapathlist[j].split("/")[-1] == 'LDOS_B.txt' or datapathlist[j].split("/")[-1] == 'LDOS_E.txt'):
 
@@ -2539,7 +2553,7 @@ class Kwant_SSeS():
                         ax2[1].plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
                         ax2[1].set_xlabel(ylabel, fontsize=15)
                         ax2[1].set_ylabel('LDOS_E', fontsize=15)
-                elif self.GetConductance and (datapathlist[j].split("_")[-1] == 'cond.txt' or datapathlist[j].split("_")[-1] == 'Ohmic-N-Ree+Reh.txt'):
+                elif self.GetConductance and self.OhmicContact and (datapathlist[j].split("_")[-1] == 'cond.txt' or datapathlist[j].split("_")[-1] == 'Ohmic-N-Ree+Reh.txt'):
 
                     if datapathlist[j].split("_")[-1] == 'cond.txt':
                         ax2[0] = plt.subplot(1, 2, 1)
@@ -2551,6 +2565,14 @@ class Kwant_SSeS():
                         ax2[1].plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
                         ax2[1].set_xlabel(ylabel, fontsize=15)
                         ax2[1].set_ylabel('Ohmic cond', fontsize=15)
+                elif self.GetConductance and not self.OhmicContact and (
+                        datapathlist[j].split("_")[-1] == 'cond.txt' or datapathlist[j].split("_")[
+                    -1] == 'Ohmic-N-Ree+Reh.txt'):
+                    ax2 = plt.subplot(1, 1, 1)
+                    ax2.plot(ydata, zdata[x0_Index, i * len(ydata):(i + 1) * len(ydata)])
+                    ax2.set_xlabel(ylabel, fontsize=15)
+                    ax2.set_ylabel('SD cond', fontsize=15)
+
             if len(datapathlist) > 1:
                 fig.subplots_adjust(left=0.05,
                                     bottom=0.05,

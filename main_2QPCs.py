@@ -67,7 +67,7 @@ for DELTA in delta_list:
     for Vg_s in VGate_shift_list:
         for NName in NName_list:
             Estep = 0.005
-            # Estep = 0.03
+            # Estep = 0.1
             Emin = -0.25
             Emax = 0.25
             E_excited_list = np.round(np.arange(Emin * 100, Emax * 100 + Estep * 100, Estep * 100) / 100, 14)
@@ -86,7 +86,7 @@ for DELTA in delta_list:
                               SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                               muN=[0.4], muLead=[0.5], DefectAmp=0, DefectNumPer=0, CombineMu=True,
                               CombineTev=False, showBands=False, OhmicContact=True,
-                              NumBands=1, Mapping=True, GetConductance=False, GetLDOS=True, Two_QPC=True,
+                              NumBands=1, Mapping=True, GetConductance=True, GetLDOS=False, Two_QPC=True,
                               muSC=[0.4], delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
                               PlotbeforeFigures=200, PlotbeforeFigures_Ana=200).Run_sweep()
 
