@@ -299,7 +299,7 @@ class Kwant_SSeS():
     def __init__(self, DavidPot=False,alpha = 2.25e-3 ,beta = 2.25e-3,gn = -3.4,
                  Temp=0.1,delta=0.125, delta_real = 0.58e-3,muN=0.25, muSC=0.25,muLead=0.25, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  W_g=300, S_g=400, Nb_d=100, D_2DEG=120, W_r=1400, L_r=5000, L_s=4000, WSC=200,DAir = 50, a=30, GridFactor=1,
-                 BField=[0], V_A=np.arange(0, -1.49, -0.01), Vbias_List=[0],Tev=[1e-3], Tev_Tunnel=[2e-3],
+                 BField=[0], V_A=np.arange(0, -1.49, -0.01), Vbias_List=[0],Tev=[1e-3], Tev_Tunnel=[2e-3], VGate_x_f = 1, VGate_y_f = 1,
                  E_excited=[5e-3],TStrength=[0], TunnelLength=2, Phase=[np.pi / 4],  PeriBC=[0],SNjunc=['SNS'], ProOn=[1],
                  DateT = '',TimeT = '',SwpID="Vg", deltaPairingMatrix = "sigma_y",deltaPairingMatrix_sign = "+",
                  NextNanoName=None, ReferenceData=None, SaveNameNote=None,Masterfilepath = None,FieldDependentGap = True,Surface2DEG = False,
@@ -325,6 +325,8 @@ class Kwant_SSeS():
         self.CloseSystem = CloseSystem
         self.mode_Num =mode_Num
         self.k_Num =k_Num
+        self.VGate_x_f = VGate_x_f
+        self.VGate_y_f = VGate_y_f
         if ACFix:
             if not AC == 0:
                 E_excited = AC/Tev
@@ -1783,8 +1785,8 @@ class Kwant_SSeS():
                 except:
                     VGate = 0
             else:
-                X = (x) * self.L_r / self.L
-                Y = (y) * self.W_r / self.W
+                X = (x) * self.L_r *self.VGate_x_f / self.L
+                Y = (y+1) * self.W_r *self.VGate_y_f / self.W
                 VGate = (self.u_sl(X,Y) - self.u_sl_ref)
 
             if np.isnan(VGate):
