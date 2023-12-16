@@ -16,7 +16,7 @@ ShowDensity = False
 
 master_file_path = __file__
 onedrivepath = '/mnt/c/Users/li244/OneDrive/'
-# onedrivepath = '/mnt/d/OneDrive/'
+onedrivepath = '/mnt/d/OneDrive/'
 # RefName = '/mnt/d/OneDrive/Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 # RefName = onedrivepath+'Desktop2/iCloud_Desktop/NN_backup/Reference/ReferData.xlsx'
 
@@ -71,23 +71,23 @@ for DELTA in delta_list:
             Emax = 0.25
             E_excited_list = np.round(np.arange(Emin * 100, Emax * 100 + Estep * 100, Estep * 100) / 100, 14)
 
-            B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, W_r=200,
-                              WSC=100, DavidPot=DavidPot, W_g=50, S_g=250, D_2DEG=250, gn=30, L_r=2500, L_s=2000,
-                              alpha=1, beta=0, VGate_x_f = 2,VGate_y_f =2,DAir = 0,
-                              V_A=np.round(np.arange(0.5, -2, -1), 3), TStrength=TStrength_list, TeV_Normal=True,
+            B = KC.Kwant_SSeS(NextNanoName=NName, Masterfilepath=master_file_path, W_r=400,
+                              WSC=200, DavidPot=DavidPot, W_g=50, S_g=250, D_2DEG=250, gn=30, L_r=5000, L_s=4000,
+                              alpha=1, beta=0, VGate_x_f = 1,VGate_y_f =1,DAir = 0,
+                              V_A=np.round(np.arange(0.5, -2, -0.02), 3), TStrength=TStrength_list, TeV_Normal=True,
                               AddOrbitEffect=False, AddZeemanField=True, AddRashbaSOI=True, AddDresselhausSOI=True,
                               PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list,
-                              E_excited=[0], SNjunc=SNjunc_list, Surface2DEG=False,
+                              E_excited=E_excited_list, SNjunc=SNjunc_list, Surface2DEG=False,
                               ProOn=[1, 0], constantDelta=False, BField=[(0, 0, 0)], a=20,
                               ShowDensity=ShowDensity, ShowCurrent=False, Swave=False,
                               FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
-                              Phase=[np.pi], CloseSystem=True,
+                              Phase=[np.pi], CloseSystem=False,
                               SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                               muN=[0.4], muLead=[0.5], DefectAmp=0, DefectNumPer=0, CombineMu=True,
                               CombineTev=False, showBands=False, OhmicContact=True,
-                              NumBands=1, Mapping=False, GetConductance=True, GetLDOS=False, Two_QPC=True,
+                              NumBands=1, Mapping=True, GetConductance=True, GetLDOS=False, Two_QPC=True,
                               muSC=[0.4], delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
-                              PlotbeforeFigures=1, PlotbeforeFigures_Ana=1).Run_sweep()
+                              PlotbeforeFigures=200, PlotbeforeFigures_Ana=200).Run_sweep()
 
             # B = KC.Kwant_SSeS(NextNanoName=NName,  Masterfilepath=master_file_path, W_r=100,
             #                   WSC=100, DavidPot=DavidPot, W_g=50, S_g=100, D_2DEG=250, gn=30, L_r=5000, L_s=4000,
