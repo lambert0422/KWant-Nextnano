@@ -2215,6 +2215,8 @@ class Kwant_SSeS():
                                     LDOS_h_Dn = np.array(LDOS_h_Dn_list[E_ID])
                                     LDOS_h_Up = np.array(LDOS_h_Up_list[E_ID])
 
+
+
                                 else:
                                     LDOS = np.abs(evecs[:, self.mode_Num]) ** 2
                                     pick_electron_up = np.arange(0, len(LDOS), 4)
@@ -2222,6 +2224,8 @@ class Kwant_SSeS():
                                     LDOS_e_Dn = LDOS[pick_electron_up + 1]
                                     LDOS_h_Dn = LDOS[pick_electron_up + 2]
                                     LDOS_h_Up = LDOS[pick_electron_up + 3]
+                                    pick_electron_up = []
+                                    LDOS = []
                             else:
 
                                 LDOS =  kwant.ldos(sys, params=params, energy=self.E)
@@ -2230,9 +2234,12 @@ class Kwant_SSeS():
                                 LDOS_e_Dn = LDOS[pick_electron_up+1]
                                 LDOS_h_Dn = LDOS[pick_electron_up+2]
                                 LDOS_h_Up = LDOS[pick_electron_up+3]
+                                pick_electron_up = []
+                                LDOS = []
 
                             sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                             coords = kwant.plotter.sys_leads_pos(sys, sites)
+                            sites = []
                             # LDOS, Amin, Amax = kwant.plotter.mask_interpolate(coords, LDOS)
                             def find_coordinates_in_range(arr, x_range, y_range):
                                 # Convert the N by 2 array to a NumPy array
@@ -2264,6 +2271,7 @@ class Kwant_SSeS():
 
                             found_row_edge = find_coordinates_in_range(coords, target_X_edge,target_Y_edge)
                             found_row_bulk = find_coordinates_in_range(coords, target_X_bulk,target_Y_bulk)
+                            coords = []
 
                             C_edge_e_Up = np.mean(LDOS_e_Up[found_row_edge])
                             C_bulk_e_Up = np.mean(LDOS_e_Up[found_row_bulk])
@@ -2273,7 +2281,10 @@ class Kwant_SSeS():
                             C_bulk_h_Dn = np.mean(LDOS_h_Dn[found_row_bulk])
                             C_edge_h_Up = np.mean(LDOS_h_Up[found_row_edge])
                             C_bulk_h_Up = np.mean(LDOS_h_Up[found_row_bulk])
-
+                            LDOS_e_Up = []
+                            LDOS_e_Dn = []
+                            LDOS_h_Up = []
+                            LDOS_h_Dn = []
                             self.LDOS_edge_e_Up.append(C_edge_e_Up)
                             self.LDOS_bulk_e_Up.append(C_bulk_e_Up)
                             self.LDOS_edge_e_Dn.append(C_edge_e_Dn)
@@ -2344,6 +2355,9 @@ class Kwant_SSeS():
                             #     syst.stdout.write("Site plot not generated")
                             #     syst.stdout.flush()
 
+                            self.d = []
+                            self.d_raw = []
+                            pick_electron_up = []
                         if self.BlockWarnings:
                             warnings.filterwarnings("always")
                         if self.GetConductance:
@@ -2369,6 +2383,7 @@ class Kwant_SSeS():
                                     self.conductances3.append(C3)
                                 else:
                                     self.conductances2.append('nan')
+                            SMatrix = []
                             self.conductances.append(C1)
 
 
@@ -2394,7 +2409,10 @@ class Kwant_SSeS():
                                 syst.stdout.write("\n")
                         self.ProgressBar(TimeTXT)
                         A = self.Potential_Map
-
+                    LDOS_e_Up_list = []
+                    LDOS_e_Dn_list = []
+                    LDOS_h_Up_list = []
+                    LDOS_h_Dn_list = []
 
 
                 self.GlobalVswpCount = self.GlobalVswpCount + 1
