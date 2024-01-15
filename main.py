@@ -54,7 +54,7 @@ delta_list = [0.125] # in eV
 # delta_list = [6.4e-6]
 # delta_list = [0.1] # in eV
 Vg_s = [0]
-alphaList = [4]
+alphaList = [2]
 # alphaList = [1,2]
 #
 # syst.stdout.write("\r{0}".format('--------------------------- Loading Poisson Result -----------------------------------'))
@@ -71,7 +71,8 @@ else:
 for DELTA in delta_list:
     for alphaTest in alphaList:
         # Estep = 0.005
-        Estep = 0.001
+        # Estep = 0.001
+        Estep = 0.005
         Emin = -0.1
         Emax = 0.1
         E_excited_list = np.round(np.arange(Emin*100, Emax*100+Estep*100,Estep*100)/100,14) # the unit is in t(normalised)
@@ -115,14 +116,14 @@ for DELTA in delta_list:
                           PeriBC=[0], Tev=TeV_list, Tev_Tunnel=TeV_T_list, TunnelLength=1,
                           E_excited=E_excited_list, SNjunc=SNjunc_list,
                           ProOn=[0], constantDelta=False, BField=BTest_list, a=20,
-                          ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=True, Swave=False,
+                          ShowDensity=ShowDensity, ShowCurrent=False, GetLDOS=False, Swave=False,
                           FieldDependentGap=False, deltaPairingMatrix="sigma_0", deltaPairingMatrix_sign="+",
                           Phase=[0],
                           CloseSystem=True,
                           SaveNameNote=NName, SeriesR=0, DateT=Date, TimeT=Time, MasterMultiRun=MMR,
                           muN=mu_N_list, muLead=mu_Lead_list, DefectAmp=0, DefectNumPer=0, CombineMu=True,
                           CombineTev=False, showBands=False, LockFieldAngle=False,
-                          NumBands=1, Mapping=True, GetConductance=GetConductance,
+                          NumBands=1, Mapping=True, GetConductance=True,
                           muSC=mu_SC_list, delta=DELTA, delta_real=0.58e-3, VGate_shift=Vg_s, SwpID="E",
                           PlotbeforeFigures=100,
                           PlotbeforeFigures_Ana=20).Run_sweep()
