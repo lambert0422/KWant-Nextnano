@@ -1822,7 +1822,8 @@ class Kwant_SSeS():
                 # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
                 Square = self.Semi_region(x, y)
 
-            result = Square * 1e-9 * (y - self.W / 2) * self.a / self.GridFactor
+            result = Square * (y - self.W / 2) * self.a / self.GridFactor
+
 
             return result  # in actual nm
 
@@ -2127,6 +2128,7 @@ class Kwant_SSeS():
                         TimeBeforeEverySwp = time.time()
                         ham_mat = sys_close.hamiltonian_submatrix(sparse=True, params=params)
                         AA  =  ham_mat.toarray()
+                        AA = AA[0:16,0:16]
                         if self.PB:
                             sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                             # coords = kwant.plotter.sys_leads_pos(sys, sites)
