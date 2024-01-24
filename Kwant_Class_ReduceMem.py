@@ -2076,9 +2076,9 @@ class Kwant_SSeS():
                                   Delta_SC_up_prime=self.delta * ExpRounded(self.phi / 2),
                                   Delta_SC_dn_prime=self.delta * ExpRounded(- self.phi / 2),
 
-                                  Orbital1 = (self.deltaNormalitionFactor*self.e * (self.Bz**2)/(2*self.m)),
-                                  Orbital2 = ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor)))),
-                                  Orbital3 =  ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) *self.Bz),
+                                  Orbital1 = (self.deltaNormalitionFactor*self.e * (self.Bz**2)/(2*self.m*self.c**2)),
+                                  Orbital2 = ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor))*self.c)),
+                                  Orbital3 =  ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) *self.Bz/self.c),
                                   )
 # ======================================================================================================================
 # ======================================================================================================================
@@ -2126,7 +2126,7 @@ class Kwant_SSeS():
                     if self.CloseSystem:
                         TimeBeforeEverySwp = time.time()
                         ham_mat = sys_close.hamiltonian_submatrix(sparse=True, params=params)
-
+                        AA  =  ham_mat.toarray()
                         if self.PB:
                             sites = kwant.plotter.sys_leads_sites(sys, 0)[0]  # Get the site and coordinate to plot
                             # coords = kwant.plotter.sys_leads_pos(sys, sites)
@@ -2259,11 +2259,17 @@ class Kwant_SSeS():
                             # target_Y_edge = [0, self.W - 1]
                             # target_X_bulk = [int(self.L_SC / 2)-5, int(self.L_SC / 2)+4]
                             # target_Y_bulk = [0, self.W - 1]
-
+                            ## This is target for edge and middle bulk states
                             target_X_edge = [self.L_Side, self.L_Side + 10]
                             target_Y_edge = [1, self.W - 2]
                             target_X_bulk = [int(self.L_SC / 2) - 5, int(self.L_SC / 2) + 4]
                             target_Y_bulk = [1, self.W - 2]
+                            ## This is target for edge and entire states
+                            # target_X_edge = [self.L_Side, self.L_Side + 10]
+                            # target_Y_edge = [1, self.W - 2]
+                            # target_X_bulk = [self.L_Side+50, self.L_SC+self.L_Side-50]
+                            # target_Y_bulk = [1, self.W - 2]
+
                             # target_Y_edge = [-self.WSC, self.W + self.WSC]
                             # target_Y_bulk = [-self.WSC, self.W + self.WSC]
                             # target_Y_edge = [int(self.W/4), int(3*self.W/4)]
