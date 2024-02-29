@@ -15,7 +15,10 @@ import numpy as np
 # from matplotlib.projections import PolarAxes
 from mpl_toolkits.axisartist.grid_finder import (FixedLocator, MaxNLocator,
                                                  DictFormatter)
+
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('GTK3Agg')
 # import tinyarray
 import warnings
 import kwant
@@ -34,7 +37,6 @@ from scipy.interpolate import LinearNDInterpolator
 import re
 import time
 from datetime import datetime
-
 def savedata(file_in,init,initdata = None,newcol = None):
     # Save the updated table to a file
     tempfile = 'temp.txt'
@@ -317,7 +319,7 @@ class Kwant_SSeS():
         self.deltaNormalitionFactor = delta / delta_real
         # self.gn = gn  # g-factor
         # self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
-        self.gn_muB = 2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
+        self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
         self.Surface2DEG = Surface2DEG
         self.Temp = Temp
         self.deltaPairingMatrix=deltaPairingMatrix
@@ -744,6 +746,7 @@ class Kwant_SSeS():
 
             else:
                 ZeemanHam = ""
+                ZeemanHam_Fix = ""
 
             if self.RashbaSOI:
                 # HamPreRashba = """+ (m*alpha**2/(2*e*hbar**2))""" + TeV_N_Txt
@@ -756,6 +759,7 @@ class Kwant_SSeS():
             else:
                 HamPreRashba = ""
                 RashbaHam = ""
+                RashbaHam_Fix = ""
 
             if self.DresselhausSOI:
                 # HamPreDresselhaus = """+ (m*beta**2/(2*e*hbar**2))""" + TeV_N_Txt
@@ -766,6 +770,7 @@ class Kwant_SSeS():
             else:
                 HamPreDresselhaus = ""
                 DresselhausHam = ""
+                DresselhausHam_Fix = ""
 
             DeltaHam = """+(Delta_0(x,y)*kron(sigma_x+1j*sigma_y,""" + PHMatrix + """) """ + PHMatrix_sign + """ Delta_0_prime(x,y)*kron(sigma_x-1j*sigma_y,""" + PHMatrix + """))""" + TeV_N_Txt
 
@@ -862,10 +867,10 @@ class Kwant_SSeS():
         def lead_shape_PB(site):
             (x, y) = site.pos
             if self.SN == 'SN':
-                return  -self.WSC <= y < (
+                return  -self.WSC < y < (
                     self.W -1)
             else:
-                return -self.WSC <= y < (self.W + self.WSC-1)
+                return -self.WSC < y < (self.W + self.WSC-1)
 
 
 
@@ -996,6 +1001,8 @@ class Kwant_SSeS():
             syst_close = sys_close.finalized()
         else:
             syst_close = []
+        print(matplotlib.get_backend())
+
         # kwant.plotter.plot(syst,site_color = 'k',fig_size = (20,10))
 
         return syst, syst_close
@@ -1816,14 +1823,14 @@ class Kwant_SSeS():
             return t
 
         def Y_rl_dis(x, y):
-            if self.Surface2DEG:
-                Square = 1
-            else:
+            # if self.Surface2DEG:
+            #     Square = 1
+            # else:
                 # Square = np.heaviside(y, 1) - np.heaviside(y - self.W, 1)
-                Square = self.Semi_region(x, y)
+            Square = self.Semi_region(x, y)
 
-            result = Square * (y - self.W / 2) * self.a / self.GridFactor
-
+            result = Square * (y - (self.W-1) / 2) * self.a / self.GridFactor
+            # result = Square * (y) * self.a / self.GridFactor
 
             return result  # in actual nm
 
@@ -2077,9 +2084,9 @@ class Kwant_SSeS():
                                   Delta_SC_up_prime=self.delta * ExpRounded(self.phi / 2),
                                   Delta_SC_dn_prime=self.delta * ExpRounded(- self.phi / 2),
 
-                                  Orbital1 = (self.deltaNormalitionFactor*self.e * (self.Bz**2)/(2*self.m*self.c**2)),
-                                  Orbital2 = ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor))*self.c)),
-                                  Orbital3 =  ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) *self.Bz/self.c),
+                                  Orbital1 = (self.deltaNormalitionFactor*self.e * (self.Bz**2)/(2*self.m*self.c**2))/(1),
+                                  Orbital2 = ((self.deltaNormalitionFactor*self.Bz)/ (self.m *np.sqrt(1/(2*self.m*self.e/self.deltaNormalitionFactor))*self.c))/(1),
+                                  Orbital3 =  ((self.alpha*np.sqrt(self.e/(2*self.m/self.deltaNormalitionFactor))) *self.Bz/self.c)/(1),
                                   )
 # ======================================================================================================================
 # ======================================================================================================================
