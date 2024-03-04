@@ -298,7 +298,7 @@ class Kwant_SSeS():
     # Two_QPC: modify the model to have 2 QPC at both ends of the junction
     # ACFix and AC: fix the AC signal as the E excitation is in the unit of t and t is in unit of eV, so fix AC means fix product of E and t
     # CloseSystem: whether to perform a extra calculation on a closed system of the scattering region, get k_Num lowest eigenvector and output the mode_Num waverfucntion density
-    def __init__(self, DavidPot=False,alpha = 2.25e-3 ,beta = 2.25e-3,gn = -3.4,
+    def __init__(self, DavidPot=False,alpha = 2.25e-3 ,beta = 2.25e-3,gn_muB_factor = 0.2,
                  Temp=0.1,delta=0.125, delta_real = 0.58e-3,muN=0.25, muSC=0.25,muLead=0.25, VGate_shift=-0.1, DefectAmp=0.5, DefectNumPer = 10,SeriesR=0,
                  W_g=300, S_g=400, Nb_d=100, D_2DEG=120, W_r=1400, L_r=5000, L_s=4000, WSC=200,DAir = 50, a=30, GridFactor=1,
                  BField=[0], V_A=np.arange(0, -1.49, -0.01), Vbias_List=[0],Tev=[1e-3], Tev_Tunnel=[2e-3], VGate_x_f = 1, VGate_y_f = 1,
@@ -319,7 +319,7 @@ class Kwant_SSeS():
         self.deltaNormalitionFactor = delta / delta_real
         # self.gn = gn  # g-factor
         # self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
-        self.gn_muB = 0.2 / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
+        self.gn_muB = gn_muB_factor / (self.deltaNormalitionFactor)  # this is normalized to EZ = 0.1 with B = 1T
         self.Surface2DEG = Surface2DEG
         self.Temp = Temp
         self.deltaPairingMatrix=deltaPairingMatrix
